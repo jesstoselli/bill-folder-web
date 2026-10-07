@@ -1,0 +1,47 @@
+<mat-drawer-container
+  class="shell"
+  [hasBackdrop]="drawerMode()"
+  (backdropClick)="store.closeDrawer()"
+>
+  <mat-drawer
+    id="primary-navigation"
+    class="shell__navigation"
+    [class.shell__navigation--rail]="store.mode() === 'rail'"
+    [mode]="drawerMode() ? 'over' : 'side'"
+    [opened]="navigationOpen()"
+    [disableClose]="!drawerMode()"
+    [autoFocus]="drawerMode()"
+    (closedStart)="store.closeDrawer()"
+  >
+    <app-sidebar
+      [activeRoute]="activeRoute()"
+      [mode]="store.mode()"
+      (navigationRequested)="store.navigationCompleted()"
+    />
+  </mat-drawer>
+
+  <mat-drawer-content class="shell__body">
+    @if (drawerMode()) {
+      <header class="shell__mobile-header">
+        <button
+          class="shell__menu-button"
+          type="button"
+          aria-label="Abrir navegação"
+          aria-controls="primary-navigation"
+          [attr.aria-expanded]="store.drawerOpen()"
+          (click)="store.openDrawer()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        <span class="shell__mobile-brand">BillFolder</span>
+        <span class="shell__mobile-mark" aria-hidden="true"></span>
+      </header>
+    }
+
+    <main class="shell__content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </mat-drawer-content>
+</mat-drawer-container>

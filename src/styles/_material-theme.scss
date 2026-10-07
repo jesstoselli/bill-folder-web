@@ -1,0 +1,44 @@
+@use '@angular/material' as mat;
+
+@mixin billfolder-material-theme() {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$green-palette,
+        tertiary: mat.$spring-green-palette,
+        theme-type: dark,
+      ),
+      typography: (
+        plain-family: (
+          'Barlow Semi Condensed',
+          sans-serif,
+        ),
+        brand-family: (
+          'Barlow Semi Condensed',
+          sans-serif,
+        ),
+        regular-weight: 400,
+        medium-weight: 500,
+        bold-weight: 500,
+      ),
+      density: -1,
+    )
+  );
+
+  @include mat.theme-overrides(
+    (
+      primary: var(--bf-primary),
+      on-primary: var(--bf-bg),
+      primary-container: var(--bf-surface-high),
+      on-primary-container: var(--bf-primary),
+      surface: var(--bf-bg),
+      surface-container: var(--bf-surface),
+      surface-container-high: var(--bf-surface-high),
+      on-surface: var(--bf-text),
+      on-surface-variant: var(--bf-muted),
+      outline: var(--bf-outline),
+      outline-variant: var(--bf-outline),
+      error: var(--bf-danger),
+    )
+  );
+}

@@ -1,0 +1,35 @@
+<div class="sidebar__brand" [class.sidebar__brand--compact]="mode() === 'rail'">
+  <span class="sidebar__mark" aria-hidden="true">BF</span>
+  <span class="sidebar__wordmark" [class.u-visually-hidden]="mode() === 'rail'">BillFolder</span>
+</div>
+
+<nav aria-label="Navegação principal">
+  <ul class="sidebar__list">
+    @for (destination of destinations; track destination.path) {
+      <li>
+        <a
+          class="sidebar__link"
+          [class.sidebar__link--active]="isActive(destination.path)"
+          [routerLink]="destination.path"
+          [attr.aria-current]="isActive(destination.path) ? 'page' : null"
+          [attr.aria-label]="destination.label"
+          [matTooltip]="destination.label"
+          [matTooltipDisabled]="mode() !== 'rail'"
+          matTooltipPosition="right"
+          (click)="navigationRequested.emit()"
+        >
+          <svg class="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path [attr.d]="destination.iconPath" />
+          </svg>
+          <span class="sidebar__label" [class.u-visually-hidden]="mode() === 'rail'">
+            {{ destination.label }}
+          </span>
+        </a>
+      </li>
+    }
+  </ul>
+</nav>
+
+<p class="sidebar__footer" [class.u-visually-hidden]="mode() === 'rail'">
+  Seu dinheiro, no lugar certo.
+</p>

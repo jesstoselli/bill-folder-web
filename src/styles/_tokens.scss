@@ -1,0 +1,18 @@
+:root {
+  color-scheme: dark;
+  --bf-brand: #86bc65;
+  --bf-bg: #0a0d0a;
+  --bf-surface: #1e1e1e;
+  --bf-surface-high: #2d2d2d;
+  --bf-text: #e1e3db;
+  --bf-muted: #c2c9bb;
+  --bf-outline: #42493d;
+  --bf-primary: #bbe89f;
+  --bf-danger: #e09999;
+  --bf-radius-card: 16px;
+  --bf-radius-hero: 28px;
+  --bf-sidebar-full: 17rem;
+  --bf-sidebar-rail: 5.5rem;
+  --bf-content-max: 94rem;
+  --bf-focus-ring: 0 0 0 3px color-mix(in srgb, var(--bf-primary) 42%, transparent);
+}
