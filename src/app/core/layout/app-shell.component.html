@@ -17,6 +17,7 @@
       [activeRoute]="activeRoute()"
       [mode]="store.mode()"
       (navigationRequested)="store.navigationCompleted()"
+      (logoutRequested)="logout()"
     />
   </mat-drawer>
 

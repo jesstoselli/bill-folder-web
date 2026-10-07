@@ -47,5 +47,23 @@ describe('SidebarComponent', () => {
       'Poupança',
       'Ajustes',
     ]);
+    const logout = root.querySelector<HTMLButtonElement>('button[aria-label="Sair"]');
+    expect(logout).not.toBeNull();
+    expect(logout?.textContent?.trim()).toBe('Sair');
+  });
+
+  it('emits logout from a keyboard-operable button', () => {
+    const fixture = TestBed.createComponent(SidebarComponent);
+    let requested = false;
+    fixture.componentInstance.logoutRequested.subscribe(() => (requested = true));
+    fixture.detectChanges();
+
+    const button = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      'button[aria-label="Sair"]',
+    );
+    button?.click();
+
+    expect(button?.type).toBe('button');
+    expect(requested).toBe(true);
   });
 });

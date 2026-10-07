@@ -1,16 +1,30 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { provideRouter, Router } from '@angular/router';
+import { firstValueFrom, of } from 'rxjs';
+import { AuthSessionService } from '../auth/auth-session.service';
+import { APP_ENVIRONMENT } from '../config/app-environment';
 import { AppShellComponent } from './app-shell.component';
 import { ShellStore } from './shell.store';
+
+@Component({ template: '' })
+class RouteStub {}
 
 describe('AppShellComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppShellComponent],
       providers: [
-        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([
+          { path: 'home', component: RouteStub },
+          { path: 'login', component: RouteStub },
+        ]),
+        { provide: APP_ENVIRONMENT, useValue: { apiBaseUrl: '/v1', production: false } },
         {
           provide: BreakpointObserver,
           useValue: {
@@ -54,5 +68,37 @@ describe('AppShellComponent', () => {
     fixture.detectChanges();
 
     expect(menuButton?.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('closes the drawer, clears the session and routes to login when remote logout fails', async () => {
+    const session = TestBed.inject(AuthSessionService);
+    const backend = TestBed.inject(HttpTestingController);
+    const login = firstValueFrom(
+      session.login({ email: 'jess@example.com', password: 'senha-segura' }),
+    );
+    backend.expectOne('/v1/auth/web/login').flush({
+      accessToken: 'access-token',
+      accessTokenExpiresAt: '2026-10-07T18:00:00Z',
+      user: { id: 'user-1', email: 'jess@example.com', displayName: 'Jess' },
+    });
+    await login;
+
+    const fixture = TestBed.createComponent(AppShellComponent);
+    const store = TestBed.inject(ShellStore);
+    store.setMode('drawer');
+    store.openDrawer();
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('button[aria-label="Sair"]')
+      ?.click();
+    backend
+      .expectOne('/v1/auth/web/logout')
+      .flush({ message: 'offline' }, { status: 503, statusText: 'Unavailable' });
+    await fixture.whenStable();
+
+    expect(session.isAuthenticated()).toBe(false);
+    expect(store.drawerOpen()).toBe(false);
+    expect(TestBed.inject(Router).url).toBe('/login');
   });
 });

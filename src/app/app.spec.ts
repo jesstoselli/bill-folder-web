@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { App } from './app';
 import { routes } from './app.routes';
+import { AuthSessionService } from './core/auth/auth-session.service';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -11,6 +12,13 @@ describe('App', () => {
       imports: [App],
       providers: [
         provideRouter(routes),
+        {
+          provide: AuthSessionService,
+          useValue: {
+            isAuthenticated: () => true,
+            logout: () => of(void 0),
+          },
+        },
         {
           provide: BreakpointObserver,
           useValue: {

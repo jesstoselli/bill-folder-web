@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { AuthSessionService } from '../auth/auth-session.service';
 import { ShellStore } from './shell.store';
 import { SidebarComponent } from './sidebar.component';
 
@@ -14,6 +15,7 @@ import { SidebarComponent } from './sidebar.component';
 })
 export class AppShellComponent {
   private readonly router = inject(Router);
+  private readonly session = inject(AuthSessionService);
 
   readonly store = inject(ShellStore);
   readonly activeRoute = signal(this.router.url || '/home');
@@ -30,5 +32,11 @@ export class AppShellComponent {
         this.activeRoute.set(event.urlAfterRedirects);
         this.store.navigationCompleted();
       });
+  }
+
+  protected logout(): void {
+    this.store.closeDrawer();
+    this.session.logout().subscribe();
+    void this.router.navigate(['/login']);
   }
 }

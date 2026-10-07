@@ -1,0 +1,72 @@
+<main id="main-content" class="auth-page" tabindex="-1">
+  <aside class="auth-page__context" aria-label="BillFolder">
+    <a class="auth-page__brand" routerLink="/login" aria-label="BillFolder — entrar">
+      <span class="auth-page__mark" aria-hidden="true">BF</span>
+      <span>BillFolder</span>
+    </a>
+    <p class="auth-page__statement">Comece pelo que importa.</p>
+    <p class="auth-page__context-copy">
+      Crie seu acesso e mantenha cada compromisso visível no mesmo painel.
+    </p>
+  </aside>
+
+  <section class="auth-page__panel" aria-labelledby="signup-title">
+    <div class="auth-card">
+      <h1 id="signup-title" class="auth-card__heading">Criar conta</h1>
+      <p class="auth-card__intro">Três dados e seu painel fica pronto para começar.</p>
+
+      <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <mat-form-field class="auth-form__field" appearance="outline">
+          <mat-label>Nome</mat-label>
+          <input id="signup-name" matInput formControlName="displayName" autocomplete="name" />
+          @if (form.controls.displayName.touched && form.controls.displayName.invalid) {
+            <mat-error role="alert">Use entre 2 e 100 caracteres.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="auth-form__field" appearance="outline">
+          <mat-label>Email</mat-label>
+          <input
+            id="signup-email"
+            matInput
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            inputmode="email"
+          />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <mat-error role="alert">Informe um email válido.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="auth-form__field" appearance="outline">
+          <mat-label>Senha</mat-label>
+          <input
+            id="signup-password"
+            matInput
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+          />
+          <mat-hint>De 8 a 128 caracteres.</mat-hint>
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <mat-error role="alert">Use entre 8 e 128 caracteres.</mat-error>
+          }
+        </mat-form-field>
+
+        @if (errorMessage()) {
+          <p class="auth-form__status" role="alert">{{ errorMessage() }}</p>
+        }
+
+        <button class="auth-form__submit" mat-flat-button type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Criando conta…' : 'Criar conta' }}
+        </button>
+      </form>
+
+      <p class="auth-card__links">
+        <span>Já tem conta?</span>
+        <a class="auth-card__link" routerLink="/login">Entrar</a>
+      </p>
+    </div>
+  </section>
+</main>

@@ -94,9 +94,37 @@
 
 .sidebar__footer {
   border-top: 1px solid var(--bf-outline);
-  color: var(--bf-muted);
-  font-size: 0.8125rem;
-  line-height: 1.35;
   margin: auto 0 0;
-  padding: 1rem 0.75rem 0;
+  padding-top: 0.75rem;
+
+  p {
+    color: var(--bf-muted);
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    margin: 0.65rem 0.75rem 0;
+  }
+}
+
+.sidebar__logout {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  color: var(--bf-muted);
+  cursor: pointer;
+  display: flex;
+  gap: 0.875rem;
+  min-height: 2.875rem;
+  padding: 0.25rem 0.75rem;
+  width: 100%;
+
+  &:hover {
+    background: color-mix(in srgb, var(--bf-danger) 10%, transparent);
+    color: var(--bf-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bf-primary);
+    outline-offset: 2px;
+  }
 }

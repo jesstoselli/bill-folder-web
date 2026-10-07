@@ -59,6 +59,7 @@ export class SidebarComponent {
   readonly activeRoute = input<string>('/home');
   readonly mode = input<ShellMode>('full');
   readonly navigationRequested = output<void>();
+  readonly logoutRequested = output<void>();
 
   protected readonly destinations = NAVIGATION_DESTINATIONS;
 

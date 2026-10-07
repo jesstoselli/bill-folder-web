@@ -30,6 +30,20 @@
   </ul>
 </nav>
 
-<p class="sidebar__footer" [class.u-visually-hidden]="mode() === 'rail'">
-  Seu dinheiro, no lugar certo.
-</p>
+<div class="sidebar__footer">
+  <button
+    class="sidebar__logout"
+    type="button"
+    aria-label="Sair"
+    matTooltip="Sair"
+    [matTooltipDisabled]="mode() !== 'rail'"
+    matTooltipPosition="right"
+    (click)="logoutRequested.emit()"
+  >
+    <svg class="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5m5-4 4-4-4-4m4 4H9" />
+    </svg>
+    <span [class.u-visually-hidden]="mode() === 'rail'">Sair</span>
+  </button>
+  <p [class.u-visually-hidden]="mode() === 'rail'">Seu dinheiro, no lugar certo.</p>
+</div>
