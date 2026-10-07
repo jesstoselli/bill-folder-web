@@ -1,9 +1,10 @@
 // Include theming for Angular Material with `mat.theme()`.
 // This Sass mixin will define CSS variables that are used for styling Angular Material
 // components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// The font stack remains local until the product font is added in Task 2.
 @use '@angular/material' as mat;
+
+$system-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
 html {
   height: 100%;
@@ -13,7 +14,10 @@ html {
         primary: mat.$azure-palette,
         tertiary: mat.$blue-palette,
       ),
-      typography: Roboto,
+      typography: (
+        plain-family: $system-font-family,
+        brand-family: $system-font-family,
+      ),
       density: 0,
     )
   );
@@ -25,9 +29,7 @@ body {
   // user's system settings.
   color-scheme: light;
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
+  // Set the default background, font, and text colors from the Material theme.
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
