@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -7,4 +8,16 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
-export class App {}
+export class App {
+  private readonly document = inject(DOCUMENT);
+
+  protected skipToMainContent(event: Event): void {
+    const mainContent = this.document.getElementById('main-content');
+    if (!mainContent) {
+      return;
+    }
+
+    event.preventDefault();
+    mainContent.focus();
+  }
+}

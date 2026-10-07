@@ -1,4 +1,9 @@
-<a class="skip-link" href="#main-content" aria-label="Pular para o conteúdo">
+<a
+  class="skip-link"
+  href="#main-content"
+  aria-label="Pular para o conteúdo"
+  (click)="skipToMainContent($event)"
+>
   Pular para o conteúdo
 </a>
-<router-outlet id="main-content" tabindex="-1" />
+<router-outlet />
