@@ -1,0 +1,85 @@
+<form class="savings-transaction-form" [formGroup]="form" (ngSubmit)="submit()">
+  <header>
+    <div>
+      <h2 id="savings-transaction-form-title" mat-dialog-title>
+        {{ data.mode === 'create' ? 'Novo movimento' : 'Editar movimento' }}
+      </h2>
+      <p>Registre o que entrou ou saiu da reserva.</p>
+    </div>
+    <button
+      type="button"
+      mat-button
+      mat-dialog-close
+      [disabled]="saving()"
+      aria-label="Fechar formulário de movimento"
+    >
+      Fechar
+    </button>
+  </header>
+
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p class="savings-transaction-form__error" role="alert">{{ serverError() }}</p>
+    }
+
+    <div class="savings-transaction-form__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Movimento</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="deposit">Aporte</mat-option>
+          <mat-option value="withdrawal">Saque</mat-option>
+          <mat-option value="yield">Rendimento</mat-option>
+          <mat-option value="transferIn">Transferência recebida</mat-option>
+          <mat-option value="transferOut">Transferência enviada</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="savings-transaction-form__split">
+        <mat-form-field appearance="outline">
+          <mat-label>Data</mat-label>
+          <input matInput type="date" formControlName="date" />
+          @if (form.controls.date.invalid) {
+            <mat-error>Informe uma data válida.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Valor</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            formControlName="amount"
+          />
+          @if (form.controls.amount.invalid) {
+            <mat-error>O valor não pode ser negativo.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Descrição (opcional)</mat-label>
+        <input matInput formControlName="label" maxlength="200" autocomplete="off" />
+        @if (form.controls.label.hasError('maxlength')) {
+          <mat-error>Use até 200 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Transação vinculada (opcional)</mat-label>
+        <input matInput formControlName="linkedTransactionId" autocomplete="off" />
+        <mat-hint>ID da outra transação quando houver transferência vinculada.</mat-hint>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving()">
+      {{ saving() ? 'Salvando…' : 'Salvar movimento' }}
+    </button>
+  </mat-dialog-actions>
+</form>

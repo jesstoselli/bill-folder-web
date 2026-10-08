@@ -1,0 +1,161 @@
+<section class="savings-page">
+  <header class="savings-page__header">
+    <div>
+      <h1 class="bf-heading-page">Poupança</h1>
+      <p>Acompanhe a reserva e os movimentos de cada ciclo.</p>
+    </div>
+    <div class="savings-page__actions">
+      <button type="button" class="savings-page__refresh" (click)="refresh()">Atualizar</button>
+      <button
+        type="button"
+        mat-flat-button
+        data-page-action="create"
+        [disabled]="!store.selectedAccount() || !cycles.current()"
+        (click)="openCreate()"
+      >
+        Novo movimento
+      </button>
+    </div>
+  </header>
+
+  @if (store.accounts().length) {
+    <app-savings-selector
+      [accounts]="store.accounts()"
+      [selectedId]="store.selectedAccountId()"
+      (selectedIdChange)="selectAccount($event)"
+    />
+  }
+
+  @if (actionError()) {
+    <p class="savings-page__error" role="alert">{{ actionError() }}</p>
+  }
+
+  @switch (pageState().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <div class="savings-page__state">
+        <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" />
+        <button type="button" (click)="refresh()">Tentar novamente</button>
+      </div>
+    }
+    @case ('no-cycle') {
+      <div class="savings-page__state">
+        <app-page-state
+          state="empty"
+          title="Nenhum ciclo disponível"
+          message="Crie ou disponibilize um ciclo para consultar os movimentos da poupança."
+        />
+        <button type="button" (click)="refresh()">Buscar ciclos novamente</button>
+      </div>
+    }
+    @case ('no-accounts') {
+      <app-page-state
+        state="empty"
+        title="Nenhuma poupança cadastrada"
+        message="Cadastre uma conta-poupança no sistema para acompanhar a reserva aqui."
+      />
+    }
+    @case ('content') {
+      @if (store.selectedAccount(); as account) {
+        @if (cycles.current(); as cycle) {
+          <app-savings-summary
+            [account]="account"
+            [cycleNet]="store.cycleNet()"
+            [cycleLabel]="cycle.label"
+            [transactionCount]="store.transactions().length"
+          />
+
+          <div class="savings-page__cycle-row">
+            <app-cycle-navigator
+              [label]="cycle.label"
+              [startDate]="cycle.startDate"
+              [endDate]="cycle.endDate"
+              [previousEnabled]="cycles.previous() !== null && !refreshing()"
+              [nextEnabled]="cycles.next() !== null && !refreshing()"
+              (previous)="selectPreviousCycle()"
+              (next)="selectNextCycle()"
+            />
+            @if (refreshing()) {
+              <span role="status">Atualizando reserva…</span>
+            }
+          </div>
+
+          @if (store.transactions().length) {
+            <div class="savings-ledger" tabindex="-1" aria-label="Movimentos da poupança no ciclo">
+              <table>
+                <caption class="u-visually-hidden">
+                  Movimentos da poupança do mais recente para o mais antigo
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Data</th>
+                    <th scope="col">Movimento</th>
+                    <th scope="col">Descrição</th>
+                    <th scope="col" class="savings-ledger__amount">Valor</th>
+                    <th scope="col">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (transaction of store.transactions(); track transaction.id) {
+                    <tr [attr.data-transaction-id]="transaction.id">
+                      <td class="bf-tabular">
+                        <time [attr.datetime]="transaction.date">{{
+                          formatCivilDate(transaction.date)
+                        }}</time>
+                      </td>
+                      <td>
+                        <span
+                          class="savings-ledger__type"
+                          [class.savings-ledger__type--negative]="isNegative(transaction)"
+                          >{{ typeLabel(transaction.type) }}</span
+                        >
+                      </td>
+                      <td>
+                        <strong>{{ transaction.label || 'Sem descrição' }}</strong>
+                        @if (transaction.linkedTransactionId) {
+                          <span class="savings-ledger__link">Movimento vinculado</span>
+                        }
+                      </td>
+                      <td
+                        class="savings-ledger__amount bf-tabular"
+                        [class.savings-ledger__amount--negative]="isNegative(transaction)"
+                      >
+                        {{ signedAmount(transaction) }}
+                      </td>
+                      <td class="savings-ledger__actions">
+                        <button
+                          type="button"
+                          data-row-action
+                          data-action="edit"
+                          (click)="openEdit(transaction)"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          data-row-action
+                          data-action="delete"
+                          (click)="deleteTransaction(transaction)"
+                        >
+                          Excluir
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <app-page-state
+              state="empty"
+              title="Nenhum movimento neste ciclo"
+              message="Registre um aporte ou saque para começar o histórico deste período."
+            />
+          }
+        }
+      }
+    }
+  }
+</section>

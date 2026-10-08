@@ -2,11 +2,6 @@ import { Routes } from '@angular/router';
 import { anonymousGuard, authGuard } from './core/auth/auth.guard';
 import { AppShellComponent } from './core/layout/app-shell.component';
 
-const placeholder = () =>
-  import('./shared/components/feature-placeholder/feature-placeholder.component').then(
-    ({ FeaturePlaceholderComponent }) => FeaturePlaceholderComponent,
-  );
-
 export const routes: Routes = [
   {
     path: 'login',
@@ -72,7 +67,12 @@ export const routes: Routes = [
           import('./features/cards/cards.page').then(({ CardsPage }) => CardsPage),
         data: { title: 'Cartões' },
       },
-      { path: 'poupanca', loadComponent: placeholder, data: { title: 'Poupança' } },
+      {
+        path: 'poupanca',
+        loadComponent: () =>
+          import('./features/savings/savings.page').then(({ SavingsPage }) => SavingsPage),
+        data: { title: 'Poupança' },
+      },
       {
         path: 'ajustes',
         loadComponent: () =>

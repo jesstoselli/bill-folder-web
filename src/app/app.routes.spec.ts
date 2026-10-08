@@ -4,6 +4,7 @@ import { HomePage } from './features/home/home.page';
 import { ExpensesPage } from './features/expenses/expenses.page';
 import { DailyExpensesPage } from './features/daily-expenses/daily-expenses.page';
 import { CardsPage } from './features/cards/cards.page';
+import { SavingsPage } from './features/savings/savings.page';
 
 describe('application routes', () => {
   it('keeps every MVP destination available behind the application shell', () => {
@@ -78,5 +79,15 @@ describe('application routes', () => {
     expect(cardsRoute?.component).toBeUndefined();
     expect(cardsRoute?.loadComponent).toBeTypeOf('function');
     await expect(cardsRoute?.loadComponent?.()).resolves.toBe(CardsPage);
+  });
+
+  it('lazy-loads savings behind the application shell', async () => {
+    const savingsRoute = routes
+      .find((route) => route.path === '')
+      ?.children?.find((route) => route.path === 'poupanca');
+
+    expect(savingsRoute?.component).toBeUndefined();
+    expect(savingsRoute?.loadComponent).toBeTypeOf('function');
+    await expect(savingsRoute?.loadComponent?.()).resolves.toBe(SavingsPage);
   });
 });

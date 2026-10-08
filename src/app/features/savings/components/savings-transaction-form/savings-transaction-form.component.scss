@@ -1,0 +1,45 @@
+.savings-transaction-form {
+  min-width: 0;
+
+  header {
+    align-items: start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 0.4rem 0.4rem 0;
+  }
+
+  h2 {
+    margin: 0;
+  }
+
+  header p {
+    color: var(--bf-muted);
+    margin: 0.3rem 0 0;
+  }
+}
+
+.savings-transaction-form__fields {
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.65rem;
+}
+
+.savings-transaction-form__split {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.savings-transaction-form__error {
+  border: 1px solid var(--bf-danger);
+  color: var(--bf-danger);
+  margin: 0 0 0.85rem;
+  padding: 0.7rem 0.85rem;
+}
+
+@media (max-width: 560px) {
+  .savings-transaction-form__split {
+    grid-template-columns: 1fr;
+  }
+}

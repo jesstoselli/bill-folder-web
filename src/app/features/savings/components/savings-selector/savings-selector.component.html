@@ -1,0 +1,35 @@
+<section class="savings-selector" aria-labelledby="savings-selector-label">
+  <div class="savings-selector__heading">
+    <h2 id="savings-selector-label">Conta-poupança</h2>
+    <span>Uma conta por vez</span>
+  </div>
+
+  <div class="savings-selector__wide">
+    <mat-button-toggle-group
+      name="selected-savings-account"
+      [value]="selectedId()"
+      aria-labelledby="savings-selector-label"
+      (change)="selectToggle($event)"
+    >
+      @for (account of accounts(); track account.id) {
+        <mat-button-toggle [value]="account.id">
+          <strong>{{ account.bankName }}</strong>
+          <span class="bf-tabular">ag. {{ account.branch }} · {{ account.accountNumber }}</span>
+        </mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </div>
+
+  <mat-form-field class="savings-selector__compact" appearance="outline">
+    <mat-label>Conta-poupança</mat-label>
+    <mat-select
+      [value]="selectedId()"
+      aria-labelledby="savings-selector-label"
+      (selectionChange)="selectDropdown($event)"
+    >
+      @for (account of accounts(); track account.id) {
+        <mat-option [value]="account.id">{{ accountLabel(account) }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</section>

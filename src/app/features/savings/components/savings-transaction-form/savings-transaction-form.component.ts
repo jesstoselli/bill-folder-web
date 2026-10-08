@@ -1,0 +1,115 @@
+import { Component, inject, signal } from '@angular/core';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { mapApiError } from '../../../../core/http/api-error';
+import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
+import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { SavingsTransactionResponse, SavingsTransactionType } from '../../savings.models';
+import { SavingsStore } from '../../savings.store';
+
+export type SavingsTransactionFormDialogData =
+  | { readonly mode: 'create'; readonly accountId: string }
+  | {
+      readonly mode: 'edit';
+      readonly accountId: string;
+      readonly transaction: SavingsTransactionResponse;
+    };
+
+@Component({
+  selector: 'app-savings-transaction-form',
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+  ],
+  templateUrl: './savings-transaction-form.component.html',
+  styleUrl: './savings-transaction-form.component.scss',
+})
+export class SavingsTransactionFormComponent {
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly store = inject(SavingsStore);
+  private readonly dialogRef = inject(MatDialogRef<SavingsTransactionFormComponent>);
+  private readonly writeLock = new WriteDialogLock(this.dialogRef);
+  readonly data = inject<SavingsTransactionFormDialogData>(MAT_DIALOG_DATA);
+  readonly saving = this.writeLock.saving;
+  readonly serverError = signal('');
+  readonly form = this.formBuilder.nonNullable.group({
+    type: this.formBuilder.nonNullable.control<SavingsTransactionType>(
+      this.initial()?.type ?? 'deposit',
+      Validators.required,
+    ),
+    amount: [this.initial()?.amount ?? 0, [Validators.required, Validators.min(0)]],
+    date: [this.initial()?.date ?? todayCivilDate(), [Validators.required, validCivilDate]],
+    label: [this.initial()?.label ?? '', Validators.maxLength(200)],
+    linkedTransactionId: [this.initial()?.linkedTransactionId ?? ''],
+  });
+
+  async submit(): Promise<void> {
+    if (this.form.invalid || !this.writeLock.begin()) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.serverError.set('');
+    const value = this.form.getRawValue();
+    const request = {
+      type: value.type,
+      amount: value.amount,
+      date: value.date,
+      label: normalizeOptional(value.label),
+      linkedTransactionId: normalizeOptional(value.linkedTransactionId),
+    };
+    try {
+      const result =
+        this.data.mode === 'create'
+          ? await this.store.createTransaction({
+              savingsAccountId: this.data.accountId,
+              ...request,
+            })
+          : await this.store.updateTransaction(this.data.transaction.id, request);
+      this.dialogRef.close(result);
+    } catch (error: unknown) {
+      this.serverError.set(mapApiError(error).message);
+      this.writeLock.release();
+    }
+  }
+
+  private initial(): SavingsTransactionResponse | null {
+    return this.data.mode === 'edit' ? this.data.transaction : null;
+  }
+}
+
+function normalizeOptional(value: string): string | null {
+  const normalized = value.trim();
+  return normalized || null;
+}
+
+function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {
+  if (!control.value) return null;
+  try {
+    parseCivilDate(control.value);
+    return null;
+  } catch {
+    return { civilDate: true };
+  }
+}
+
+function todayCivilDate(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

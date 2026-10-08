@@ -1,0 +1,18 @@
+<section class="savings-summary" aria-labelledby="savings-balance-label">
+  <div class="savings-summary__identity">
+    <p id="savings-balance-label">saldo da poupança</p>
+    <strong class="savings-summary__balance bf-tabular">{{
+      formatBrl(account().currentBalance)
+    }}</strong>
+  </div>
+
+  <div class="savings-summary__cycle">
+    <p class="savings-summary__movement bf-tabular" [class.is-negative]="cycleNet() < 0">
+      Movimento no ciclo: {{ movementLabel() }}
+    </p>
+    <span>
+      {{ cycleLabel() }} ·
+      {{ transactionCount() === 1 ? '1 movimento' : transactionCount() + ' movimentos' }}
+    </span>
+  </div>
+</section>
