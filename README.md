@@ -5,11 +5,12 @@ the shell and local assets can be cached, while every `/v1` API read and write r
 Access tokens stay in application memory; browser refresh authentication uses an API-managed
 `HttpOnly` cookie.
 
-The final whole-product review found issues that have now received one local final-fix round. The
-current status is **awaiting scoped re-review**: this repository is not production-ready and must not
-be promoted until the controller reviews the scoped fixes and their evidence. See the binding
+The final whole-product review and its scoped re-review are complete. The two residual Important
+findings were corrected locally with deterministic regressions, and all local delivery gates are
+green. The MVP is **locally ready for an explicitly authorized rollout**, but has not been pushed,
+published, deployed, or validated in a live environment. See the binding
 [final whole-product review](../BillFolder/.superpowers/sdd/2026-10-07-billfolder-web-mvp/final-whole-review.md)
-and [final-fix report](../BillFolder/.superpowers/sdd/2026-10-07-billfolder-web-mvp/final-fix-report.md).
+and the [residual-fix report](../BillFolder/.superpowers/sdd/2026-10-07-billfolder-web-mvp/final-residual-fix-report.md).
 No remote, Cloudflare project, domain, deployment, publication, or production smoke is implied.
 
 ## Requirements and clean install
@@ -61,16 +62,16 @@ npm run e2e
   `http://127.0.0.1:4200`, and runs Chromium against a strict deterministic API fixture on the
   distinct origin `http://127.0.0.1:4301`.
 
-Final-fix evidence from 2026-10-08:
+Final local evidence from 2026-10-08:
 
-- Angular/Vitest: **349 passed in 78 files; 0 failed**.
+- Angular/Vitest: **351 passed in 78 files; 0 failed**.
 - Static security/PWA source checks: **6 passed; 0 failed**.
 - Production artifact checks: **5 passed; 0 failed**.
 - Playwright E2E: **12 passed; 0 failed**; the CSP smoke is also independently runnable as one test.
 - npm audit: **0 vulnerabilities** at the configured high-severity gate.
 
 The authoritative exact results and bundle sizes are recorded after the clean final run in the
-linked final-fix report. These results support scoped re-review, not deployment authorization.
+linked residual-fix report. These results establish local readiness, not deployment authorization.
 
 The deterministic E2E fixture validates CORS preflights, credentials, paths, methods, query strings,
 request bodies, refresh-cookie rotation, and access-token refresh without recording credential
@@ -145,7 +146,7 @@ Only after explicit user authorization, configure Cloudflare Pages with:
 - Build output directory: `dist/bill-folder-web/browser`
 - Node version: `24.15.0`
 
-Do not begin this rollout while the current status is “awaiting scoped re-review.”
+Do not begin this rollout without explicit user authorization, even though the local gates are green.
 
 The authorized rollout order is:
 
