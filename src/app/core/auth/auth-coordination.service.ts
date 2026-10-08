@@ -74,9 +74,7 @@ export class AuthCoordinationService {
     }
 
     return defer(() =>
-      from(
-        locks.request(AUTH_COOKIE_LOCK_NAME, () => firstValueFrom(operation())),
-      ),
+      from(locks.request(AUTH_COOKIE_LOCK_NAME, () => firstValueFrom(operation()))),
     );
   }
 

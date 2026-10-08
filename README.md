@@ -5,9 +5,12 @@ the shell and local assets can be cached, while every `/v1` API read and write r
 Access tokens stay in application memory; browser refresh authentication uses an API-managed
 `HttpOnly` cookie.
 
-Local MVP verification was completed on 2026-10-08. This repository is ready for an explicitly
-authorized preview/deployment setup, but no remote, Cloudflare project, domain, backend production
-configuration, deployment, publication, or production smoke is implied by that status.
+The final whole-product review found issues that have now received one local final-fix round. The
+current status is **awaiting scoped re-review**: this repository is not production-ready and must not
+be promoted until the controller reviews the scoped fixes and their evidence. See the binding
+[final whole-product review](../BillFolder/.superpowers/sdd/2026-10-07-billfolder-web-mvp/final-whole-review.md)
+and [final-fix report](../BillFolder/.superpowers/sdd/2026-10-07-billfolder-web-mvp/final-fix-report.md).
+No remote, Cloudflare project, domain, deployment, publication, or production smoke is implied.
 
 ## Requirements and clean install
 
@@ -41,11 +44,15 @@ secrets in this frontend repository.
 ```bash
 nvm use
 npm ci
+npm run audit:ci
 npm run test:ci
 npm run build:prod
+npm run build:preview
 npm run e2e
 ```
 
+- `audit:ci` fails on high or critical npm advisories. The exception process and current empty
+  exception list are in `docs/security/npm-audit-exceptions.md`.
 - `test:ci` runs the Angular unit suite and source-level PWA/security configuration tests.
 - `build:prod` creates the production application and then verifies the manifest, generated Angular
   service worker, absence of API data caching, copied Cloudflare control files, CSP authorization for
@@ -54,13 +61,16 @@ npm run e2e
   `http://127.0.0.1:4200`, and runs Chromium against a strict deterministic API fixture on the
   distinct origin `http://127.0.0.1:4301`.
 
-Fresh Task 14 evidence from 2026-10-08:
+Final-fix evidence from 2026-10-08:
 
-- Angular/Vitest: **337 passed in 75 files; 0 failed**.
-- Static security/PWA source checks: **4 passed; 0 failed**.
+- Angular/Vitest: **349 passed in 78 files; 0 failed**.
+- Static security/PWA source checks: **6 passed; 0 failed**.
 - Production artifact checks: **5 passed; 0 failed**.
-- Playwright E2E: **8 passed; 0 failed**.
-- Production bundle: **450.72 kB raw / 116.82 kB estimated transfer** for the initial chunks.
+- Playwright E2E: **12 passed; 0 failed**; the CSP smoke is also independently runnable as one test.
+- npm audit: **0 vulnerabilities** at the configured high-severity gate.
+
+The authoritative exact results and bundle sizes are recorded after the clean final run in the
+linked final-fix report. These results support scoped re-review, not deployment authorization.
 
 The deterministic E2E fixture validates CORS preflights, credentials, paths, methods, query strings,
 request bodies, refresh-cookie rotation, and access-token refresh without recording credential
@@ -69,9 +79,9 @@ blocks the production API before any request can leave the browser. No local or 
 real account, or real secret is used by `npm run e2e`.
 
 The loopback E2E boundary is intentionally HTTP, so Chromium observes its synthetic refresh cookie
-with `secure: false`. `config/web-auth-cookie-contract.json` records that test-only transport limit
-and statically requires `Secure`, `HttpOnly`, `SameSite=Lax`, and path `/v1/auth/web` for HTTPS
-production cookies.
+with `secure: false` and `SameSite=Lax`. That is an explicit local-fixture exception only.
+`config/web-auth-cookie-contract.json` statically requires `Secure`, `HttpOnly`, `SameSite=Strict`,
+and path `/v1/auth/web` for HTTPS preview and production cookies.
 
 Use Playwright UI mode only with the pinned Node version:
 
@@ -112,6 +122,20 @@ and a CSP that permits scripts and fonts only from the application origin, permi
 component styles required by Angular at runtime, and restricts connections to the application origin
 plus `https://api.billfolder.app`.
 
+## Authenticated preview contract
+
+The only authenticated preview origin is `https://preview.billfolder.app`, and it calls
+`https://api.billfolder.app/v1`. Build it locally with:
+
+```bash
+npm run build:preview
+```
+
+The output remains `dist/bill-folder-web/browser`. The preview configuration uses the production
+service worker, CSP, cookie strength, and exact API origin. Wildcard credentialed CORS and
+authenticated `pages.dev` previews are prohibited. This is a build/runbook contract only; no
+preview project, DNS, domain, remote, or deployment was created in the final-fix round.
+
 ## Cloudflare runbook — authorization required
 
 Only after explicit user authorization, configure Cloudflare Pages with:
@@ -120,6 +144,8 @@ Only after explicit user authorization, configure Cloudflare Pages with:
 - Build command: `npm run build:prod`
 - Build output directory: `dist/bill-folder-web/browser`
 - Node version: `24.15.0`
+
+Do not begin this rollout while the current status is “awaiting scoped re-review.”
 
 The authorized rollout order is:
 
