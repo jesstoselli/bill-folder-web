@@ -118,10 +118,11 @@ explicitly authorized, use this command only to inspect the unauthenticated shel
 in or exercise API reads/writes. See the
 [Angular service-worker guide](https://angular.dev/ecosystem/service-workers/getting-started).
 
-`public/_redirects` supplies the SPA fallback. `public/_headers` supplies the static security headers
-and a CSP that permits scripts and fonts only from the application origin, permits the inline
-component styles required by Angular at runtime, and restricts connections to the application origin
-plus `https://api.billfolder.app`.
+`wrangler.jsonc` supplies the Workers Static Assets directory and SPA fallback. Do not add a
+catch-all `public/_redirects` rule alongside it: Workers rejects that combination as a redirect loop.
+`public/_headers` supplies the static security headers and a CSP that permits scripts and fonts only
+from the application origin, permits the inline component styles required by Angular at runtime, and
+restricts connections to the application origin plus `https://api.billfolder.app`.
 
 ## Authenticated preview contract
 
@@ -139,21 +140,26 @@ preview project, DNS, domain, remote, or deployment was created in the final-fix
 
 ## Cloudflare runbook — authorization required
 
-Only after explicit user authorization, configure Cloudflare Pages with:
+Only after explicit user authorization, configure Cloudflare Workers Builds with:
 
+- Project name: `bill-folder-web-preview`
 - Production branch: `main`
-- Build command: `npm run build:prod`
-- Build output directory: `dist/bill-folder-web/browser`
-- Node version: `24.15.0`
+- Build command: `npm run build:preview`
+- Deploy command: `npx wrangler deploy`
+- Root directory: `/`
+
+The Workers Static Assets output directory is declared in `wrangler.jsonc`, not in the dashboard.
+Node `24.15.0` or newer is required; Workers Builds detects the version from `package.json`.
 
 Do not begin this rollout without explicit user authorization, even though the local gates are green.
 
 The authorized rollout order is:
 
 1. Create or connect the approved Git remote.
-2. Create the Cloudflare project and configure its build settings.
+2. Create the Cloudflare Worker project and configure its build and deploy commands.
 3. Configure the exact web origins in backend `WebAuth:AllowedOrigins`, then deploy the backend.
-4. Connect `app.billfolder.app`, deploy the static web build, and confirm `_headers`/`_redirects`.
+4. Connect `preview.billfolder.app`, deploy the static web build, and confirm `_headers` plus SPA
+   fallback behavior on a deep link such as `/login`.
 5. Run the separately authorized authenticated production smoke.
 
 Without that explicit authorization, do **not** create or connect a remote, push, create a Cloudflare

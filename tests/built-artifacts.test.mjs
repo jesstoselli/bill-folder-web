@@ -32,16 +32,14 @@ test('built service worker has no API data cache', async () => {
   assert.equal(serialized.includes('api.billfolder.app'), false);
 });
 
-test('Cloudflare control files survive the production build unchanged', async () => {
-  const [sourceHeaders, builtHeaders, sourceRedirects, builtRedirects] = await Promise.all([
+test('Cloudflare security headers survive the build without a conflicting redirect file', async () => {
+  const [sourceHeaders, builtHeaders] = await Promise.all([
     readFile(new URL('../public/_headers', import.meta.url), 'utf8'),
     read('_headers'),
-    readFile(new URL('../public/_redirects', import.meta.url), 'utf8'),
-    read('_redirects'),
   ]);
 
   assert.equal(builtHeaders, sourceHeaders);
-  assert.equal(builtRedirects, sourceRedirects);
+  await assert.rejects(access(new URL('_redirects', output)), { code: 'ENOENT' });
 });
 
 test('every built inline script is explicitly authorized by the deployed CSP', async () => {

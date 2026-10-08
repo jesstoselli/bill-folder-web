@@ -60,9 +60,11 @@ test('authenticated preview uses the exact preview origin and production API con
   );
 });
 
-test('Cloudflare SPA fallback and security policy are explicit and restrictive', async () => {
-  const redirects = await read('public/_redirects');
-  assert.equal(redirects.trim(), '/* /index.html 200');
+test('Cloudflare Workers SPA fallback is explicit and has no conflicting redirect rule', async () => {
+  const wrangler = JSON.parse(await read('wrangler.jsonc'));
+  assert.equal(wrangler.assets.directory, './dist/bill-folder-web/browser');
+  assert.equal(wrangler.assets.not_found_handling, 'single-page-application');
+  await assert.rejects(read('public/_redirects'), { code: 'ENOENT' });
 
   const headers = await read('public/_headers');
   assert.match(headers, /^\/\*$/m);
