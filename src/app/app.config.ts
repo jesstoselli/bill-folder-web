@@ -4,6 +4,7 @@ import {
   inject,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
+  isDevMode,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -12,6 +13,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthSessionService } from './core/auth/auth-session.service';
 import { APP_ENVIRONMENT } from './core/config/app-environment';
+import { provideServiceWorker } from '@angular/service-worker';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,5 +22,9 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAppInitializer(() => firstValueFrom(inject(AuthSessionService).restore())),
     { provide: APP_ENVIRONMENT, useValue: environment },
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };

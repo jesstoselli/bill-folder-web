@@ -1,59 +1,76 @@
-# BillFolderWeb
+# BillFolder Web
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.2.
+Angular 22 web client for the BillFolder MVP. The production build is an installable PWA: the
+application shell and local assets are available offline, while every `/v1` API request remains
+online-only. Access tokens stay in application memory and refresh authentication uses an HTTP-only
+cookie managed by the API.
 
-## Development server
+## Requirements
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- Node.js **24.15.0** (the exact supported version is recorded in `.nvmrc`)
+- npm **11.12.1**
 
 ```bash
-ng generate component component-name
+nvm install
+nvm use
+npm ci
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Local development
+
+The development client expects the BillFolder API at `http://localhost:5077/v1`.
 
 ```bash
-ng generate --help
+npm start
 ```
 
-## Building
+Open `http://localhost:4200`. Local development does not enable the production service worker.
 
-To build the project run:
+## Verification
 
 ```bash
-ng build
+npm run test:ci
+npm run build:prod
+npm run e2e
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+- `test:ci` runs the Angular unit suite and source-level PWA/security configuration tests.
+- `build:prod` builds the application and then verifies the manifest, generated Angular service
+  worker, absence of API data caching, and copied Cloudflare control files.
+- `e2e` requires Node 24.15.0, starts the Angular E2E configuration on
+  `http://127.0.0.1:4200`, and runs Chromium against a deterministic same-origin network fixture.
+  It never calls the local or production API and uses no real credentials or secrets.
 
-## Running unit tests
+Use `npm run e2e:ui` for Playwright UI mode after starting from Node 24.15.0.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Production build
 
 ```bash
-ng test
+npm run build:prod
 ```
 
-## Running end-to-end tests
+The deployable static output is:
 
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
+```text
+dist/bill-folder-web/browser
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+`public/_redirects` supplies the SPA fallback. `public/_headers` supplies the static security
+headers and a CSP that permits scripts and fonts only from the application origin, permits the
+inline component styles required by the Angular runtime, and restricts network connections to the
+application origin plus `https://api.billfolder.app`.
 
-## Additional Resources
+## Cloudflare Pages settings
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+When deployment is explicitly authorized, configure Cloudflare Pages with:
+
+- Production branch: `main`
+- Build command: `npm run build:prod`
+- Build output directory: `dist/bill-folder-web/browser`
+- Node version: `24.15.0`
+
+Production setup is an authorization boundary. Do **not** create or connect a GitHub remote,
+Cloudflare project or domain, configure the backend origin/CORS, deploy, publish, push, or run
+production smoke tests without the user's explicit approval. Backend deployment and
+`WebAuth:AllowedOrigins` changes are separate operations and are not part of local preview
+readiness.
