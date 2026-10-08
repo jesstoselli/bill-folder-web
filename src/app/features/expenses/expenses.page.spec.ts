@@ -10,6 +10,7 @@ import { ExpenseResponse } from './expenses.models';
 import { ExpensesPage } from './expenses.page';
 import { ExpensesStore } from './expenses.store';
 import { of } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { RecurrenceFormComponent } from './components/recurrence-form/recurrence-form.component';
 import { PayExpenseDialogComponent } from './components/pay-expense-dialog/pay-expense-dialog.component';
 import { PayOccurrenceDialogComponent } from './components/pay-occurrence-dialog/pay-occurrence-dialog.component';
@@ -287,6 +288,48 @@ describe('ExpensesPage actions', () => {
     expect(dialog?.textContent).toContain('1 de 4 pagas');
     expect(dialog?.textContent).toMatch(/R\$\s*450,00/);
   });
+
+  it.each([
+    {
+      action: 'pay',
+      row: expense({ id: 'ordinary', label: 'Internet' }),
+      title: 'Registrar pagamento',
+    },
+    {
+      action: 'pay-occurrence',
+      row: expense({
+        id: 'provisioned',
+        label: 'Terapia',
+        templateId: 'template-1',
+        occurrenceAmount: 150,
+        occurrencesTotal: 4,
+        occurrencesPaid: 1,
+        paidToDate: 150,
+        expectedAmount: 600,
+      }),
+      title: 'Registrar ocorrência',
+    },
+  ])(
+    'opens the existing $action dialog for an exact Home deep link',
+    async ({ action, row, title }) => {
+      const { fixture, router } = await createActionFixture(
+        [row],
+        () => Promise.resolve(),
+        {},
+        { cycleId: 'cycle-1', expenseId: row.id, action },
+      );
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      expect(overlay.querySelector('[role="dialog"]')?.textContent).toContain(title);
+      expect(overlay.querySelector('[role="dialog"]')?.textContent).toContain(row.label);
+      expect(router.navigate).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({ replaceUrl: true }),
+      );
+    },
+  );
 
   it('keeps normal payment open during a delayed write and restores success focus', async () => {
     const pendingPayment = deferred<ExpenseResponse>();
@@ -581,11 +624,13 @@ async function createActionFixture(
   rows: ExpenseResponse[],
   deleteImplementation: (id: string) => Promise<void>,
   writeOverrides: ActionWriteOverrides = {},
+  queryParams: Record<string, string> = {},
 ) {
   const expenseState = signal({ kind: 'content' as const, data: rows, refreshing: false });
   const expenses = signal(rows);
   const current = signal<CycleResponse | null>(octoberCycle);
   const deleteOne = vi.fn((id: string) => deleteImplementation(id));
+  const router = { navigate: vi.fn(() => Promise.resolve(true)) };
 
   const store = {
     state: expenseState.asReadonly(),
@@ -627,12 +672,25 @@ async function createActionFixture(
           load: vi.fn(() => Promise.resolve()),
           selectPrevious: vi.fn(() => false),
           selectNext: vi.fn(() => false),
+          select: vi.fn(() => true),
         },
       },
+      {
+        provide: ActivatedRoute,
+        useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } },
+      },
+      { provide: Router, useValue: router },
     ],
   }).compileComponents();
 
-  return { fixture: TestBed.createComponent(ExpensesPage), current, expenses, deleteOne, store };
+  return {
+    fixture: TestBed.createComponent(ExpensesPage),
+    current,
+    expenses,
+    deleteOne,
+    store,
+    router,
+  };
 }
 
 type ActionWriteOverrides = Partial<

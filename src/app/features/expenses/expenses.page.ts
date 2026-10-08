@@ -4,13 +4,16 @@ import {
   ElementRef,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { mapApiError } from '../../core/http/api-error';
 import { CycleNavigatorComponent } from '../../shared/components/cycle-navigator/cycle-navigator.component';
@@ -22,7 +25,7 @@ import { PayExpenseDialogComponent } from './components/pay-expense-dialog/pay-e
 import { PayOccurrenceDialogComponent } from './components/pay-occurrence-dialog/pay-occurrence-dialog.component';
 import { RecurrenceFormComponent } from './components/recurrence-form/recurrence-form.component';
 import { RepriceProvisionedDialogComponent } from './components/reprice-provisioned-dialog/reprice-provisioned-dialog.component';
-import { ExpenseProjection, groupExpenses } from './expense-projections';
+import { ExpenseProjection, groupExpenses, projectExpense } from './expense-projections';
 import { ExpensesStore } from './expenses.store';
 import { RecurrenceScopeDialogComponent } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope-dialog.component';
 import { ScopeChoice } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
@@ -71,6 +74,9 @@ export class ExpensesPage implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly router = inject(Router, { optional: true });
+  private readonly deepLink = signal(this.readDeepLink());
   private pendingAction: PendingAction | null = null;
 
   protected readonly groups = computed(() => groupExpenses(this.store.expenses()));
@@ -112,10 +118,22 @@ export class ExpensesPage implements OnInit {
   protected readonly formatCivilDate = formatCivilDate;
   protected readonly formatBrl = formatBrl;
 
+  constructor() {
+    effect(() => {
+      const link = this.deepLink();
+      const cycle = this.cycles.current();
+      const state = this.store.state();
+      if (!link || cycle?.id !== link.cycleId || state.kind !== 'content') {
+        return;
+      }
+      const source = this.store.expenses().find((item) => item.id === link.expenseId);
+      const expense = source ? projectExpense(source) : undefined;
+      untracked(() => this.consumeDeepLink(link.action, expense, cycle.id));
+    });
+  }
+
   ngOnInit(): void {
-    if (this.cycles.state().kind === 'loading') {
-      void this.cycles.load();
-    }
+    void this.initialize();
   }
 
   protected openCreate(): void {
@@ -313,6 +331,56 @@ export class ExpensesPage implements OnInit {
       })
       .afterClosed()
       .subscribe((result) => this.restoreDialogFocus(focusContext, result !== undefined));
+  }
+
+  private async initialize(): Promise<void> {
+    if (this.cycles.state().kind === 'loading') {
+      await this.cycles.load();
+    }
+    const cycleId = this.deepLink()?.cycleId;
+    if (cycleId && this.cycles.current()?.id !== cycleId) {
+      this.cycles.select(cycleId);
+    }
+  }
+
+  private readDeepLink(): {
+    readonly cycleId: string;
+    readonly expenseId: string;
+    readonly action: 'pay' | 'pay-occurrence';
+  } | null {
+    const params = this.route?.snapshot.queryParamMap;
+    const cycleId = params?.get('cycleId');
+    const expenseId = params?.get('expenseId');
+    const action = params?.get('action');
+    return cycleId && expenseId && (action === 'pay' || action === 'pay-occurrence')
+      ? { cycleId, expenseId, action }
+      : null;
+  }
+
+  private consumeDeepLink(
+    action: 'pay' | 'pay-occurrence',
+    expense: ExpenseProjection | undefined,
+    cycleId: string,
+  ): void {
+    this.deepLink.set(null);
+    void this.router?.navigate([], {
+      relativeTo: this.route ?? undefined,
+      queryParams: { expenseId: null, action: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    if (!expense || !this.canPay(expense)) {
+      this.actionError.set('A despesa indicada não está disponível para pagamento.');
+      return;
+    }
+    const focus = this.captureRowFocus(cycleId, expense.id);
+    if (action === 'pay-occurrence' && expense.isProvisioned) {
+      this.openOccurrencePayment(expense, focus);
+    } else if (action === 'pay' && !expense.isProvisioned) {
+      this.openPayment(expense, focus);
+    } else {
+      this.actionError.set('A ação indicada não corresponde a esta despesa.');
+    }
   }
 
   private openScopeDialog(

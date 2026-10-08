@@ -67,7 +67,11 @@
                 tabindex="0"
                 [attr.aria-labelledby]="'home-tab-' + selectedTab()"
               >
-                <app-projection-list [rows]="visibleRows()" [emptyMessage]="emptyMessage()" />
+                <app-projection-list
+                  [rows]="visibleRows()"
+                  [emptyMessage]="emptyMessage()"
+                  [cycleId]="data.cycle.id"
+                />
               </div>
             </section>
           </div>

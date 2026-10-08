@@ -7,6 +7,7 @@ export interface HomeResponse {
   readonly incomeBreakdown: HomeIncomeBreakdownResponse;
   readonly expenseBreakdown: HomeExpenseBreakdownResponse;
   readonly upcomingExpenses: readonly HomeUpcomingExpenseResponse[];
+  readonly overdueExpenses: readonly HomeUpcomingExpenseResponse[];
   readonly cardStatementsInCycle: readonly HomeCardStatementResponse[];
   readonly categoryBreakdown: readonly HomeCategoryBreakdownResponse[];
 }

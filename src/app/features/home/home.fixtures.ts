@@ -25,10 +25,8 @@ export const homeFixture: HomeResponse = {
   },
   incomeBreakdown: { expected: 2, received: 3, late: 0, notOccurred: 0 },
   expenseBreakdown: { pending: 2, overdue: 1, paid: 3 },
-  upcomingExpenses: [
-    expense({ id: 'late', dueDate: '2026-10-02', status: 'overdue' }),
-    expense({ id: 'next', dueDate: '2026-10-12', status: 'pending' }),
-  ],
+  upcomingExpenses: [expense({ id: 'next', dueDate: '2026-10-12', status: 'pending' })],
+  overdueExpenses: [expense({ id: 'late', dueDate: '2026-10-02', status: 'overdue' })],
   cardStatementsInCycle: [statement({ id: 'card', dueDate: '2026-10-10' })],
   categoryBreakdown: [
     { categoryId: 'cat-home', categoryKey: 'home', categoryName: 'Casa', amount: 1600 },

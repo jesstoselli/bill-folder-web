@@ -1,9 +1,13 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { dailyExpense, expense } from '../../home.fixtures';
-import { projectRecent, projectUpcoming } from '../../home-projections';
+import { projectRecent, projectStatement, projectUpcoming } from '../../home-projections';
+import { statement } from '../../home.fixtures';
 import { ProjectionListComponent } from './projection-list.component';
 
 describe('ProjectionListComponent', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter([])] }));
+
   it('renders financial context, civil due date and a textual status', () => {
     const fixture = TestBed.createComponent(ProjectionListComponent);
     fixture.componentRef.setInput('rows', [
@@ -40,5 +44,42 @@ describe('ProjectionListComponent', () => {
     expect(root.querySelector('.projection-list__date time')?.getAttribute('datetime')).toBe(
       '2026-10-20',
     );
+  });
+
+  it('renders exact keyboard-accessible deep links for every actionable obligation', () => {
+    const fixture = TestBed.createComponent(ProjectionListComponent);
+    fixture.componentRef.setInput('cycleId', 'cycle-1');
+    fixture.componentRef.setInput('rows', [
+      projectUpcoming(expense({ id: 'ordinary', label: 'Internet' })),
+      projectUpcoming(
+        expense({
+          id: 'provisioned',
+          label: 'Terapia',
+          occurrencesTotal: 4,
+          occurrencesPaid: 1,
+          paidToDate: 200,
+        }),
+      ),
+      projectStatement(statement({ id: 'statement-1', cardId: 'card-1', status: 'closed' })),
+      projectStatement(statement({ id: 'open', status: 'open' })),
+    ]);
+    fixture.componentRef.setInput('emptyMessage', 'Sem itens.');
+    fixture.detectChanges();
+    const links = [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>(
+        '.projection-list__action',
+      ),
+    ];
+
+    expect(links.map((link) => link.textContent?.trim())).toEqual([
+      'Pagar Internet',
+      'Pagar ocorrência de Terapia',
+      'Pagar fatura Cartão principal',
+    ]);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/despesas?cycleId=cycle-1&expenseId=ordinary&action=pay',
+      '/despesas?cycleId=cycle-1&expenseId=provisioned&action=pay-occurrence',
+      '/cartoes?cardId=card-1&statementId=statement-1&action=pay-statement',
+    ]);
   });
 });

@@ -32,6 +32,44 @@
             {{ statusLabel(row.status) }}
           </span>
         }
+
+        @switch (row.action.kind) {
+          @case ('payExpense') {
+            <a
+              class="projection-list__action"
+              routerLink="/despesas"
+              [queryParams]="{ cycleId: cycleId(), expenseId: row.action.expenseId, action: 'pay' }"
+            >
+              Pagar {{ row.title }}
+            </a>
+          }
+          @case ('payProvisionedExpense') {
+            <a
+              class="projection-list__action"
+              routerLink="/despesas"
+              [queryParams]="{
+                cycleId: cycleId(),
+                expenseId: row.action.expenseId,
+                action: 'pay-occurrence',
+              }"
+            >
+              Pagar ocorrência de {{ row.title }}
+            </a>
+          }
+          @case ('payCardStatement') {
+            <a
+              class="projection-list__action"
+              routerLink="/cartoes"
+              [queryParams]="{
+                cardId: row.action.cardId,
+                statementId: row.action.statementId,
+                action: 'pay-statement',
+              }"
+            >
+              Pagar fatura {{ row.title }}
+            </a>
+          }
+        }
       </li>
     }
   </ul>

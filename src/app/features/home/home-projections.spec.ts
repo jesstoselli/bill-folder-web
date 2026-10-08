@@ -34,10 +34,8 @@ describe('Home projections', () => {
 
   it('merges expenses and statements by due date and separates overdue', () => {
     const result = collectHomeRows(
-      [
-        expense({ id: 'late', dueDate: '2026-10-02', status: 'overdue' }),
-        expense({ id: 'next', dueDate: '2026-10-12', status: 'pending' }),
-      ],
+      [expense({ id: 'next', dueDate: '2026-10-12', status: 'pending' })],
+      [expense({ id: 'late', dueDate: '2026-10-02', status: 'overdue' })],
       [statement({ id: 'card', dueDate: '2026-10-10', status: 'closed' })],
     );
 

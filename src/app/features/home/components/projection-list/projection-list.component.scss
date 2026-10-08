@@ -80,6 +80,14 @@
   color: var(--bf-danger);
 }
 
+.projection-list__action {
+  color: var(--bf-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  justify-self: end;
+  white-space: nowrap;
+}
+
 .projection-list__empty {
   color: var(--bf-muted);
   margin: 0;
@@ -105,5 +113,10 @@
     grid-column: 2;
     grid-row: 2;
     justify-self: end;
+  }
+
+  .projection-list__action {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }

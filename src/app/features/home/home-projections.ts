@@ -102,13 +102,13 @@ export function projectStatement(statement: HomeCardStatementResponse): HomeRowP
 }
 
 export function collectHomeRows(
-  expenses: readonly HomeUpcomingExpenseResponse[],
+  upcomingExpenses: readonly HomeUpcomingExpenseResponse[],
+  overdueExpenses: readonly HomeUpcomingExpenseResponse[],
   statements: readonly HomeCardStatementResponse[],
 ): { readonly upcoming: HomeRowProjection[]; readonly overdue: HomeRowProjection[] } {
-  const expenseRows = expenses.map(projectUpcoming);
-  const overdue = expenseRows.filter((row) => row.status === 'overdue').sort(compareRows);
+  const overdue = overdueExpenses.map(projectUpcoming).sort(compareRows);
   const upcoming = [
-    ...expenseRows.filter((row) => row.status !== 'overdue' && row.status !== 'paid'),
+    ...upcomingExpenses.map(projectUpcoming).filter((row) => row.status !== 'paid'),
     ...statements.filter((item) => item.status !== 'paid').map(projectStatement),
   ].sort(compareRows);
 

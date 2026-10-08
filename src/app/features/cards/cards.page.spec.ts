@@ -1,6 +1,9 @@
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { of } from 'rxjs';
+import { ReferenceDataApi } from '../../core/reference/reference-data.api';
 import { CardsPage } from './cards.page';
 import {
   CardEntryResponse,
@@ -40,6 +43,26 @@ describe('CardsPage', () => {
     const payButton = findOptionalButton(fixture.nativeElement, 'Pagar fatura');
 
     expect(Boolean(payButton)).toBe(expected);
+  });
+
+  it('opens the existing statement payment dialog for an exact Home deep link', async () => {
+    const { fixture, store, router } = await createFixture('closed', {
+      queryParams: {
+        cardId: 'card-a',
+        statementId: 'statement-1',
+        action: 'pay-statement',
+      },
+    });
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+
+    expect(store.selectCard).not.toHaveBeenCalled();
+    expect(store.selectStatement).not.toHaveBeenCalled();
+    await vi.waitFor(() =>
+      expect(overlay.querySelector('[role="dialog"]')?.textContent).toContain('Pagar fatura'),
+    );
+    expect(overlay.querySelector('[role="dialog"]')?.textContent).toContain('Nubank');
+    expect(router.navigate).toHaveBeenCalledWith([], expect.objectContaining({ replaceUrl: true }));
+    fixture.destroy();
   });
 
   it('shows paid metadata as read-only text and shape', async () => {
@@ -154,6 +177,7 @@ async function createFixture(
   options: {
     entryOverrides?: Partial<CardEntryResponse>;
     deleteResult?: Promise<null>;
+    queryParams?: Record<string, string>;
   } = {},
 ) {
   const cards = signal<readonly CreditCardAccountResponse[]>([card('card-a'), card('card-b')]);
@@ -175,6 +199,7 @@ async function createFixture(
     refreshing: false,
   });
   const navigation = signal({ previousId: null, nextId: 'statement-next' });
+  const router = { navigate: vi.fn(() => Promise.resolve(true)) };
   const store = {
     cardsState,
     cardState,
@@ -191,6 +216,7 @@ async function createFixture(
     load: vi.fn(() => Promise.resolve()),
     refresh: vi.fn(() => Promise.resolve()),
     selectCard: vi.fn(() => Promise.resolve()),
+    selectStatement: vi.fn(() => Promise.resolve()),
     selectPreviousStatement: vi.fn(() => Promise.resolve()),
     selectNextStatement: vi.fn(() => Promise.resolve()),
     createEntry: vi.fn(),
@@ -203,7 +229,20 @@ async function createFixture(
 
   await TestBed.configureTestingModule({
     imports: [CardsPage],
-    providers: [{ provide: CardsStore, useValue: store }],
+    providers: [
+      { provide: CardsStore, useValue: store },
+      {
+        provide: ReferenceDataApi,
+        useValue: { categories: () => of([]), checkingAccounts: () => of([]) },
+      },
+      {
+        provide: ActivatedRoute,
+        useValue: {
+          snapshot: { queryParamMap: convertToParamMap(options.queryParams ?? {}) },
+        },
+      },
+      { provide: Router, useValue: router },
+    ],
   }).compileComponents();
   const fixture = TestBed.createComponent(CardsPage);
   fixture.detectChanges();
@@ -211,6 +250,7 @@ async function createFixture(
   return {
     fixture,
     store,
+    router,
     controls: {
       selectedCardId,
       selectedCard,

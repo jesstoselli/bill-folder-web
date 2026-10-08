@@ -165,6 +165,20 @@ const weeklyExpense: ExpenseFixture = {
   updatedAt: '2026-10-01T00:00:00Z',
 };
 
+const ordinaryExpense: ExpenseFixture = {
+  ...weeklyExpense,
+  id: 'expense-internet',
+  dueDate: '2026-10-20',
+  label: 'Internet',
+  expectedAmount: 120,
+  actualAmount: null,
+  templateId: null,
+  occurrenceAmount: null,
+  occurrencesTotal: null,
+  occurrencesPaid: 0,
+  paidToDate: 0,
+};
+
 const statementBase: StatementFixture = {
   id: 'statement-closed',
   cardId: creditCard.id,
@@ -190,7 +204,7 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
   private readonly recordedAuthRequests: AuthRequestEvidence[] = [];
   private readonly recordedPreflights: CorsPreflightEvidence[] = [];
   private readonly recordedEvents: string[] = [];
-  private readonly expenses: ExpenseFixture[] = [{ ...weeklyExpense }];
+  private readonly expenses: ExpenseFixture[] = [{ ...weeklyExpense }, { ...ordinaryExpense }];
   private statement: StatementFixture = { ...statementBase };
   private currentAccessToken: string | null = null;
   private currentRefreshCookie: string | null = null;
@@ -383,7 +397,6 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
 
     this.beginAuthMutation();
     try {
-
       const gate = this.refreshGate;
       if (gate) {
         this.refreshGate = null;
@@ -420,7 +433,6 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
 
     this.beginAuthMutation();
     try {
-
       this.recordedEvents.push('logout:requested');
       const gate = this.logoutGate;
       if (gate) {
@@ -523,6 +535,16 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       this.json(response, this.expenses[0]);
       return;
     }
+    if (method === 'POST' && path === '/v1/expenses/expense-internet/pay') {
+      const body = await readJson(request);
+      this.recordWrite(method, path, body);
+      this.json(response, {
+        ...this.expenses[1],
+        ...(typeof body === 'object' && body !== null ? body : {}),
+        status: 'paid',
+      });
+      return;
+    }
     if (method === 'GET' && path === '/v1/credit-card-accounts/') {
       this.json(response, [creditCard]);
       return;
@@ -591,6 +613,7 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
     if (method === 'POST' && path === '/v1/expenses/expense-weekly/pay-occurrence') {
       return query === '';
     }
+    if (method === 'POST' && path === '/v1/expenses/expense-internet/pay') return query === '';
     if (method === 'GET' && ['/v1/card-entries/', '/v1/card-statements/'].includes(path)) {
       return query === 'cardId=card-e2e';
     }
@@ -638,8 +661,41 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       },
       incomeBreakdown: { expected: 3_000, received: 3_000, late: 0, notOccurred: 0 },
       expenseBreakdown: { pending: 450, overdue: 0, paid: 150 },
-      upcomingExpenses: [],
-      cardStatementsInCycle: [],
+      upcomingExpenses: [
+        {
+          id: ordinaryExpense.id,
+          label: ordinaryExpense.label,
+          dueDate: ordinaryExpense.dueDate,
+          expectedAmount: ordinaryExpense.expectedAmount,
+          status: ordinaryExpense.status,
+          categoryName: ordinaryExpense.categoryName,
+          occurrencesTotal: ordinaryExpense.occurrencesTotal,
+          occurrencesPaid: ordinaryExpense.occurrencesPaid,
+          paidToDate: ordinaryExpense.paidToDate,
+        },
+        {
+          id: weeklyExpense.id,
+          label: weeklyExpense.label,
+          dueDate: weeklyExpense.dueDate,
+          expectedAmount: weeklyExpense.expectedAmount,
+          status: weeklyExpense.status,
+          categoryName: weeklyExpense.categoryName,
+          occurrencesTotal: weeklyExpense.occurrencesTotal,
+          occurrencesPaid: weeklyExpense.occurrencesPaid,
+          paidToDate: weeklyExpense.paidToDate,
+        },
+      ],
+      overdueExpenses: [],
+      cardStatementsInCycle: [
+        {
+          id: this.statement.id,
+          cardId: this.statement.cardId,
+          cardName: this.statement.cardName,
+          dueDate: this.statement.dueDate,
+          totalAmount: this.statement.totalAmount,
+          status: this.statement.status,
+        },
+      ],
       categoryBreakdown: [
         {
           categoryId: category.id,

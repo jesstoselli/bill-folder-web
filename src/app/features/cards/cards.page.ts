@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ActivatedRoute, Router } from '@angular/router';
 import { mapApiError } from '../../core/http/api-error';
 import { PageStateComponent } from '../../shared/components/page-state/page-state.component';
 import { RecurrenceScopeDialogComponent } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope-dialog.component';
@@ -60,6 +61,8 @@ export class CardsPage implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly router = inject(Router, { optional: true });
 
   protected readonly actionError = signal('');
   protected readonly pageState = computed<CardsViewState>(() => {
@@ -87,9 +90,7 @@ export class CardsPage implements OnInit {
   });
 
   ngOnInit(): void {
-    if (this.store.cardsState().kind === 'loading') {
-      void this.store.load();
-    }
+    void this.initialize();
   }
 
   protected selectCard(cardId: string): void {
@@ -148,8 +149,11 @@ export class CardsPage implements OnInit {
       .subscribe((result) => this.restoreEntryDialogFocus(focus, result !== undefined));
   }
 
-  protected openPayment(statement: CardStatementDetailResponse): void {
-    const focus = this.captureStatementFocus();
+  protected openPayment(
+    statement: CardStatementDetailResponse,
+    explicitFocus?: StatementFocusContext,
+  ): void {
+    const focus = explicitFocus ?? this.captureStatementFocus();
     if (!focus) return;
     this.actionError.set('');
     this.dialog
@@ -165,6 +169,40 @@ export class CardsPage implements OnInit {
       })
       .afterClosed()
       .subscribe((result) => this.restoreStatementDialogFocus(focus, result !== undefined));
+  }
+
+  private async initialize(): Promise<void> {
+    if (this.store.cardsState().kind === 'loading') {
+      await this.store.load();
+    }
+    const params = this.route?.snapshot.queryParamMap;
+    const cardId = params?.get('cardId');
+    const statementId = params?.get('statementId');
+    if (params?.get('action') !== 'pay-statement' || !cardId || !statementId) {
+      return;
+    }
+    if (this.store.selectedCardId() !== cardId) {
+      await this.store.selectCard(cardId);
+    }
+    if (this.store.selectedStatementId() !== statementId) {
+      await this.store.selectStatement(statementId);
+    }
+    const statement = this.store.statement();
+    void this.router?.navigate([], {
+      relativeTo: this.route ?? undefined,
+      queryParams: { statementId: null, action: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    if (
+      statement?.cardId === cardId &&
+      statement.id === statementId &&
+      statement.status === 'closed'
+    ) {
+      this.openPayment(statement, { cardId, statementId });
+    } else {
+      this.actionError.set('A fatura indicada não está disponível para pagamento.');
+    }
   }
 
   protected requestDelete(entry: CardEntryResponse): void {

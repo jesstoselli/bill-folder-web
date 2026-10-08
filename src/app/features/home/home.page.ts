@@ -43,10 +43,14 @@ export class HomePage implements OnInit {
   private readonly obligations = computed(() => {
     const content = this.content();
     return content
-      ? collectHomeRows(content.upcomingExpenses, content.cardStatementsInCycle)
+      ? collectHomeRows(
+          content.upcomingExpenses,
+          content.overdueExpenses,
+          content.cardStatementsInCycle,
+        )
       : { upcoming: [], overdue: [] };
   });
-  protected readonly overdueCount = computed(() => this.obligations().overdue.length);
+  protected readonly overdueCount = computed(() => this.content()?.expenseBreakdown.overdue ?? 0);
   protected readonly visibleRows = computed(() => {
     switch (this.selectedTab()) {
       case 'upcoming':
