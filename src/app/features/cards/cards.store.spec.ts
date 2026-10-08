@@ -134,6 +134,73 @@ describe('CardsStore', () => {
     repriceRequest.flush(entry('entry-1', 'card-a', 'statement-a'));
     await repricing;
   });
+
+  it('preserves the selected statement when its refresh fails and clears the error on retry', async () => {
+    const loading = store.load();
+    backend.expectOne('/v1/credit-card-accounts/').flush([card('card-a')]);
+    await nextMicrotask();
+    backend.expectOne('/v1/card-entries/?cardId=card-a').flush([]);
+    backend
+      .expectOne('/v1/card-statements/?cardId=card-a')
+      .flush([statement('statement-apr', 'card-a', '2026-04-10')]);
+    await nextMicrotask();
+    backend
+      .expectOne('/v1/card-statements/statement-apr')
+      .flush(detail('statement-apr', 'card-a', '2026-04-10'));
+    await loading;
+
+    const initialState = store.statementState();
+    expect(initialState.kind).toBe('content');
+    const initialLastSuccessfulAt =
+      initialState.kind === 'content' ? initialState.lastSuccessfulAt : undefined;
+
+    const refresh = store.refresh();
+    expect(store.statement()?.id).toBe('statement-apr');
+    const refreshingState = store.statementState();
+    expect(refreshingState.kind).toBe('content');
+    if (refreshingState.kind === 'content') {
+      expect(refreshingState.refreshing).toBe(true);
+    }
+    backend.expectOne('/v1/card-entries/?cardId=card-a').flush([]);
+    backend
+      .expectOne('/v1/card-statements/?cardId=card-a')
+      .flush([statement('statement-apr', 'card-a', '2026-04-10')]);
+    await nextMicrotask();
+    backend
+      .expectOne('/v1/card-statements/statement-apr')
+      .flush(
+        { error: 'statement_refresh_failed', message: 'Falha ao atualizar a fatura.' },
+        { status: 503, statusText: 'Service Unavailable' },
+      );
+    await refresh;
+
+    expect(store.statement()?.id).toBe('statement-apr');
+    const failedState = store.statementState();
+    expect(failedState.kind).toBe('content');
+    if (failedState.kind === 'content') {
+      expect(failedState.refreshing).toBe(false);
+      expect(failedState.refreshError).toBe('Falha ao atualizar a fatura.');
+      expect(failedState.lastSuccessfulAt).toBe(initialLastSuccessfulAt);
+    }
+
+    const retry = store.refresh();
+    backend.expectOne('/v1/card-entries/?cardId=card-a').flush([]);
+    backend
+      .expectOne('/v1/card-statements/?cardId=card-a')
+      .flush([statement('statement-apr', 'card-a', '2026-04-10')]);
+    await nextMicrotask();
+    backend
+      .expectOne('/v1/card-statements/statement-apr')
+      .flush(detail('statement-apr', 'card-a', '2026-04-10'));
+    await retry;
+
+    const recovered = store.statementState();
+    expect(recovered.kind).toBe('content');
+    if (recovered.kind === 'content') {
+      expect(recovered.refreshing).toBe(false);
+      expect(recovered.refreshError).toBeUndefined();
+    }
+  });
 });
 
 function card(id: string): CreditCardAccountResponse {

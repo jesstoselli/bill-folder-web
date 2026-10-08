@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { ReferenceDataApi } from '../../core/reference/reference-data.api';
+import { LoadState } from '../../shared/states/load-state';
 import { CardsPage } from './cards.page';
 import {
   CardEntryResponse,
@@ -106,6 +107,25 @@ describe('CardsPage', () => {
     expect(store.selectNextStatement).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the statement visible and surfaces its non-destructive refresh failure', async () => {
+    const { fixture, controls } = await createFixture('closed');
+    controls.statementState.set({
+      kind: 'content',
+      data: controls.statement(),
+      refreshing: false,
+      refreshError: 'Falha ao atualizar a fatura.',
+      lastSuccessfulAt: new Date('2026-10-08T12:00:00Z').getTime(),
+    });
+
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('.statement-document')).not.toBeNull();
+    expect(root.querySelector('.refresh-status')?.textContent).toContain(
+      'Falha ao atualizar a fatura.',
+    );
+  });
+
   it('uses the shared scope dialog for a subscription delete', async () => {
     const { fixture, store } = await createFixture('closed', {
       entryOverrides: { templateId: 'template-1', installmentsCount: 1 },
@@ -198,7 +218,7 @@ async function createFixture(
     data: { cardId: 'card-a', entries: entries(), statements: statements() },
     refreshing: false,
   });
-  const statementState = signal({
+  const statementState = signal<LoadState<CardStatementDetailResponse | null>>({
     kind: 'content' as const,
     data: statementSignal(),
     refreshing: false,
@@ -263,6 +283,7 @@ async function createFixture(
       statements,
       selectedStatementId,
       statement: statementSignal,
+      statementState,
     },
   };
 }

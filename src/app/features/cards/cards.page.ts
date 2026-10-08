@@ -25,6 +25,7 @@ import { RepriceSubscriptionDialogComponent } from './components/reprice-subscri
 import { StatementSummaryComponent } from './components/statement-summary/statement-summary.component';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
+import { LoadState } from '../../shared/states/load-state';
 
 interface EntryFocusContext {
   readonly cardId: string;
@@ -101,8 +102,22 @@ export class CardsPage implements OnInit {
     return statementState.data ? { kind: 'content' } : { kind: 'no-statements' };
   });
   protected readonly refreshing = computed(() => {
-    const state = this.store.cardState();
-    return state.kind === 'content' && state.refreshing;
+    const cardState = this.store.cardState();
+    const statementState = this.store.statementState();
+    return (
+      (cardState.kind === 'content' && cardState.refreshing) ||
+      (statementState.kind === 'content' && statementState.refreshing)
+    );
+  });
+  protected readonly refreshState = computed<LoadState<unknown>>(() => {
+    const statementState = this.store.statementState();
+    if (
+      statementState.kind === 'content' &&
+      (statementState.refreshing || statementState.refreshError)
+    ) {
+      return statementState;
+    }
+    return this.store.cardState();
   });
 
   constructor() {

@@ -46,6 +46,7 @@ export class CardsStore {
   private statementGeneration = 0;
   private observedVersion = this.changes.version();
   private cardLastSuccessfulAt = 0;
+  private statementLastSuccessfulAt = 0;
 
   readonly cardsState = this.cardsSource.asReadonly();
   readonly cardState = this.cardSource.asReadonly();
@@ -206,7 +207,18 @@ export class CardsStore {
     ++this.statementGeneration;
     const previousStatementId = this.selectedStatementIdState();
     const existing = this.currentCardState();
-    this.statementSource.set({ kind: 'loading' });
+    const existingStatement = previousStatementId
+      ? this.currentStatementState(cardId, previousStatementId)
+      : null;
+    if (refreshing && existingStatement) {
+      this.statementSource.set({
+        kind: 'content',
+        data: existingStatement,
+        refreshing: true,
+      });
+    } else {
+      this.statementSource.set({ kind: 'loading' });
+    }
     if (refreshing && existing?.cardId === cardId) {
       this.cardSource.set({ kind: 'content', data: existing, refreshing: true });
     } else {
@@ -243,7 +255,11 @@ export class CardsStore {
       this.cardLastSuccessfulAt = Date.now();
       this.selectedStatementIdState.set(selectedStatementId);
       if (selectedStatementId) {
-        await this.loadStatement(cardId, selectedStatementId);
+        await this.loadStatement(
+          cardId,
+          selectedStatementId,
+          refreshing && existingStatement?.id === selectedStatementId,
+        );
       } else {
         this.statementSource.set({ kind: 'content', data: null, refreshing: false });
       }
@@ -259,9 +275,12 @@ export class CardsStore {
           refreshError: mapApiError(error).message,
           lastSuccessfulAt: this.cardLastSuccessfulAt,
         });
-        const selectedStatementId = this.selectedStatementIdState();
-        if (selectedStatementId) {
-          await this.loadStatement(cardId, selectedStatementId);
+        if (existingStatement) {
+          this.statementSource.set({
+            kind: 'content',
+            data: existingStatement,
+            refreshing: false,
+          });
         }
       } else {
         this.cardSource.set({ kind: 'error', message: mapApiError(error).message });
@@ -270,9 +289,18 @@ export class CardsStore {
     }
   }
 
-  private async loadStatement(cardId: string, statementId: string): Promise<void> {
+  private async loadStatement(
+    cardId: string,
+    statementId: string,
+    refreshing = false,
+  ): Promise<void> {
     const generation = ++this.statementGeneration;
-    this.statementSource.set({ kind: 'loading' });
+    const existing = this.currentStatementState(cardId, statementId);
+    if (refreshing && existing) {
+      this.statementSource.set({ kind: 'content', data: existing, refreshing: true });
+    } else {
+      this.statementSource.set({ kind: 'loading' });
+    }
     try {
       const statement = await firstValueFrom(this.api.getStatement(statementId));
       if (
@@ -284,14 +312,30 @@ export class CardsStore {
       ) {
         return;
       }
-      this.statementSource.set({ kind: 'content', data: statement, refreshing: false });
+      this.statementLastSuccessfulAt = Date.now();
+      this.statementSource.set({
+        kind: 'content',
+        data: statement,
+        refreshing: false,
+        lastSuccessfulAt: this.statementLastSuccessfulAt,
+      });
     } catch (error: unknown) {
       if (
         generation === this.statementGeneration &&
         this.selectedCardIdState() === cardId &&
         this.selectedStatementIdState() === statementId
       ) {
-        this.statementSource.set({ kind: 'error', message: mapApiError(error).message });
+        if (refreshing && existing) {
+          this.statementSource.set({
+            kind: 'content',
+            data: existing,
+            refreshing: false,
+            refreshError: mapApiError(error).message,
+            lastSuccessfulAt: this.statementLastSuccessfulAt,
+          });
+        } else {
+          this.statementSource.set({ kind: 'error', message: mapApiError(error).message });
+        }
       }
     }
   }
@@ -299,6 +343,18 @@ export class CardsStore {
   private currentCardState(): CardSnapshot | null {
     const state = this.cardSource();
     return state.kind === 'content' && state.data.cardId === this.selectedCardIdState()
+      ? state.data
+      : null;
+  }
+
+  private currentStatementState(
+    cardId: string,
+    statementId: string,
+  ): CardStatementDetailResponse | null {
+    const state = this.statementSource();
+    return state.kind === 'content' &&
+      state.data?.cardId === cardId &&
+      state.data.id === statementId
       ? state.data
       : null;
   }
