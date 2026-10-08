@@ -1,4 +1,5 @@
 import { Injectable, Signal, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   Observable,
   ReplaySubject,
@@ -14,11 +15,13 @@ import {
   throwError,
 } from 'rxjs';
 import { AuthApi } from './auth.api';
+import { AuthCoordinationService } from './auth-coordination.service';
 import { AuthState, LoginRequest, SignupRequest, UserDto, WebAuthResponse } from './auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthSessionService {
   private readonly api = inject(AuthApi);
+  private readonly coordination = inject(AuthCoordinationService);
   private readonly state = signal<AuthState>({ kind: 'restoring' });
   private refreshInFlight: Observable<void> | null = null;
   private logoutInFlight: Observable<void> | null = null;
@@ -35,6 +38,10 @@ export class AuthSessionService {
     const state = this.state();
     return state.kind === 'authenticated' ? state.accessToken : null;
   });
+
+  constructor() {
+    this.coordination.logoutEvents.pipe(takeUntilDestroyed()).subscribe(() => this.clear());
+  }
 
   restore(): Observable<void> {
     this.state.set({ kind: 'restoring' });
@@ -61,6 +68,7 @@ export class AuthSessionService {
 
     this.logoutRequested = true;
     this.clear();
+    this.coordination.broadcastLogout();
 
     const queuedLogout = this.enqueueCookieMutation(() =>
       this.api.logout().pipe(
@@ -177,7 +185,7 @@ export class AuthSessionService {
         take(1),
         concatMap(() => {
           started = true;
-          return operation();
+          return this.coordination.runExclusive(operation);
         }),
         finalize(() => {
           if (started) {

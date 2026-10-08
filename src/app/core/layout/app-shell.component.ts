@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
@@ -23,6 +23,12 @@ export class AppShellComponent {
   readonly navigationOpen = computed(() => !this.drawerMode() || this.store.drawerOpen());
 
   constructor() {
+    effect(() => {
+      if (!this.session.isAuthenticated()) {
+        void this.router.navigate(['/login']);
+      }
+    });
+
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),

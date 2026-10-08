@@ -47,6 +47,7 @@ export interface BillFolderApiFixture {
   readonly authRequests: readonly AuthRequestEvidence[];
   readonly preflights: readonly CorsPreflightEvidence[];
   readonly events: readonly string[];
+  readonly maxConcurrentAuthMutations: number;
   startAuthenticated(context: BrowserContext): Promise<void>;
   delayNextRefresh(): RequestGate;
   delayNextLogout(): RequestGate;
@@ -199,6 +200,8 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
   private awaitingHomeRetry = false;
   private homeRemaining = 1_500;
   private waitingForHomeAfterWrite = false;
+  private activeAuthMutations = 0;
+  private maximumConcurrentAuthMutations = 0;
 
   get writes(): readonly ApiWrite[] {
     return this.recordedWrites;
@@ -218,6 +221,10 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
 
   get events(): readonly string[] {
     return this.recordedEvents;
+  }
+
+  get maxConcurrentAuthMutations(): number {
+    return this.maximumConcurrentAuthMutations;
   }
 
   async startAuthenticated(context: BrowserContext): Promise<void> {
@@ -374,18 +381,24 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       return;
     }
 
-    const gate = this.refreshGate;
-    if (gate) {
-      this.refreshGate = null;
-      this.recordedEvents.push('refresh:requested');
-      gate.markRequested();
-      await gate.waitForRelease();
-    }
+    this.beginAuthMutation();
+    try {
 
-    this.rotateAccessToken();
-    this.currentRefreshCookie = randomUUID();
-    this.recordedEvents.push('refresh:accepted');
-    this.json(response, this.authResponse(), 200, this.activeCookie(this.currentRefreshCookie));
+      const gate = this.refreshGate;
+      if (gate) {
+        this.refreshGate = null;
+        this.recordedEvents.push('refresh:requested');
+        gate.markRequested();
+        await gate.waitForRelease();
+      }
+
+      this.rotateAccessToken();
+      this.currentRefreshCookie = randomUUID();
+      this.recordedEvents.push('refresh:accepted');
+      this.json(response, this.authResponse(), 200, this.activeCookie(this.currentRefreshCookie));
+    } finally {
+      this.endAuthMutation();
+    }
   }
 
   private async logout(request: IncomingMessage, response: ServerResponse): Promise<void> {
@@ -405,18 +418,24 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       return;
     }
 
-    this.recordedEvents.push('logout:requested');
-    const gate = this.logoutGate;
-    if (gate) {
-      this.logoutGate = null;
-      gate.markRequested();
-      await gate.waitForRelease();
+    this.beginAuthMutation();
+    try {
+
+      this.recordedEvents.push('logout:requested');
+      const gate = this.logoutGate;
+      if (gate) {
+        this.logoutGate = null;
+        gate.markRequested();
+        await gate.waitForRelease();
+      }
+      this.currentAccessToken = null;
+      this.currentRefreshCookie = null;
+      this.recordedEvents.push('logout:accepted');
+      response.writeHead(204, { ...this.corsHeaders(), 'Set-Cookie': this.expiredCookie() });
+      response.end();
+    } finally {
+      this.endAuthMutation();
     }
-    this.currentAccessToken = null;
-    this.currentRefreshCookie = null;
-    this.recordedEvents.push('logout:accepted');
-    response.writeHead(204, { ...this.corsHeaders(), 'Set-Cookie': this.expiredCookie() });
-    response.end();
   }
 
   private async protectedRequest(
@@ -581,6 +600,18 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
 
   private rotateAccessToken(): void {
     this.currentAccessToken = randomUUID();
+  }
+
+  private beginAuthMutation(): void {
+    this.activeAuthMutations += 1;
+    this.maximumConcurrentAuthMutations = Math.max(
+      this.maximumConcurrentAuthMutations,
+      this.activeAuthMutations,
+    );
+  }
+
+  private endAuthMutation(): void {
+    this.activeAuthMutations -= 1;
   }
 
   private authResponse() {

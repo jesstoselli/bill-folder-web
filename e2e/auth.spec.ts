@@ -168,3 +168,30 @@ test('a delayed refresh cannot restore the session after logout', async ({
     'refresh:rejected',
   ]);
 });
+
+test('two tabs serialize refresh and logout while logout clears both immediately', async ({
+  api,
+  context,
+  page,
+}) => {
+  await api.startAuthenticated(context);
+  await page.goto('/home');
+  await expect(page.getByRole('heading', { name: 'Resumo do ciclo' })).toBeVisible();
+  const secondPage = await context.newPage();
+  await secondPage.goto('/home');
+  await expect(secondPage.getByRole('heading', { name: 'Resumo do ciclo' })).toBeVisible();
+
+  const refresh = api.delayNextRefresh();
+  api.failNextHomeRequestWith401();
+  await secondPage.getByRole('button', { name: 'Atualizar' }).click();
+  await refresh.requested;
+
+  await page.getByRole('button', { name: 'Sair' }).click();
+  await expect(secondPage).toHaveURL(/\/login$/);
+  expect(api.events).not.toContain('logout:requested');
+
+  refresh.release();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect.poll(() => api.events).toContain('logout:accepted');
+  expect(api.maxConcurrentAuthMutations).toBe(1);
+});

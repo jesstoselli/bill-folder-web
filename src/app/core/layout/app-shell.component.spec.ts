@@ -98,7 +98,7 @@ describe('AppShellComponent', () => {
     const logoutRequest = backend.expectOne('/v1/auth/web/logout');
     await fixture.whenStable();
 
-    expect(router.url).toBe('/home');
+    expect(router.url).toBe('/login');
     expect(session.isAuthenticated()).toBe(false);
 
     logoutRequest.flush({ message: 'offline' }, { status: 503, statusText: 'Unavailable' });
