@@ -260,7 +260,10 @@ export class SavingsPage implements OnInit {
       const selectedId =
         this.store.accounts().find((account) => account.id === accountId)?.id ??
         this.store.accounts()[0]?.id;
-      if (selectedId && selectedId !== this.store.selectedAccountId()) {
+      if (
+        selectedId &&
+        (selectedId !== this.store.selectedAccountId() || accountsState.refreshing)
+      ) {
         await this.store.selectAccount(selectedId);
       }
     }

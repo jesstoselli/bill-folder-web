@@ -136,6 +136,11 @@ export class SavingsStore {
 
   async selectAccount(accountId: string): Promise<void> {
     if (!this.accounts().some((account) => account.id === accountId)) return;
+    this.accountsGeneration += 1;
+    const accountsState = this.accountsSource();
+    if (accountsState.kind === 'content' && accountsState.refreshing) {
+      this.accountsSource.set({ ...accountsState, refreshing: false });
+    }
     this.selectedAccountIdState.set(accountId);
     const cycle = this.cycles.current();
     if (cycle) await this.loadTransactions(accountId, cycle);
