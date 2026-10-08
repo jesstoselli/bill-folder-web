@@ -60,10 +60,22 @@ export const routes: Routes = [
           ),
         data: { title: 'Gastos diários' },
       },
-      { path: 'receitas', loadComponent: placeholder, data: { title: 'Receitas' } },
+      {
+        path: 'receitas',
+        loadComponent: () =>
+          import('./features/income/income.page').then(({ IncomePage }) => IncomePage),
+        data: { title: 'Receitas' },
+      },
       { path: 'cartoes', loadComponent: placeholder, data: { title: 'Cartões' } },
       { path: 'poupanca', loadComponent: placeholder, data: { title: 'Poupança' } },
-      { path: 'ajustes', loadComponent: placeholder, data: { title: 'Ajustes' } },
+      {
+        path: 'ajustes',
+        loadComponent: () =>
+          import('./features/adjustments/adjustments.page').then(
+            ({ AdjustmentsPage }) => AdjustmentsPage,
+          ),
+        data: { title: 'Ajustes' },
+      },
       { path: '', pathMatch: 'full', redirectTo: 'home' },
     ],
   },

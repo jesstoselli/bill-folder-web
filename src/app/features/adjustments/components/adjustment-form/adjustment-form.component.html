@@ -1,0 +1,68 @@
+<form class="adjustment-form" [formGroup]="form" (ngSubmit)="submit()">
+  <header>
+    <div>
+      <h2 id="adjustment-form-title" mat-dialog-title>
+        {{ data.mode === 'create' ? 'Novo ajuste' : 'Editar ajuste' }}
+      </h2>
+      <p>Registre uma correção que aumenta ou reduz o resultado do ciclo.</p>
+    </div>
+    <button
+      type="button"
+      mat-button
+      mat-dialog-close
+      [disabled]="saving()"
+      aria-label="Fechar formulário de ajuste"
+    >
+      Fechar
+    </button>
+  </header>
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p class="adjustment-form__error" role="alert">{{ serverError() }}</p>
+    }
+    <div class="adjustment-form__fields">
+      <mat-form-field appearance="outline"
+        ><mat-label>Movimento</mat-label
+        ><mat-select formControlName="type"
+          ><mat-option value="inflow">Entrada — soma ao ciclo</mat-option
+          ><mat-option value="outflow">Saída — subtrai do ciclo</mat-option></mat-select
+        ></mat-form-field
+      >
+      <mat-form-field appearance="outline"
+        ><mat-label>Descrição</mat-label
+        ><input matInput formControlName="label" autocomplete="off" />
+        @if (form.controls.label.invalid) {
+          <mat-error>Informe a descrição.</mat-error>
+        }
+      </mat-form-field>
+      <div class="adjustment-form__split">
+        <mat-form-field appearance="outline"
+          ><mat-label>Data</mat-label><input matInput type="date" formControlName="date" />
+          @if (form.controls.date.invalid) {
+            <mat-error>Informe uma data válida.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline"
+          ><mat-label>Valor</mat-label><span matTextPrefix>R$&nbsp;</span
+          ><input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            formControlName="amount"
+          />
+          @if (form.controls.amount.invalid) {
+            <mat-error>O valor não pode ser negativo.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end"
+    ><button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button
+    ><button type="submit" mat-flat-button [disabled]="saving()">
+      {{ saving() ? 'Salvando…' : 'Salvar ajuste' }}
+    </button></mat-dialog-actions
+  >
+</form>

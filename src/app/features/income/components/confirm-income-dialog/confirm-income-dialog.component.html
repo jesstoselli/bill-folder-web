@@ -1,0 +1,51 @@
+<form class="confirm-income" [formGroup]="form" (ngSubmit)="submit()">
+  <header>
+    <h2 id="confirm-income-title" mat-dialog-title>Confirmar recebimento</h2>
+    <button
+      type="button"
+      mat-button
+      mat-dialog-close
+      [disabled]="saving()"
+      aria-label="Fechar confirmação de receita"
+    >
+      Fechar
+    </button>
+  </header>
+  <mat-dialog-content>
+    <p id="confirm-income-description">
+      Registre quanto e quando {{ data.entry.sourceOrigin ?? 'esta receita avulsa' }} entrou.
+    </p>
+    @if (serverError()) {
+      <p class="confirm-income__error" role="alert">{{ serverError() }}</p>
+    }
+    <div class="confirm-income__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Valor recebido</mat-label><span matTextPrefix>R$&nbsp;</span>
+        <input
+          matInput
+          type="number"
+          min="0.01"
+          step="0.01"
+          inputmode="decimal"
+          formControlName="actualAmount"
+        />
+        @if (form.controls.actualAmount.invalid) {
+          <mat-error>Informe um valor maior que zero.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Data do recebimento</mat-label
+        ><input matInput type="date" formControlName="actualDate" />
+        @if (form.controls.actualDate.invalid) {
+          <mat-error>Informe uma data válida.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving()">
+      {{ saving() ? 'Confirmando…' : 'Confirmar recebimento' }}
+    </button>
+  </mat-dialog-actions>
+</form>

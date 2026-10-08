@@ -1,0 +1,140 @@
+<section class="adjustments-page">
+  <header class="adjustments-page__header">
+    <div>
+      <h1 class="bf-heading-page">Ajustes do ciclo</h1>
+      <p>Correções pontuais que reconciliam o resultado sem virar uma despesa.</p>
+    </div>
+    <div class="adjustments-page__actions">
+      <button type="button" class="adjustments-page__refresh" (click)="refresh()">Atualizar</button
+      ><button
+        type="button"
+        mat-flat-button
+        [disabled]="cycles.current() === null"
+        (click)="openCreate()"
+      >
+        Novo ajuste
+      </button>
+    </div>
+  </header>
+  @if (cycles.current(); as cycle) {
+    <div class="adjustments-page__cycle-row">
+      <app-cycle-navigator
+        [label]="cycle.label"
+        [startDate]="cycle.startDate"
+        [endDate]="cycle.endDate"
+        [previousEnabled]="cycles.previous() !== null && !refreshing()"
+        [nextEnabled]="cycles.next() !== null && !refreshing()"
+        (previous)="selectPreviousCycle()"
+        (next)="selectNextCycle()"
+      />
+      @if (refreshing()) {
+        <span role="status">Atualizando ajustes…</span>
+      }
+    </div>
+  }
+  @if (actionError()) {
+    <p class="adjustments-page__error" role="alert">{{ actionError() }}</p>
+  }
+  @switch (pageState().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <div class="adjustments-page__state">
+        <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" /><button
+          type="button"
+          (click)="refresh()"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    }
+    @case ('no-cycle') {
+      <div class="adjustments-page__state">
+        <app-page-state
+          state="empty"
+          title="Nenhum ciclo disponível"
+          message="Crie ou disponibilize um ciclo para registrar e consultar ajustes."
+        /><button type="button" (click)="refresh()">Buscar ciclos novamente</button>
+      </div>
+    }
+    @case ('content') {
+      <div class="adjustments-summary">
+        <span>{{
+          store.adjustments().length === 1
+            ? '1 lançamento'
+            : store.adjustments().length + ' lançamentos'
+        }}</span
+        ><strong
+          class="adjustments-summary__net bf-tabular"
+          [class.adjustments-summary__net--negative]="store.netAmount() < 0"
+          >{{ netLabel() }}</strong
+        >
+      </div>
+      @if (store.adjustments().length) {
+        <div class="adjustments-sheet" tabindex="-1" aria-label="Folha de reconciliação do ciclo">
+          <table>
+            <caption class="u-visually-hidden">
+              Ajustes do ciclo do mais recente para o mais antigo
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Movimento</th>
+                <th scope="col">Descrição</th>
+                <th scope="col" class="adjustments-sheet__amount">Impacto</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (adjustment of store.adjustments(); track adjustment.id) {
+                <tr [attr.data-adjustment-id]="adjustment.id">
+                  <td class="bf-tabular">
+                    <time [attr.datetime]="adjustment.date">{{
+                      formatCivilDate(adjustment.date)
+                    }}</time>
+                  </td>
+                  <td>
+                    <span class="adjustments-sheet__type">{{ typeLabel(adjustment.type) }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ adjustment.label }}</strong>
+                  </td>
+                  <td
+                    class="adjustments-sheet__amount bf-tabular"
+                    [class.adjustments-sheet__amount--negative]="adjustment.type === 'outflow'"
+                  >
+                    {{ signedAmount(adjustment) }}
+                  </td>
+                  <td class="adjustments-sheet__actions">
+                    <button
+                      type="button"
+                      data-row-action
+                      data-action="edit"
+                      (click)="openEdit(adjustment)"
+                    >
+                      Editar</button
+                    ><button
+                      type="button"
+                      data-row-action
+                      data-action="delete"
+                      (click)="deleteAdjustment(adjustment)"
+                    >
+                      Excluir
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <app-page-state
+          state="empty"
+          title="Nenhum ajuste neste ciclo"
+          message="Use um ajuste para registrar uma correção de entrada ou saída."
+        />
+      }
+    }
+  }
+</section>

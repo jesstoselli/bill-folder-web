@@ -1,0 +1,223 @@
+<section class="income-page">
+  <header class="income-page__header">
+    <div>
+      <h1 class="bf-heading-page">Receitas do ciclo</h1>
+      <p>Entradas previstas e recebidas, organizadas pela situação real.</p>
+    </div>
+    <div class="income-page__actions">
+      <button type="button" class="income-page__refresh" (click)="refresh()">Atualizar</button
+      ><button
+        type="button"
+        mat-flat-button
+        [disabled]="cycles.current() === null"
+        (click)="openCreate()"
+      >
+        Nova receita
+      </button>
+    </div>
+  </header>
+
+  @if (cycles.current(); as cycle) {
+    <div class="income-page__cycle-row">
+      <app-cycle-navigator
+        [label]="cycle.label"
+        [startDate]="cycle.startDate"
+        [endDate]="cycle.endDate"
+        [previousEnabled]="cycles.previous() !== null && !refreshing()"
+        [nextEnabled]="cycles.next() !== null && !refreshing()"
+        (previous)="selectPreviousCycle()"
+        (next)="selectNextCycle()"
+      />
+      @if (refreshing()) {
+        <span role="status">Atualizando receitas…</span>
+      }
+    </div>
+  }
+  @if (actionError()) {
+    <p class="income-page__error" role="alert">{{ actionError() }}</p>
+  }
+
+  @switch (pageState().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <div class="income-page__state">
+        <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" /><button
+          type="button"
+          (click)="refresh()"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    }
+    @case ('no-cycle') {
+      <div class="income-page__state">
+        <app-page-state
+          state="empty"
+          title="Nenhum ciclo disponível"
+          message="Crie ou disponibilize um ciclo para registrar e consultar receitas."
+        /><button type="button" (click)="refresh()">Buscar ciclos novamente</button>
+      </div>
+    }
+    @case ('content') {
+      <div class="income-totals" aria-label="Resumo das receitas">
+        <span
+          ><small>Esperado</small
+          ><strong class="bf-tabular">{{ formatBrl(expectedTotal()) }}</strong></span
+        ><span
+          ><small>Recebido</small
+          ><strong class="bf-tabular">{{ formatBrl(receivedTotal()) }}</strong></span
+        >
+      </div>
+      <div class="income-ledger" tabindex="-1" aria-label="Receitas do ciclo por situação">
+        <table>
+          <caption class="u-visually-hidden">
+            Receitas previstas, recebidas, atrasadas e não realizadas
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Origem</th>
+              <th scope="col">Data</th>
+              <th scope="col" class="income-ledger__amount">Esperado</th>
+              <th scope="col" class="income-ledger__amount">Recebido</th>
+              <th scope="col">Situação</th>
+              <th scope="col">Ações</th>
+            </tr>
+          </thead>
+          <tbody aria-labelledby="income-expected-title">
+            <tr class="income-ledger__group">
+              <th id="income-expected-title" scope="rowgroup" colspan="6">
+                <span>Previstas</span><span>{{ store.groups().expected.length }}</span>
+              </th>
+            </tr>
+            @for (entry of store.groups().expected; track entry.id) {
+              <ng-container
+                [ngTemplateOutlet]="incomeRow"
+                [ngTemplateOutletContext]="{ $implicit: entry }"
+              />
+            } @empty {
+              <tr class="income-ledger__empty">
+                <td colspan="6">Nenhuma receita prevista.</td>
+              </tr>
+            }
+          </tbody>
+          <tbody aria-labelledby="income-received-title">
+            <tr class="income-ledger__group">
+              <th id="income-received-title" scope="rowgroup" colspan="6">
+                <span>Recebidas</span><span>{{ store.groups().received.length }}</span>
+              </th>
+            </tr>
+            @for (entry of store.groups().received; track entry.id) {
+              <ng-container
+                [ngTemplateOutlet]="incomeRow"
+                [ngTemplateOutletContext]="{ $implicit: entry }"
+              />
+            } @empty {
+              <tr class="income-ledger__empty">
+                <td colspan="6">Nenhuma receita recebida.</td>
+              </tr>
+            }
+          </tbody>
+          <tbody aria-labelledby="income-late-title">
+            <tr class="income-ledger__group">
+              <th id="income-late-title" scope="rowgroup" colspan="6">
+                <span>Atrasadas</span><span>{{ store.groups().late.length }}</span>
+              </th>
+            </tr>
+            @for (entry of store.groups().late; track entry.id) {
+              <ng-container
+                [ngTemplateOutlet]="incomeRow"
+                [ngTemplateOutletContext]="{ $implicit: entry }"
+              />
+            } @empty {
+              <tr class="income-ledger__empty">
+                <td colspan="6">Nenhuma receita atrasada.</td>
+              </tr>
+            }
+          </tbody>
+          <tbody aria-labelledby="income-missed-title">
+            <tr class="income-ledger__group">
+              <th id="income-missed-title" scope="rowgroup" colspan="6">
+                <span>Não realizadas</span><span>{{ store.groups().notOccurred.length }}</span>
+              </th>
+            </tr>
+            @for (entry of store.groups().notOccurred; track entry.id) {
+              <ng-container
+                [ngTemplateOutlet]="incomeRow"
+                [ngTemplateOutletContext]="{ $implicit: entry }"
+              />
+            } @empty {
+              <tr class="income-ledger__empty">
+                <td colspan="6">Nenhuma receita marcada como não realizada.</td>
+              </tr>
+            }
+          </tbody>
+          @if (store.groups().other.length) {
+            <tbody aria-labelledby="income-other-title">
+              <tr class="income-ledger__group">
+                <th id="income-other-title" scope="rowgroup" colspan="6">
+                  <span>Outras situações</span><span>{{ store.groups().other.length }}</span>
+                </th>
+              </tr>
+              @for (entry of store.groups().other; track entry.id) {
+                <ng-container
+                  [ngTemplateOutlet]="incomeRow"
+                  [ngTemplateOutletContext]="{ $implicit: entry }"
+                />
+              }
+            </tbody>
+          }
+        </table>
+      </div>
+    }
+  }
+</section>
+
+<ng-template #incomeRow let-entry>
+  <tr [attr.data-income-id]="entry.id">
+    <td data-label="Origem">
+      <strong>{{ entry.sourceOrigin ?? 'Receita avulsa' }}</strong>
+      @if (entry.notes) {
+        <span class="income-ledger__notes">{{ entry.notes }}</span>
+      }
+    </td>
+    <td data-label="Data" class="bf-tabular">
+      <time [attr.datetime]="entry.expectedDate">{{ formatCivilDate(entry.expectedDate) }}</time>
+    </td>
+    <td data-label="Esperado" class="income-ledger__amount bf-tabular">
+      {{ formatBrl(entry.expectedAmount) }}
+    </td>
+    <td data-label="Recebido" class="income-ledger__amount bf-tabular">
+      {{ entry.actualAmount === null ? '—' : formatBrl(entry.actualAmount) }}
+    </td>
+    <td data-label="Situação">
+      <span
+        class="income-ledger__status"
+        [class.income-ledger__status--attention]="
+          entry.status === 'late' || entry.status === 'notOccurred'
+        "
+        >{{ statusLabel(entry.status) }}</span
+      >
+    </td>
+    <td class="income-ledger__row-actions">
+      @if (canConfirm(entry.status)) {
+        <button type="button" data-row-action data-action="confirm" (click)="openConfirm(entry)">
+          Confirmar
+        </button>
+      }
+      <button type="button" data-row-action data-action="edit" (click)="openEdit(entry)">
+        Editar
+      </button>
+      <button
+        type="button"
+        data-row-action
+        data-action="delete"
+        class="income-ledger__delete"
+        (click)="deleteEntry(entry)"
+      >
+        Excluir
+      </button>
+    </td>
+  </tr>
+</ng-template>
