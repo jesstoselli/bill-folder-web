@@ -6,7 +6,13 @@
     </div>
     <div class="expenses-page__header-actions">
       <button type="button" class="expenses-page__refresh" (click)="refresh()">Atualizar</button>
-      <button #createButton type="button" mat-flat-button (click)="openCreate()">
+      <button
+        #createButton
+        type="button"
+        mat-flat-button
+        [disabled]="cycles.current() === null"
+        (click)="openCreate()"
+      >
         Nova despesa
       </button>
     </div>
@@ -33,22 +39,28 @@
     <p class="expenses-page__action-error" role="alert">{{ actionError() }}</p>
   }
 
-  @switch (store.state().kind) {
+  @switch (pageState().kind) {
     @case ('loading') {
       <app-page-state state="loading" />
     }
     @case ('error') {
       <div class="expenses-page__error">
-        <app-page-state
-          state="error"
-          title="Não foi possível carregar as despesas"
-          [message]="loadError()"
-        />
+        <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" />
         <button type="button" (click)="refresh()">Tentar novamente</button>
       </div>
     }
+    @case ('no-cycle') {
+      <div class="expenses-page__error">
+        <app-page-state
+          state="empty"
+          title="Nenhum ciclo disponível"
+          message="Crie ou disponibilize um ciclo para registrar e consultar despesas."
+        />
+        <button type="button" (click)="refresh()">Buscar ciclos novamente</button>
+      </div>
+    }
     @case ('content') {
-      <div class="expense-ledger">
+      <div class="expense-ledger" tabindex="-1" aria-label="Lista de despesas do ciclo">
         <table>
           <caption class="u-visually-hidden">
             Despesas do ciclo agrupadas em atrasadas, próximas e pagas

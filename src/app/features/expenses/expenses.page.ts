@@ -1,4 +1,12 @@
-import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -17,6 +25,17 @@ type PendingAction =
   | { readonly kind: 'edit'; readonly expense: ExpenseProjection }
   | { readonly kind: 'delete'; readonly expense: ExpenseProjection };
 
+interface DeleteFocusContext {
+  readonly expenseId: string;
+  readonly rowIndex: number;
+}
+
+type ExpensesViewState =
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'error'; readonly source: 'cycles' | 'expenses'; readonly message: string }
+  | { readonly kind: 'no-cycle' }
+  | { readonly kind: 'content' };
+
 @Component({
   selector: 'app-expenses-page',
   imports: [
@@ -31,22 +50,47 @@ type PendingAction =
   styleUrl: './expenses.page.scss',
 })
 export class ExpensesPage implements OnInit {
-  @ViewChild('createButton', { read: ElementRef })
-  private createButton?: ElementRef<HTMLButtonElement>;
-
   protected readonly store = inject(ExpensesStore);
   protected readonly cycles = inject(CycleStore);
   private readonly dialog = inject(MatDialog);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   private pendingAction: PendingAction | null = null;
 
   protected readonly groups = computed(() => groupExpenses(this.store.expenses()));
+  protected readonly pageState = computed<ExpensesViewState>(() => {
+    const cycleState = this.cycles.state();
+    const cycle = this.cycles.current();
+
+    if (cycleState.kind === 'error') {
+      return { kind: 'error', source: 'cycles', message: cycleState.message };
+    }
+    if (cycleState.kind === 'loading' && cycle === null) {
+      return { kind: 'loading' };
+    }
+    if (cycleState.kind === 'content' && cycle === null) {
+      return { kind: 'no-cycle' };
+    }
+
+    const expenseState = this.store.state();
+    if (expenseState.kind === 'error') {
+      return { kind: 'error', source: 'expenses', message: expenseState.message };
+    }
+    return { kind: expenseState.kind };
+  });
   protected readonly refreshing = computed(() => {
     const state = this.store.state();
     return state.kind === 'content' && state.refreshing;
   });
   protected readonly loadError = computed(() => {
-    const state = this.store.state();
+    const state = this.pageState();
     return state.kind === 'error' ? state.message : '';
+  });
+  protected readonly loadErrorTitle = computed(() => {
+    const state = this.pageState();
+    return state.kind === 'error' && state.source === 'cycles'
+      ? 'Não foi possível carregar os ciclos'
+      : 'Não foi possível carregar as despesas';
   });
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
@@ -59,6 +103,9 @@ export class ExpensesPage implements OnInit {
   }
 
   protected openCreate(): void {
+    if (this.cycles.current() === null) {
+      return;
+    }
     this.actionError.set('');
     this.dialog.open(ExpenseFormComponent, {
       data: { mode: 'create' },
@@ -66,6 +113,7 @@ export class ExpensesPage implements OnInit {
       maxWidth: 'calc(100vw - 2rem)',
       autoFocus: 'first-tabbable',
       restoreFocus: true,
+      ariaLabelledBy: 'expense-form-title',
     });
   }
 
@@ -91,8 +139,7 @@ export class ExpensesPage implements OnInit {
       return;
     }
 
-    this.createButton?.nativeElement.focus();
-    void this.deleteExpense(action.expense);
+    void this.deleteExpense(action.expense, this.captureDeleteFocus(expenseId));
   }
 
   protected selectPreviousCycle(): void {
@@ -107,6 +154,10 @@ export class ExpensesPage implements OnInit {
 
   protected refresh(): void {
     this.actionError.set('');
+    if (this.cycles.state().kind === 'error' || this.cycles.current() === null) {
+      void this.cycles.load();
+      return;
+    }
     void this.store.refresh();
   }
 
@@ -134,16 +185,57 @@ export class ExpensesPage implements OnInit {
       maxHeight: '100dvh',
       autoFocus: 'first-tabbable',
       restoreFocus: true,
+      ariaLabelledBy: 'expense-form-title',
       panelClass: 'bf-expense-side-sheet',
     });
   }
 
-  private async deleteExpense(expense: ExpenseProjection): Promise<void> {
+  private async deleteExpense(
+    expense: ExpenseProjection,
+    focusContext: DeleteFocusContext,
+  ): Promise<void> {
     this.actionError.set('');
     try {
       await this.store.deleteOne(expense.id, 'this');
+      this.changeDetector.detectChanges();
+      this.focusAdjacentRow(focusContext.rowIndex);
     } catch (error: unknown) {
       this.actionError.set(mapApiError(error).message);
+      this.changeDetector.detectChanges();
+      this.focusRestoredRow(focusContext);
     }
+  }
+
+  private captureDeleteFocus(expenseId: string): DeleteFocusContext {
+    const rowIndex = this.rowActionTriggers().findIndex(
+      (trigger) => trigger.closest<HTMLTableRowElement>('tr')?.dataset['expenseId'] === expenseId,
+    );
+    return { expenseId, rowIndex: Math.max(rowIndex, 0) };
+  }
+
+  private focusRestoredRow(context: DeleteFocusContext): void {
+    const trigger = this.rowActionTriggers().find(
+      (candidate) =>
+        candidate.closest<HTMLTableRowElement>('tr')?.dataset['expenseId'] === context.expenseId,
+    );
+    (trigger ?? this.ledgerFallback())?.focus();
+  }
+
+  private focusAdjacentRow(previousIndex: number): void {
+    const triggers = this.rowActionTriggers();
+    const trigger = triggers[Math.min(previousIndex, triggers.length - 1)];
+    (trigger ?? this.ledgerFallback())?.focus();
+  }
+
+  private rowActionTriggers(): HTMLButtonElement[] {
+    return [
+      ...this.host.nativeElement.querySelectorAll<HTMLButtonElement>(
+        '.expense-ledger__menu-trigger',
+      ),
+    ];
+  }
+
+  private ledgerFallback(): HTMLElement | null {
+    return this.host.nativeElement.querySelector<HTMLElement>('.expense-ledger');
   }
 }

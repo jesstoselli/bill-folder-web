@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { ReferenceDataApi } from '../../../../core/reference/reference-data.api';
+import { ExpenseResponse } from '../../expenses.models';
 import { ExpenseFormComponent } from './expense-form.component';
 import { toCreateExpenseRequest, toUpdateExpenseRequest } from './expense-form.models';
 import { ExpensesStore } from '../../expenses.store';
@@ -107,4 +108,73 @@ describe('ExpenseFormComponent failed save', () => {
     );
     expect(close).not.toHaveBeenCalled();
   });
+
+  it('blocks a duplicate submit while the first save is pending', async () => {
+    let resolveSave: (value: ExpenseResponse) => void = () => undefined;
+    const savedExpense = expenseResponse();
+    const create = vi.fn(
+      () =>
+        new Promise<ExpenseResponse>((resolve) => {
+          resolveSave = resolve;
+        }),
+    );
+    const close = vi.fn();
+
+    await TestBed.configureTestingModule({
+      imports: [ExpenseFormComponent],
+      providers: [
+        { provide: MAT_DIALOG_DATA, useValue: { mode: 'create' } },
+        { provide: MatDialogRef, useValue: { close } },
+        { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
+        { provide: ExpensesStore, useValue: { create } },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ExpenseFormComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.form.setValue({
+      dueDate: '2026-10-18',
+      label: 'Energia',
+      expectedAmount: 189.9,
+      categoryId: 'category-1',
+      notes: '',
+    });
+
+    const firstSubmit = component.submit();
+    const duplicateSubmit = component.submit();
+
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(component.saving()).toBe(true);
+    resolveSave(savedExpense);
+    await Promise.all([firstSubmit, duplicateSubmit]);
+
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(close).toHaveBeenCalledWith(savedExpense);
+  });
 });
+
+function expenseResponse(): ExpenseResponse {
+  return {
+    id: 'expense-1',
+    dueDate: '2026-10-18',
+    label: 'Energia',
+    expectedAmount: 189.9,
+    actualAmount: null,
+    status: 'pending',
+    paidDate: null,
+    paidFromAccountId: null,
+    paidFromAccountName: null,
+    categoryId: 'category-1',
+    categoryName: 'Moradia',
+    linkedCardStatementId: null,
+    templateId: null,
+    notes: null,
+    occurrenceAmount: null,
+    occurrencesTotal: null,
+    occurrencesPaid: 0,
+    paidToDate: 0,
+    createdAt: '2026-10-01T10:00:00Z',
+    updatedAt: '2026-10-01T10:00:00Z',
+  };
+}

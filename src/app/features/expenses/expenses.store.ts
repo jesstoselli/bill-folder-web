@@ -18,14 +18,36 @@ export class ExpensesStore {
   private readonly api = inject(ExpensesApi);
   private readonly cycles = inject(CycleStore);
   private readonly changes = inject(DataChangeService);
-  private readonly stateValue = signal<LoadState<readonly ExpenseResponse[]>>({ kind: 'loading' });
+  private readonly sourceState = signal<LoadState<readonly ExpenseResponse[]>>({
+    kind: 'loading',
+  });
+  private readonly stateCycleId = signal<string | null>(null);
+  private readonly pendingDeletes = signal<ReadonlySet<string>>(new Set());
   private activeCycle: CycleResponse | null = null;
   private observedKey: string | null = null;
   private loadGeneration = 0;
 
-  readonly state = this.stateValue.asReadonly();
+  readonly state = computed<LoadState<readonly ExpenseResponse[]>>(() => {
+    const state = this.sourceState();
+    const selectedCycle = this.cycles.current();
+    const stateCycleId = this.stateCycleId();
+    if (selectedCycle !== null && selectedCycle.id !== stateCycleId) {
+      return { kind: 'loading' };
+    }
+    if (state.kind !== 'content') {
+      return state;
+    }
+
+    const pendingDeletes = this.pendingDeletes();
+    return {
+      ...state,
+      data: state.data.filter(
+        (expense) => !pendingDeletes.has(deleteKey(stateCycleId, expense.id)),
+      ),
+    };
+  });
   readonly expenses = computed(() => {
-    const state = this.stateValue();
+    const state = this.state();
     return state.kind === 'content' ? state.data : [];
   });
 
@@ -33,7 +55,17 @@ export class ExpensesStore {
     effect(() => {
       const cycle = this.cycles.current();
       const key = cycle ? `${cycle.id}:${this.changes.version()}` : null;
-      if (cycle === null || key === this.observedKey) {
+      if (cycle === null) {
+        if (this.observedKey !== null || this.stateCycleId() !== null) {
+          this.observedKey = null;
+          this.activeCycle = null;
+          this.stateCycleId.set(null);
+          this.sourceState.set({ kind: 'loading' });
+          this.loadGeneration += 1;
+        }
+        return;
+      }
+      if (key === this.observedKey) {
         return;
       }
 
@@ -44,13 +76,15 @@ export class ExpensesStore {
 
   async load(cycle: CycleResponse): Promise<void> {
     const generation = ++this.loadGeneration;
-    const previousState = this.stateValue();
+    const previousState = this.sourceState();
+    const sameCycle = this.stateCycleId() === cycle.id;
     this.activeCycle = cycle;
+    this.stateCycleId.set(cycle.id);
 
-    if (previousState.kind === 'content') {
-      this.stateValue.set({ ...previousState, refreshing: true });
+    if (sameCycle && previousState.kind === 'content') {
+      this.sourceState.set({ ...previousState, refreshing: true });
     } else {
-      this.stateValue.set({ kind: 'loading' });
+      this.sourceState.set({ kind: 'loading' });
     }
 
     try {
@@ -58,15 +92,15 @@ export class ExpensesStore {
       if (generation !== this.loadGeneration) {
         return;
       }
-      this.stateValue.set({ kind: 'content', data: expenses, refreshing: false });
+      this.sourceState.set({ kind: 'content', data: expenses, refreshing: false });
     } catch (error: unknown) {
       if (generation !== this.loadGeneration) {
         return;
       }
-      if (previousState.kind === 'content') {
-        this.stateValue.set({ ...previousState, refreshing: false });
+      if (sameCycle && previousState.kind === 'content') {
+        this.sourceState.set({ ...previousState, refreshing: false });
       } else {
-        this.stateValue.set({ kind: 'error', message: mapApiError(error).message });
+        this.sourceState.set({ kind: 'error', message: mapApiError(error).message });
       }
     }
   }
@@ -87,22 +121,39 @@ export class ExpensesStore {
   }
 
   async deleteOne(id: string, scope: ExpenseDeleteScope): Promise<void> {
-    const previousState = this.stateValue();
-    if (previousState.kind === 'content') {
-      this.stateValue.set({
-        kind: 'content',
-        data: previousState.data.filter((expense) => expense.id !== id),
-        refreshing: previousState.refreshing,
-      });
-    }
+    const cycleId = this.stateCycleId();
+    const key = deleteKey(cycleId, id);
+    this.updatePendingDelete(key, true);
 
     try {
       await firstValueFrom(this.api.deleteOne(id, scope));
-    } catch (error: unknown) {
-      if (previousState.kind === 'content') {
-        this.stateValue.set(previousState);
+      if (this.stateCycleId() === cycleId) {
+        const state = this.sourceState();
+        if (state.kind === 'content') {
+          this.sourceState.set({
+            ...state,
+            data: state.data.filter((expense) => expense.id !== id),
+          });
+        }
       }
+    } catch (error: unknown) {
       throw error;
+    } finally {
+      this.updatePendingDelete(key, false);
     }
   }
+
+  private updatePendingDelete(key: string, pending: boolean): void {
+    const next = new Set(this.pendingDeletes());
+    if (pending) {
+      next.add(key);
+    } else {
+      next.delete(key);
+    }
+    this.pendingDeletes.set(next);
+  }
+}
+
+function deleteKey(cycleId: string | null, expenseId: string): string {
+  return `${cycleId ?? 'no-cycle'}:${expenseId}`;
 }

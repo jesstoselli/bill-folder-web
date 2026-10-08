@@ -1,7 +1,7 @@
 <form class="expense-form" [formGroup]="form" (ngSubmit)="submit()">
   <header class="expense-form__header">
     <div>
-      <h2 mat-dialog-title>
+      <h2 id="expense-form-title" mat-dialog-title>
         {{ data.mode === 'create' ? 'Nova despesa' : 'Editar despesa' }}
       </h2>
       <p>
