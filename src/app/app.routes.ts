@@ -66,7 +66,12 @@ export const routes: Routes = [
           import('./features/income/income.page').then(({ IncomePage }) => IncomePage),
         data: { title: 'Receitas' },
       },
-      { path: 'cartoes', loadComponent: placeholder, data: { title: 'Cartões' } },
+      {
+        path: 'cartoes',
+        loadComponent: () =>
+          import('./features/cards/cards.page').then(({ CardsPage }) => CardsPage),
+        data: { title: 'Cartões' },
+      },
       { path: 'poupanca', loadComponent: placeholder, data: { title: 'Poupança' } },
       {
         path: 'ajustes',

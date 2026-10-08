@@ -1,0 +1,68 @@
+<form class="pay-statement" [formGroup]="form" (ngSubmit)="submit()">
+  <header>
+    <div>
+      <h2 id="pay-statement-title" mat-dialog-title>Pagar fatura</h2>
+      <p id="pay-statement-description">
+        {{ data.statement.cardName }} · {{ formatBrl(data.statement.totalAmount) }}
+      </p>
+    </div>
+    <button
+      type="button"
+      mat-button
+      mat-dialog-close
+      [disabled]="saving()"
+      aria-label="Fechar pagamento de fatura"
+    >
+      Fechar
+    </button>
+  </header>
+
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p class="pay-statement__error" role="alert">{{ serverError() }}</p>
+    }
+
+    <div class="pay-statement__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Valor pago</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input
+          matInput
+          type="number"
+          min="0.01"
+          step="0.01"
+          inputmode="decimal"
+          formControlName="actualAmount"
+        />
+        @if (form.controls.actualAmount.invalid) {
+          <mat-error>Informe um valor maior que zero.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Data do pagamento</mat-label>
+        <input matInput type="date" formControlName="paidDate" />
+        @if (form.controls.paidDate.invalid) {
+          <mat-error>Informe uma data válida.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Conta de origem (opcional)</mat-label>
+        <mat-select formControlName="paidFromAccountId">
+          <mat-option [value]="null">Não informar</mat-option>
+          @for (account of accounts(); track account.id) {
+            <mat-option [value]="account.id">{{ account.bankName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving() || loadingAccounts()">
+      {{ saving() ? 'Pagando…' : 'Confirmar pagamento' }}
+    </button>
+  </mat-dialog-actions>
+</form>

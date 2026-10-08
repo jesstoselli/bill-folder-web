@@ -1,0 +1,47 @@
+<section class="statement-summary" [attr.data-status]="statement().status">
+  <div class="statement-summary__total">
+    <span>Total da fatura</span>
+    <strong class="bf-tabular">{{ formatBrl(statement().totalAmount) }}</strong>
+  </div>
+
+  <dl>
+    <div>
+      <dt>Vencimento</dt>
+      <dd>
+        <time [attr.datetime]="statement().dueDate">{{
+          formatCivilDate(statement().dueDate)
+        }}</time>
+      </dd>
+    </div>
+    <div>
+      <dt>Período</dt>
+      <dd>
+        <time [attr.datetime]="statement().periodStart">{{
+          formatCivilDate(statement().periodStart)
+        }}</time>
+        a
+        <time [attr.datetime]="statement().periodEnd">{{
+          formatCivilDate(statement().periodEnd)
+        }}</time>
+      </dd>
+    </div>
+    <div>
+      <dt>Situação</dt>
+      <dd>
+        <span class="statement-summary__status">{{ statusLabel(statement().status) }}</span>
+      </dd>
+    </div>
+  </dl>
+
+  @if (canPayStatement(statement().status)) {
+    <button type="button" mat-flat-button (click)="pay.emit()">Pagar fatura</button>
+  }
+
+  @if (statement().status === 'paid') {
+    <div class="statement-summary__paid" aria-label="Dados do pagamento registrado">
+      <strong>Paga em {{ formatCivilDate(statement().paidDate!) }}</strong>
+      <span>{{ statement().paidFromAccountName || 'Conta não informada' }}</span>
+      <span class="bf-tabular">Valor pago {{ formatBrl(statement().actualAmount!) }}</span>
+    </div>
+  }
+</section>

@@ -1,0 +1,135 @@
+:host {
+  display: block;
+}
+
+.installment-table {
+  overflow-x: auto;
+
+  table {
+    border-collapse: collapse;
+    min-width: 52rem;
+    width: 100%;
+  }
+
+  th {
+    color: var(--bf-muted);
+    font-size: 0.82rem;
+    font-weight: 400;
+    padding: 0.8rem 1rem;
+    text-align: left;
+  }
+
+  td {
+    border-top: 1px solid color-mix(in srgb, var(--bf-outline) 72%, transparent);
+    padding: 0.9rem 1rem;
+    vertical-align: middle;
+  }
+
+  td:first-child {
+    strong,
+    span {
+      display: block;
+    }
+  }
+}
+
+.installment-table__subscription {
+  color: var(--bf-primary);
+  font-size: 0.78rem;
+}
+
+.installment-table__amount {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.installment-table__actions {
+  text-align: right !important;
+
+  button {
+    background: transparent;
+    border: 0;
+    color: var(--bf-primary);
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+    padding: 0.3rem 0;
+    white-space: nowrap;
+
+    &:last-child {
+      color: var(--bf-danger);
+    }
+
+    &:focus-visible {
+      box-shadow: var(--bf-focus-ring);
+      outline: 1px solid var(--bf-primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.installment-table__empty td {
+  color: var(--bf-muted);
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .installment-table {
+    overflow: visible;
+
+    table,
+    tbody,
+    tr,
+    td {
+      display: block;
+      min-width: 0;
+      width: 100%;
+    }
+
+    thead {
+      display: none;
+    }
+
+    tr {
+      border-top: 1px solid var(--bf-outline);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: 0.8rem 1rem;
+    }
+
+    td {
+      border: 0;
+      padding: 0.15rem 0;
+    }
+
+    td[data-label='Compra'],
+    td[data-label='Categoria'],
+    td[data-label='Data da compra'] {
+      grid-column: 1;
+    }
+
+    td[data-label='Parcela'],
+    .installment-table__amount {
+      grid-column: 2;
+    }
+
+    td[data-label='Parcela'] {
+      grid-row: 1;
+      text-align: right;
+    }
+
+    .installment-table__amount {
+      grid-row: 2;
+    }
+
+    .installment-table__actions {
+      grid-column: 1 / -1;
+      text-align: left !important;
+
+      button {
+        display: inline-block;
+        margin: 0 1rem 0 0;
+      }
+    }
+  }
+}

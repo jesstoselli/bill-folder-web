@@ -1,0 +1,50 @@
+<form class="reprice-subscription" [formGroup]="form" (ngSubmit)="submit()">
+  <header>
+    <div>
+      <h2 id="reprice-subscription-title" mat-dialog-title>Reajustar assinatura</h2>
+      <p id="reprice-subscription-description">{{ data.entry.label }}</p>
+    </div>
+    <button
+      type="button"
+      mat-button
+      mat-dialog-close
+      [disabled]="saving()"
+      aria-label="Fechar reajuste de assinatura"
+    >
+      Fechar
+    </button>
+  </header>
+
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p class="reprice-subscription__error" role="alert">{{ serverError() }}</p>
+    }
+
+    <p class="reprice-subscription__current">
+      Valor atual <strong>{{ formatBrl(data.entry.totalAmount) }}</strong>
+    </p>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Novo valor mensal</mat-label>
+      <span matTextPrefix>R$&nbsp;</span>
+      <input
+        matInput
+        type="number"
+        min="0.01"
+        step="0.01"
+        inputmode="decimal"
+        formControlName="amount"
+      />
+      @if (form.controls.amount.invalid) {
+        <mat-error>Informe um valor maior que zero.</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving()">
+      {{ saving() ? 'Reajustando…' : 'Salvar novo valor' }}
+    </button>
+  </mat-dialog-actions>
+</form>

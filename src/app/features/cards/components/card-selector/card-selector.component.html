@@ -1,0 +1,21 @@
+<section class="card-selector" aria-labelledby="card-selector-label">
+  <div class="card-selector__heading">
+    <h2 id="card-selector-label">Cartão</h2>
+    <span>Selecione para consultar as faturas</span>
+  </div>
+  <div class="card-selector__scroll">
+    <mat-button-toggle-group
+      name="selected-card"
+      [value]="selectedId()"
+      aria-labelledby="card-selector-label"
+      (change)="select($event)"
+    >
+      @for (card of cards(); track card.id) {
+        <mat-button-toggle [value]="card.id">
+          <strong>{{ card.name }}</strong>
+          <span>{{ card.brand || card.issuerBank || 'Crédito' }}</span>
+        </mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </div>
+</section>

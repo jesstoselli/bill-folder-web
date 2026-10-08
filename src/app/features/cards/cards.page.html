@@ -1,0 +1,102 @@
+<section class="cards-page">
+  <header class="cards-page__header">
+    <div>
+      <h1 class="bf-heading-page">Cartões e faturas</h1>
+      <p>Compras, assinaturas e pagamentos organizados pela fatura real de cada cartão.</p>
+    </div>
+    <div class="cards-page__header-actions">
+      <button type="button" class="cards-page__quiet-action" (click)="refresh()">Atualizar</button>
+      <button
+        type="button"
+        mat-flat-button
+        [disabled]="store.selectedCard() === null"
+        (click)="openCreate()"
+      >
+        Nova compra
+      </button>
+    </div>
+  </header>
+
+  @if (store.cardsState().kind === 'content' && store.cards().length) {
+    <app-card-selector
+      [cards]="store.cards()"
+      [selectedId]="store.selectedCardId()"
+      (selectedIdChange)="selectCard($event)"
+    />
+  }
+
+  @if (actionError()) {
+    <p class="cards-page__action-error" role="alert">{{ actionError() }}</p>
+  }
+
+  @if (store.selectedStatementId()) {
+    <nav class="statement-navigation" aria-label="Navegação entre faturas">
+      <button
+        type="button"
+        class="statement-navigation__arrow"
+        aria-label="Fatura anterior"
+        [disabled]="store.navigation().previousId === null || refreshing()"
+        (click)="previousStatement()"
+      >
+        <span aria-hidden="true">←</span>
+      </button>
+      <strong>{{ statementMonth() }}</strong>
+      <button
+        type="button"
+        class="statement-navigation__arrow"
+        aria-label="Próxima fatura"
+        [disabled]="store.navigation().nextId === null || refreshing()"
+        (click)="nextStatement()"
+      >
+        <span aria-hidden="true">→</span>
+      </button>
+      @if (refreshing()) {
+        <span role="status">Atualizando fatura…</span>
+      }
+    </nav>
+  }
+
+  @switch (pageState().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <div class="cards-page__state">
+        <app-page-state
+          state="error"
+          title="Não foi possível carregar os cartões"
+          [message]="loadError()"
+        />
+        <button type="button" (click)="refresh()">Tentar novamente</button>
+      </div>
+    }
+    @case ('no-cards') {
+      <app-page-state
+        state="empty"
+        title="Nenhum cartão cadastrado"
+        message="Cadastre um cartão para registrar compras e acompanhar suas faturas."
+      />
+    }
+    @case ('no-statements') {
+      <app-page-state
+        state="empty"
+        title="Nenhuma fatura para este cartão"
+        message="Registre a primeira compra para iniciar o histórico de faturas."
+      />
+    }
+    @case ('content') {
+      @if (store.statement(); as statement) {
+        <article class="statement-document" tabindex="-1" aria-label="Fatura selecionada">
+          <app-statement-summary [statement]="statement" (pay)="openPayment(statement)" />
+          <app-installment-table
+            [installments]="statement.installments"
+            [entries]="store.entries()"
+            (edit)="openEdit($event)"
+            (delete)="requestDelete($event)"
+            (reprice)="requestReprice($event)"
+          />
+        </article>
+      }
+    }
+  }
+</section>

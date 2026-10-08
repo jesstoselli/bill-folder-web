@@ -1,0 +1,137 @@
+.cards-page {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.cards-page__header {
+  align-items: end;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+
+  h1 {
+    margin: 0;
+  }
+
+  p {
+    color: var(--bf-muted);
+    margin: 0.4rem 0 0;
+    max-width: 44rem;
+  }
+}
+
+.cards-page__header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cards-page__quiet-action,
+.cards-page__state button,
+.statement-navigation__arrow {
+  background: transparent;
+  border: 1px solid var(--bf-outline);
+  color: var(--bf-text);
+  cursor: pointer;
+
+  &:focus-visible {
+    box-shadow: var(--bf-focus-ring);
+    outline: 1px solid var(--bf-primary);
+    outline-offset: 2px;
+  }
+}
+
+.cards-page__quiet-action,
+.cards-page__state button {
+  border-radius: 999px;
+  min-height: 2.75rem;
+  padding: 0.55rem 1rem;
+
+  &:hover {
+    border-color: var(--bf-primary);
+    color: var(--bf-primary);
+  }
+}
+
+.cards-page__action-error {
+  border: 1px solid var(--bf-danger);
+  color: var(--bf-danger);
+  margin: 0;
+  padding: 0.75rem 1rem;
+}
+
+.statement-navigation {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+
+  strong {
+    font-size: 1.08rem;
+    font-weight: 600;
+    min-width: 11rem;
+    text-align: center;
+  }
+
+  [role='status'] {
+    color: var(--bf-muted);
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+  }
+}
+
+.statement-navigation__arrow {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  height: 2.4rem;
+  justify-content: center;
+  width: 2.4rem;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.42;
+  }
+}
+
+.statement-document {
+  background: var(--bf-surface);
+  border: 1px solid var(--bf-outline);
+  border-radius: var(--bf-radius-card);
+  overflow: hidden;
+
+  &:focus-visible {
+    box-shadow: var(--bf-focus-ring);
+    outline: 1px solid var(--bf-primary);
+    outline-offset: 2px;
+  }
+}
+
+.cards-page__state {
+  display: grid;
+  justify-items: center;
+}
+
+@media (max-width: 720px) {
+  .cards-page__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cards-page__header-actions {
+    justify-content: space-between;
+  }
+
+  .statement-document {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 420px) {
+  .statement-navigation {
+    justify-content: space-between;
+
+    [role='status'] {
+      display: none;
+    }
+  }
+}

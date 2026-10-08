@@ -1,0 +1,61 @@
+<div class="installment-table">
+  <table>
+    <caption class="u-visually-hidden">
+      Parcelas lançadas nesta fatura
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Compra</th>
+        <th scope="col">Parcela</th>
+        <th scope="col">Categoria</th>
+        <th scope="col">Data da compra</th>
+        <th scope="col" class="installment-table__amount">Valor</th>
+        <th scope="col" class="installment-table__actions">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (installment of installments(); track installment.installmentId) {
+        @if (entryFor(installment); as entry) {
+          <tr [attr.data-entry-id]="entry.id">
+            <td data-label="Compra">
+              <strong>{{ installment.label }}</strong>
+              @if (isSubscription(entry)) {
+                <span class="installment-table__subscription">Assinatura mensal</span>
+              }
+            </td>
+            <td data-label="Parcela" class="bf-tabular">
+              {{ installment.installmentNumber }}/{{ entry.installmentsCount }}
+            </td>
+            <td data-label="Categoria">{{ installment.categoryName }}</td>
+            <td data-label="Data da compra" class="bf-tabular">
+              <time [attr.datetime]="installment.purchaseDate">{{
+                formatCivilDate(installment.purchaseDate)
+              }}</time>
+            </td>
+            <td data-label="Valor" class="installment-table__amount bf-tabular">
+              {{ formatBrl(installment.amount) }}
+            </td>
+            <td class="installment-table__actions">
+              @if (isSubscription(entry)) {
+                <button type="button" data-action="reprice" (click)="reprice.emit(entry)">
+                  Reajustar assinatura
+                </button>
+              } @else {
+                <button type="button" data-action="edit" (click)="edit.emit(entry)">
+                  Editar compra
+                </button>
+              }
+              <button type="button" data-action="delete" (click)="delete.emit(entry)">
+                {{ isSubscription(entry) ? 'Excluir assinatura' : 'Excluir compra' }}
+              </button>
+            </td>
+          </tr>
+        }
+      } @empty {
+        <tr class="installment-table__empty">
+          <td colspan="6">Nenhuma parcela nesta fatura.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

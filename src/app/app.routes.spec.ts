@@ -3,6 +3,7 @@ import { anonymousGuard, authGuard } from './core/auth/auth.guard';
 import { HomePage } from './features/home/home.page';
 import { ExpensesPage } from './features/expenses/expenses.page';
 import { DailyExpensesPage } from './features/daily-expenses/daily-expenses.page';
+import { CardsPage } from './features/cards/cards.page';
 
 describe('application routes', () => {
   it('keeps every MVP destination available behind the application shell', () => {
@@ -67,5 +68,15 @@ describe('application routes', () => {
     expect(dailyExpensesRoute?.component).toBeUndefined();
     expect(dailyExpensesRoute?.loadComponent).toBeTypeOf('function');
     await expect(dailyExpensesRoute?.loadComponent?.()).resolves.toBe(DailyExpensesPage);
+  });
+
+  it('lazy-loads cards and statements behind the application shell', async () => {
+    const cardsRoute = routes
+      .find((route) => route.path === '')
+      ?.children?.find((route) => route.path === 'cartoes');
+
+    expect(cardsRoute?.component).toBeUndefined();
+    expect(cardsRoute?.loadComponent).toBeTypeOf('function');
+    await expect(cardsRoute?.loadComponent?.()).resolves.toBe(CardsPage);
   });
 });
