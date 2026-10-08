@@ -152,6 +152,66 @@ describe('ExpensesPage actions', () => {
     });
   });
 
+  it('does not steal focus in cycle B when a cycle-A delete succeeds', async () => {
+    const cycleARows = [expense({ id: 'internet', label: 'Internet' })];
+    const cycleBRows = [
+      expense({ id: 'aluguel-novembro', label: 'Aluguel de novembro', dueDate: '2026-11-10' }),
+    ];
+    let resolveDelete: () => void = () => undefined;
+    const { fixture, current, expenses } = await createActionFixture(cycleARows, (id: string) => {
+      expenses.set(expenses().filter((row) => row.id !== id));
+      return new Promise<void>((resolve) => {
+        resolveDelete = resolve;
+      });
+    });
+    fixture.detectChanges();
+
+    await chooseDelete(fixture, 'internet');
+    current.set(novemberCycle);
+    expenses.set(cycleBRows);
+    fixture.detectChanges();
+    const currentCycleFocus = findButton(fixture.nativeElement, 'Atualizar');
+    currentCycleFocus.focus();
+
+    resolveDelete();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(document.activeElement).toBe(currentCycleFocus);
+  });
+
+  it('does not steal focus in cycle B when a cycle-A delete fails', async () => {
+    const cycleARows = [expense({ id: 'internet', label: 'Internet' })];
+    const cycleBRows = [
+      expense({ id: 'aluguel-novembro', label: 'Aluguel de novembro', dueDate: '2026-11-10' }),
+    ];
+    let rejectDelete: (reason: unknown) => void = () => undefined;
+    const { fixture, current, expenses } = await createActionFixture(cycleARows, (id: string) => {
+      expenses.set(expenses().filter((row) => row.id !== id));
+      return new Promise<void>((_, reject) => {
+        rejectDelete = reject;
+      });
+    });
+    fixture.detectChanges();
+
+    await chooseDelete(fixture, 'internet');
+    current.set(novemberCycle);
+    expenses.set(cycleBRows);
+    fixture.detectChanges();
+    const currentCycleFocus = findButton(fixture.nativeElement, 'Atualizar');
+    currentCycleFocus.focus();
+
+    rejectDelete({ status: 409, code: 'conflict', message: 'Exclusão recusada.' });
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
+        'Exclusão recusada.',
+      );
+      expect(document.activeElement).toBe(currentCycleFocus);
+    });
+  });
+
   it('does not offer a payment action for a fully paid provisioned row', async () => {
     const paidProvisioned = expense({
       id: 'paid-provisioned',
@@ -301,6 +361,7 @@ async function createActionFixture(
 ) {
   const expenseState = signal({ kind: 'content' as const, data: rows, refreshing: false });
   const expenses = signal(rows);
+  const current = signal<CycleResponse | null>(octoberCycle);
   const deleteOne = vi.fn((id: string) => deleteImplementation(id));
 
   await TestBed.configureTestingModule({
@@ -324,10 +385,10 @@ async function createActionFixture(
         useValue: {
           state: signal({
             kind: 'content' as const,
-            data: [octoberCycle],
+            data: [octoberCycle, novemberCycle],
             refreshing: false,
           }).asReadonly(),
-          current: signal<CycleResponse | null>(octoberCycle).asReadonly(),
+          current: current.asReadonly(),
           previous: signal<string | null>(null).asReadonly(),
           next: signal<string | null>(null).asReadonly(),
           load: vi.fn(() => Promise.resolve()),
@@ -338,7 +399,7 @@ async function createActionFixture(
     ],
   }).compileComponents();
 
-  return { fixture: TestBed.createComponent(ExpensesPage), expenses, deleteOne };
+  return { fixture: TestBed.createComponent(ExpensesPage), current, expenses, deleteOne };
 }
 
 async function chooseDelete(
@@ -386,6 +447,15 @@ const octoberCycle: CycleResponse = {
   isCurrent: true,
   createdAt: '2026-10-01T10:00:00Z',
   updatedAt: '2026-10-01T10:00:00Z',
+};
+
+const novemberCycle: CycleResponse = {
+  ...octoberCycle,
+  id: 'cycle-2',
+  startDate: '2026-11-01',
+  endDate: '2026-11-30',
+  label: 'novembro/2026',
+  isCurrent: false,
 };
 
 function expense(overrides: Partial<ExpenseResponse> = {}): ExpenseResponse {

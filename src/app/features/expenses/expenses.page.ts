@@ -23,9 +23,14 @@ import { ExpensesStore } from './expenses.store';
 
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: ExpenseProjection }
-  | { readonly kind: 'delete'; readonly expense: ExpenseProjection };
+  | {
+      readonly kind: 'delete';
+      readonly expense: ExpenseProjection;
+      readonly focusContext: DeleteFocusContext;
+    };
 
 interface DeleteFocusContext {
+  readonly cycleId: string;
   readonly expenseId: string;
   readonly rowIndex: number;
 }
@@ -124,7 +129,15 @@ export class ExpensesPage implements OnInit {
   }
 
   protected queueDelete(expense: ExpenseProjection): void {
-    this.pendingAction = { kind: 'delete', expense };
+    const cycle = this.cycles.current();
+    if (cycle === null) {
+      return;
+    }
+    this.pendingAction = {
+      kind: 'delete',
+      expense,
+      focusContext: this.captureDeleteFocus(cycle.id, expense.id),
+    };
   }
 
   protected handleMenuClosed(expenseId: string): void {
@@ -139,7 +152,7 @@ export class ExpensesPage implements OnInit {
       return;
     }
 
-    void this.deleteExpense(action.expense, this.captureDeleteFocus(expenseId));
+    void this.deleteExpense(action.expense, action.focusContext);
   }
 
   protected selectPreviousCycle(): void {
@@ -198,19 +211,31 @@ export class ExpensesPage implements OnInit {
     try {
       await this.store.deleteOne(expense.id, 'this');
       this.changeDetector.detectChanges();
-      this.focusAdjacentRow(focusContext.rowIndex);
+      if (this.isCurrentCycle(focusContext)) {
+        this.focusAdjacentRow(focusContext.rowIndex);
+      }
     } catch (error: unknown) {
       this.actionError.set(mapApiError(error).message);
       this.changeDetector.detectChanges();
-      this.focusRestoredRow(focusContext);
+      if (this.isCurrentCycle(focusContext)) {
+        this.focusRestoredRow(focusContext);
+      }
     }
   }
 
-  private captureDeleteFocus(expenseId: string): DeleteFocusContext {
+  private captureDeleteFocus(cycleId: string, expenseId: string): DeleteFocusContext {
     const rowIndex = this.rowActionTriggers().findIndex(
       (trigger) => trigger.closest<HTMLTableRowElement>('tr')?.dataset['expenseId'] === expenseId,
     );
-    return { expenseId, rowIndex: Math.max(rowIndex, 0) };
+    return {
+      cycleId,
+      expenseId,
+      rowIndex: Math.max(rowIndex, 0),
+    };
+  }
+
+  private isCurrentCycle(context: DeleteFocusContext): boolean {
+    return this.cycles.current()?.id === context.cycleId;
   }
 
   private focusRestoredRow(context: DeleteFocusContext): void {
