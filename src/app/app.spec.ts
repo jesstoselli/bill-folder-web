@@ -52,6 +52,8 @@ describe('App', () => {
           useValue: {
             state: signal({ kind: 'content', data: homeFixture, refreshing: false }),
             recentDailyExpenses: signal([]),
+            recentState: signal({ kind: 'content', data: [], refreshing: false }),
+            refreshRecent: vi.fn(() => Promise.resolve()),
             load: vi.fn(() => Promise.resolve()),
             refresh: vi.fn(() => Promise.resolve()),
             selectCycle: vi.fn(() => true),

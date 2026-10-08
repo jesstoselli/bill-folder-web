@@ -113,6 +113,29 @@ describe('ExpensesStore', () => {
     await vi.waitFor(() => expect(store.expenses()).toEqual([]));
   });
 
+  it('preserves content and exposes an invalidation refresh failure', async () => {
+    current.set(cycle);
+    TestBed.tick();
+    backend.expectOne('/v1/expenses/?from=2026-10-01&to=2026-10-31').flush([firstExpense]);
+    await vi.waitFor(() => expect(store.expenses()).toEqual([firstExpense]));
+
+    changes.notify();
+    TestBed.tick();
+    backend
+      .expectOne('/v1/expenses/?from=2026-10-01&to=2026-10-31')
+      .flush({ message: 'Falha ao atualizar.' }, { status: 503, statusText: 'Unavailable' });
+
+    await vi.waitFor(() =>
+      expect(store.state()).toMatchObject({
+        kind: 'content',
+        data: [firstExpense],
+        refreshing: false,
+        refreshError: 'Servidor indisponível. Tente novamente em instantes.',
+        lastSuccessfulAt: expect.any(Number),
+      }),
+    );
+  });
+
   it('rolls an optimistic delete back and does not notify when HTTP deletion fails', async () => {
     const loading = store.load(cycle);
     backend.expectOne('/v1/expenses/?from=2026-10-01&to=2026-10-31').flush([firstExpense]);

@@ -30,6 +30,7 @@
     }
     @case ('content') {
       @if (content(); as data) {
+        <app-refresh-status [state]="store.state()" (retry)="refresh()" />
         <div class="home-page__cycle-row">
           <app-cycle-navigator
             [label]="data.cycle.label"
@@ -67,11 +68,30 @@
                 tabindex="0"
                 [attr.aria-labelledby]="'home-tab-' + selectedTab()"
               >
-                <app-projection-list
-                  [rows]="visibleRows()"
-                  [emptyMessage]="emptyMessage()"
-                  [cycleId]="data.cycle.id"
-                />
+                @if (selectedTab() === 'recent' && store.recentState().kind === 'loading') {
+                  <app-page-state state="loading" />
+                } @else if (selectedTab() === 'recent' && store.recentState().kind === 'error') {
+                  <div class="home-page__error">
+                    <app-page-state
+                      state="error"
+                      title="Não foi possível carregar os gastos recentes"
+                      [message]="recentErrorMessage()"
+                    />
+                    <button type="button" (click)="store.refreshRecent()">Tentar novamente</button>
+                  </div>
+                } @else {
+                  <app-projection-list
+                    [rows]="visibleRows()"
+                    [emptyMessage]="emptyMessage()"
+                    [cycleId]="data.cycle.id"
+                  />
+                  @if (selectedTab() === 'recent') {
+                    <app-refresh-status
+                      [state]="store.recentState()"
+                      (retry)="store.refreshRecent()"
+                    />
+                  }
+                }
               </div>
             </section>
           </div>

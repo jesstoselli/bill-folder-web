@@ -129,7 +129,11 @@ describe('CardsPage', () => {
     const deleteButton = findButton(fixture.nativeElement, 'Excluir compra');
     deleteButton.focus();
     deleteButton.click();
+    fixture.detectChanges();
     expect(store.deleteEntry).toHaveBeenCalledWith('entry-1', 'this');
+    expect(deleteButton.disabled).toBe(true);
+    deleteButton.click();
+    expect(store.deleteEntry).toHaveBeenCalledTimes(1);
 
     pending.reject({ status: 409, code: 'conflict', message: 'Compra bloqueada.' });
 
@@ -139,6 +143,7 @@ describe('CardsPage', () => {
         (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')?.textContent,
       ).toContain('Compra bloqueada.');
       expect(document.activeElement).toBe(deleteButton);
+      expect(deleteButton.disabled).toBe(false);
     });
   });
 

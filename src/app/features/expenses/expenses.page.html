@@ -68,6 +68,7 @@
       </div>
     }
     @case ('content') {
+      <app-refresh-status [state]="store.state()" (retry)="refresh()" />
       <div class="expense-ledger" tabindex="-1" aria-label="Lista de despesas do ciclo">
         <table>
           <caption class="u-visually-hidden">

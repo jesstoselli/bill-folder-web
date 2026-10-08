@@ -96,7 +96,27 @@ describe('HomeStore', () => {
     await store.load('cycle-1');
 
     expect(store.state()).toEqual({ kind: 'content', data: homeFixture, refreshing: false });
-    expect(store.recentDailyExpenses()).toEqual([]);
+    expect(store.recentState()).toMatchObject({
+      kind: 'error',
+      message: 'indisponível',
+    });
+  });
+
+  it('preserves Home content and exposes retry details when a manual refresh fails', async () => {
+    await store.load('cycle-1');
+    api.get.mockReturnValueOnce(
+      throwError(() => ({ status: 503, code: 'http_503', message: 'Falha ao atualizar.' })),
+    );
+
+    await store.refresh();
+
+    expect(store.state()).toMatchObject({
+      kind: 'content',
+      data: homeFixture,
+      refreshing: false,
+      refreshError: 'Falha ao atualizar.',
+      lastSuccessfulAt: expect.any(Number),
+    });
   });
 
   it('exposes recent daily expenses in descending civil-date order', async () => {
@@ -142,7 +162,12 @@ describe('HomeStore', () => {
     pendingB.error({ status: 503, code: 'http_503', message: 'indisponível' });
 
     await vi.waitFor(() =>
-      expect(store.state()).toEqual({ kind: 'content', data: homeFixture, refreshing: false }),
+      expect(store.state()).toMatchObject({
+        kind: 'content',
+        data: homeFixture,
+        refreshing: false,
+        refreshError: 'indisponível',
+      }),
     );
     expect(cycleStore.current()?.id).toBe('cycle-1');
     expect(cycleStore.previous()).toBeNull();

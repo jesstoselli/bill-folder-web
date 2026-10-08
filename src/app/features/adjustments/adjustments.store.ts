@@ -25,6 +25,7 @@ export class AdjustmentsStore {
   private activeCycle: CycleResponse | null = null;
   private observedKey: string | null = null;
   private loadGeneration = 0;
+  private lastSuccessfulAt = 0;
 
   readonly state = computed<LoadState<readonly CycleAdjustmentResponse[]>>(() => {
     const state = this.sourceState();
@@ -88,10 +89,16 @@ export class AdjustmentsStore {
         data: [...data].sort(compareAdjustments),
         refreshing: false,
       });
+      this.lastSuccessfulAt = Date.now();
     } catch (error: unknown) {
       if (generation !== this.loadGeneration) return;
       if (sameCycle && previous.kind === 'content')
-        this.sourceState.set({ ...previous, refreshing: false });
+        this.sourceState.set({
+          ...previous,
+          refreshing: false,
+          refreshError: mapApiError(error).message,
+          lastSuccessfulAt: this.lastSuccessfulAt,
+        });
       else this.sourceState.set({ kind: 'error', message: mapApiError(error).message });
     }
   }

@@ -41,8 +41,14 @@ describe('HomePage tabs', () => {
           useValue: {
             state: homeState.asReadonly(),
             recentDailyExpenses: recent.asReadonly(),
+            recentState: signal({
+              kind: 'content' as const,
+              data: [],
+              refreshing: false,
+            }).asReadonly(),
             load: vi.fn(() => Promise.resolve()),
             refresh: vi.fn(() => Promise.resolve()),
+            refreshRecent: vi.fn(() => Promise.resolve()),
             selectCycle: vi.fn(() => true),
           },
         },

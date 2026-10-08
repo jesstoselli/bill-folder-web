@@ -58,6 +58,8 @@
       />
     }
     @case ('content') {
+      <app-refresh-status [state]="store.accountsState()" (retry)="refresh()" />
+      <app-refresh-status [state]="store.transactionState()" (retry)="refresh()" />
       @if (store.selectedAccount(); as account) {
         @if (cycles.current(); as cycle) {
           <app-savings-summary

@@ -9,6 +9,8 @@ import { HomeTab, HomeTabsComponent } from './components/home-tabs/home-tabs.com
 import { ProjectionListComponent } from './components/projection-list/projection-list.component';
 import { collectHomeRows, projectRecent } from './home-projections';
 import { HomeStore } from './home.store';
+import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
+import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 
 @Component({
   selector: 'app-home-page',
@@ -20,6 +22,7 @@ import { HomeStore } from './home.store';
     CategoryBreakdownComponent,
     HomeTabsComponent,
     ProjectionListComponent,
+    RefreshStatusComponent,
   ],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
@@ -38,6 +41,10 @@ export class HomePage implements OnInit {
   });
   protected readonly errorMessage = computed(() => {
     const state = this.store.state();
+    return state.kind === 'error' ? state.message : '';
+  });
+  protected readonly recentErrorMessage = computed(() => {
+    const state = this.store.recentState();
     return state.kind === 'error' ? state.message : '';
   });
   private readonly obligations = computed(() => {
@@ -71,6 +78,10 @@ export class HomePage implements OnInit {
         return 'Nada atrasado neste ciclo.';
     }
   });
+
+  constructor() {
+    registerActiveRouteRefresh(() => this.store.refresh());
+  }
 
   ngOnInit(): void {
     void this.initialize();

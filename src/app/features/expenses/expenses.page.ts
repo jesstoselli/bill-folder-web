@@ -29,6 +29,8 @@ import { ExpenseProjection, groupExpenses, projectExpense } from './expense-proj
 import { ExpensesStore } from './expenses.store';
 import { RecurrenceScopeDialogComponent } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope-dialog.component';
 import { ScopeChoice } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
+import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
+import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: ExpenseProjection }
@@ -64,6 +66,7 @@ type ExpensesViewState =
     NgTemplateOutlet,
     CycleNavigatorComponent,
     PageStateComponent,
+    RefreshStatusComponent,
   ],
   templateUrl: './expenses.page.html',
   styleUrl: './expenses.page.scss',
@@ -119,6 +122,7 @@ export class ExpensesPage implements OnInit {
   protected readonly formatBrl = formatBrl;
 
   constructor() {
+    registerActiveRouteRefresh(() => this.store.refresh());
     effect(() => {
       const link = this.deepLink();
       const cycle = this.cycles.current();

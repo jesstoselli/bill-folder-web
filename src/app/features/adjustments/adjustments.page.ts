@@ -18,6 +18,8 @@ import { formatBrl } from '../../shared/formatters/money';
 import { AdjustmentFormComponent } from './components/adjustment-form/adjustment-form.component';
 import { CycleAdjustmentResponse, CycleAdjustmentType } from './adjustments.models';
 import { AdjustmentsStore } from './adjustments.store';
+import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
+import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 
 interface RowFocus {
   readonly cycleId: string;
@@ -33,7 +35,13 @@ type AdjustmentsViewState =
 
 @Component({
   selector: 'app-adjustments-page',
-  imports: [MatButtonModule, MatDialogModule, CycleNavigatorComponent, PageStateComponent],
+  imports: [
+    MatButtonModule,
+    MatDialogModule,
+    CycleNavigatorComponent,
+    PageStateComponent,
+    RefreshStatusComponent,
+  ],
   templateUrl: './adjustments.page.html',
   styleUrl: './adjustments.page.scss',
 })
@@ -62,6 +70,10 @@ export class AdjustmentsPage implements OnInit {
     const state = this.store.state();
     return state.kind === 'content' && state.refreshing;
   });
+
+  constructor() {
+    registerActiveRouteRefresh(() => this.store.refresh());
+  }
 
   ngOnInit(): void {
     if (this.cycles.state().kind === 'loading') void this.cycles.load();

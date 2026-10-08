@@ -25,6 +25,7 @@ export class DailyExpensesStore {
   private activeCycle: CycleResponse | null = null;
   private observedKey: string | null = null;
   private loadGeneration = 0;
+  private lastSuccessfulAt = 0;
 
   readonly state = computed<LoadState<readonly DailyExpenseResponse[]>>(() => {
     const state = this.sourceState();
@@ -96,12 +97,18 @@ export class DailyExpensesStore {
         data: [...expenses].sort(compareDailyExpenses),
         refreshing: false,
       });
+      this.lastSuccessfulAt = Date.now();
     } catch (error: unknown) {
       if (generation !== this.loadGeneration) {
         return;
       }
       if (sameCycle && previousState.kind === 'content') {
-        this.sourceState.set({ ...previousState, refreshing: false });
+        this.sourceState.set({
+          ...previousState,
+          refreshing: false,
+          refreshError: mapApiError(error).message,
+          lastSuccessfulAt: this.lastSuccessfulAt,
+        });
       } else {
         this.sourceState.set({ kind: 'error', message: mapApiError(error).message });
       }

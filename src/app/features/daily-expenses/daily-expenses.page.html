@@ -61,6 +61,7 @@
       </div>
     }
     @case ('content') {
+      <app-refresh-status [state]="store.state()" (retry)="refresh()" />
       @if (store.expenses().length > 0) {
         <div class="daily-ledger-summary" aria-label="Resumo dos gastos do ciclo">
           <span>{{ countLabel(store.expenses().length) }} no ciclo</span>

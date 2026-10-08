@@ -20,6 +20,8 @@ import { ConfirmIncomeDialogComponent } from './components/confirm-income-dialog
 import { IncomeEntryFormComponent } from './components/income-entry-form/income-entry-form.component';
 import { IncomeEntryResponse } from './income.models';
 import { IncomeStore } from './income.store';
+import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
+import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 
 type IncomeAction = 'confirm' | 'edit' | 'delete';
 interface RowFocus {
@@ -42,6 +44,7 @@ type IncomeViewState =
     MatDialogModule,
     CycleNavigatorComponent,
     PageStateComponent,
+    RefreshStatusComponent,
   ],
   templateUrl: './income.page.html',
   styleUrl: './income.page.scss',
@@ -78,6 +81,10 @@ export class IncomePage implements OnInit {
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
   protected readonly formatBrl = formatBrl;
+
+  constructor() {
+    registerActiveRouteRefresh(() => this.store.refresh());
+  }
 
   ngOnInit(): void {
     if (this.cycles.state().kind === 'loading') void this.cycles.load();

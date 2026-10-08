@@ -51,14 +51,14 @@ describe('ExpenseFormComponent failed save', () => {
           rejectSave = reject;
         }),
     );
-    const close = vi.fn();
+    const dialogRef = { close: vi.fn(), disableClose: false };
     const state = signal({ kind: 'content' as const, data: [], refreshing: false });
 
     await TestBed.configureTestingModule({
       imports: [ExpenseFormComponent],
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: { mode: 'create' } },
-        { provide: MatDialogRef, useValue: { close } },
+        { provide: MatDialogRef, useValue: dialogRef },
         { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
         {
           provide: ExpensesStore,
@@ -92,6 +92,13 @@ describe('ExpenseFormComponent failed save', () => {
     });
 
     const submitting = component.submit();
+    fixture.detectChanges();
+    expect(dialogRef.disableClose).toBe(true);
+    expect(
+      [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button')]
+        .filter((button) => /Fechar|Cancelar/.test(button.textContent ?? ''))
+        .every((button) => button.disabled),
+    ).toBe(true);
     rejectSave({ status: 400, code: 'validation_error', message: 'Categoria inválida.' });
     await submitting;
     fixture.detectChanges();
@@ -106,7 +113,8 @@ describe('ExpenseFormComponent failed save', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
       'Categoria inválida.',
     );
-    expect(close).not.toHaveBeenCalled();
+    expect(dialogRef.disableClose).toBe(false);
+    expect(dialogRef.close).not.toHaveBeenCalled();
   });
 
   it('blocks a duplicate submit while the first save is pending', async () => {
@@ -118,13 +126,13 @@ describe('ExpenseFormComponent failed save', () => {
           resolveSave = resolve;
         }),
     );
-    const close = vi.fn();
+    const dialogRef = { close: vi.fn(), disableClose: false };
 
     await TestBed.configureTestingModule({
       imports: [ExpenseFormComponent],
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: { mode: 'create' } },
-        { provide: MatDialogRef, useValue: { close } },
+        { provide: MatDialogRef, useValue: dialogRef },
         { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
         { provide: ExpensesStore, useValue: { create } },
       ],
@@ -146,11 +154,13 @@ describe('ExpenseFormComponent failed save', () => {
 
     expect(create).toHaveBeenCalledTimes(1);
     expect(component.saving()).toBe(true);
+    expect(dialogRef.disableClose).toBe(true);
     resolveSave(savedExpense);
     await Promise.all([firstSubmit, duplicateSubmit]);
 
-    expect(close).toHaveBeenCalledTimes(1);
-    expect(close).toHaveBeenCalledWith(savedExpense);
+    expect(dialogRef.disableClose).toBe(false);
+    expect(dialogRef.close).toHaveBeenCalledTimes(1);
+    expect(dialogRef.close).toHaveBeenCalledWith(savedExpense);
   });
 });
 

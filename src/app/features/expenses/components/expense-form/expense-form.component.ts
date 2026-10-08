@@ -15,6 +15,7 @@ import { firstValueFrom } from 'rxjs';
 import { CategoryDto, ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { mapApiError } from '../../../../core/http/api-error';
 import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpensesStore } from '../../expenses.store';
 import {
   ExpenseFormDialogData,
@@ -41,11 +42,12 @@ export class ExpenseFormComponent implements OnInit {
   private readonly references = inject(ReferenceDataApi);
   private readonly store = inject(ExpensesStore);
   private readonly dialogRef = inject(MatDialogRef<ExpenseFormComponent>);
+  private readonly writeLock = new WriteDialogLock(this.dialogRef);
   readonly data = inject<ExpenseFormDialogData>(MAT_DIALOG_DATA);
 
   readonly categories = signal<readonly CategoryDto[]>([]);
   readonly loadingCategories = signal(true);
-  readonly saving = signal(false);
+  readonly saving = this.writeLock.saving;
   readonly serverError = signal('');
   readonly form = this.formBuilder.nonNullable.group({
     dueDate: [this.initialExpense()?.dueDate ?? '', [Validators.required, validCivilDate]],
@@ -67,12 +69,11 @@ export class ExpenseFormComponent implements OnInit {
 
   async submit(): Promise<void> {
     this.serverError.set('');
-    if (this.form.invalid || this.saving()) {
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-
-    this.saving.set(true);
+    if (!this.writeLock.begin()) return;
     const value = this.form.getRawValue() as ExpenseFormValue;
     try {
       const result =
@@ -83,7 +84,7 @@ export class ExpenseFormComponent implements OnInit {
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {
-      this.saving.set(false);
+      this.writeLock.release();
     }
   }
 

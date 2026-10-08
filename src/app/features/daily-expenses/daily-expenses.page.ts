@@ -19,6 +19,8 @@ import { formatBrl } from '../../shared/formatters/money';
 import { DailyExpenseFormComponent } from './components/daily-expense-form/daily-expense-form.component';
 import { DailyExpenseResponse } from './daily-expenses.models';
 import { DailyExpensesStore } from './daily-expenses.store';
+import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
+import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: DailyExpenseResponse; readonly focus: RowFocus }
@@ -44,6 +46,7 @@ type DailyExpensesViewState =
     MatMenuModule,
     CycleNavigatorComponent,
     PageStateComponent,
+    RefreshStatusComponent,
   ],
   templateUrl: './daily-expenses.page.html',
   styleUrl: './daily-expenses.page.scss',
@@ -95,6 +98,10 @@ export class DailyExpensesPage implements OnInit {
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
   protected readonly formatBrl = formatBrl;
+
+  constructor() {
+    registerActiveRouteRefresh(() => this.store.refresh());
+  }
 
   ngOnInit(): void {
     if (this.cycles.state().kind === 'loading') {

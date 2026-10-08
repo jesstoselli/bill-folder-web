@@ -60,6 +60,7 @@
       </div>
     }
     @case ('content') {
+      <app-refresh-status [state]="store.state()" (retry)="refresh()" />
       <div class="adjustments-summary">
         <span>{{
           store.adjustments().length === 1

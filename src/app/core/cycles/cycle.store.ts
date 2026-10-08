@@ -11,6 +11,7 @@ export class CycleStore {
   private readonly stateValue = signal<LoadState<CycleResponse[]>>({ kind: 'loading' });
   private readonly selectedId = signal<string | null>(null);
   private loadGeneration = 0;
+  private lastSuccessfulAt = 0;
 
   readonly state = this.stateValue.asReadonly();
   readonly cycles = computed(() => {
@@ -55,13 +56,19 @@ export class CycleStore {
 
       this.selectedId.set(retainedSelection ?? currentSelection);
       this.stateValue.set({ kind: 'content', data: cycles, refreshing: false });
+      this.lastSuccessfulAt = Date.now();
     } catch (error: unknown) {
       if (generation !== this.loadGeneration) {
         return;
       }
 
       if (previousState.kind === 'content') {
-        this.stateValue.set({ ...previousState, refreshing: false });
+        this.stateValue.set({
+          ...previousState,
+          refreshing: false,
+          refreshError: mapApiError(error).message,
+          lastSuccessfulAt: this.lastSuccessfulAt,
+        });
         return;
       }
 

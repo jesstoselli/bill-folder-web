@@ -61,6 +61,7 @@
       </div>
     }
     @case ('content') {
+      <app-refresh-status [state]="store.state()" (retry)="refresh()" />
       <div class="income-totals" aria-label="Resumo das receitas">
         <span
           ><small>Esperado</small

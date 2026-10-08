@@ -12,12 +12,17 @@ import { isSubscription } from '../card-entry-form/card-entry-form.models';
 export class InstallmentTableComponent {
   readonly installments = input.required<readonly StatementInstallmentDto[]>();
   readonly entries = input.required<readonly CardEntryResponse[]>();
+  readonly pendingDeleteEntryIds = input<ReadonlySet<string>>(new Set());
   readonly edit = output<CardEntryResponse>();
   readonly delete = output<CardEntryResponse>();
   readonly reprice = output<CardEntryResponse>();
   protected readonly formatCivilDate = formatCivilDate;
   protected readonly formatBrl = formatBrl;
   protected readonly isSubscription = isSubscription;
+
+  protected deletePending(entryId: string): boolean {
+    return this.pendingDeleteEntryIds().has(entryId);
+  }
 
   protected entryFor(installment: StatementInstallmentDto): CardEntryResponse | null {
     return this.entries().find((entry) => entry.id === installment.cardEntryId) ?? null;

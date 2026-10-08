@@ -32,6 +32,8 @@ export class SavingsStore {
   private transactionGeneration = 0;
   private observedCycleId = this.cycles.current()?.id ?? null;
   private observedVersion = this.changes.version();
+  private accountsLastSuccessfulAt = 0;
+  private transactionsLastSuccessfulAt = 0;
 
   readonly accountsState = this.accountsSource.asReadonly();
   readonly selectedAccountId = this.selectedAccountIdState.asReadonly();
@@ -108,6 +110,7 @@ export class SavingsStore {
       if (generation !== this.accountsGeneration) return;
 
       this.accountsSource.set({ kind: 'content', data: accounts, refreshing: false });
+      this.accountsLastSuccessfulAt = Date.now();
       if (accounts.length === 0) {
         this.clearSelection();
         return;
@@ -126,7 +129,12 @@ export class SavingsStore {
     } catch (error: unknown) {
       if (generation !== this.accountsGeneration) return;
       if (previousState.kind === 'content') {
-        this.accountsSource.set({ ...previousState, refreshing: false });
+        this.accountsSource.set({
+          ...previousState,
+          refreshing: false,
+          refreshError: mapApiError(error).message,
+          lastSuccessfulAt: this.accountsLastSuccessfulAt,
+        });
       } else {
         this.clearSelection();
         this.accountsSource.set({ kind: 'error', message: mapApiError(error).message });
@@ -178,6 +186,7 @@ export class SavingsStore {
         },
         refreshing: false,
       });
+      this.transactionsLastSuccessfulAt = Date.now();
     } catch (error: unknown) {
       if (
         generation !== this.transactionGeneration ||
@@ -188,7 +197,12 @@ export class SavingsStore {
       }
       this.transactionSource.set(
         sameScope
-          ? { ...previousState, refreshing: false }
+          ? {
+              ...previousState,
+              refreshing: false,
+              refreshError: mapApiError(error).message,
+              lastSuccessfulAt: this.transactionsLastSuccessfulAt,
+            }
           : { kind: 'error', message: mapApiError(error).message },
       );
     }

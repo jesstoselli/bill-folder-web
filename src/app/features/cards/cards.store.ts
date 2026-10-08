@@ -45,6 +45,7 @@ export class CardsStore {
   private cardGeneration = 0;
   private statementGeneration = 0;
   private observedVersion = this.changes.version();
+  private cardLastSuccessfulAt = 0;
 
   readonly cardsState = this.cardsSource.asReadonly();
   readonly cardState = this.cardSource.asReadonly();
@@ -239,6 +240,7 @@ export class CardsStore {
         data: { cardId, entries, statements },
         refreshing: false,
       });
+      this.cardLastSuccessfulAt = Date.now();
       this.selectedStatementIdState.set(selectedStatementId);
       if (selectedStatementId) {
         await this.loadStatement(cardId, selectedStatementId);
@@ -250,7 +252,13 @@ export class CardsStore {
         return;
       }
       if (refreshing && existing?.cardId === cardId) {
-        this.cardSource.set({ kind: 'content', data: existing, refreshing: false });
+        this.cardSource.set({
+          kind: 'content',
+          data: existing,
+          refreshing: false,
+          refreshError: mapApiError(error).message,
+          lastSuccessfulAt: this.cardLastSuccessfulAt,
+        });
         const selectedStatementId = this.selectedStatementIdState();
         if (selectedStatementId) {
           await this.loadStatement(cardId, selectedStatementId);

@@ -86,12 +86,14 @@
       />
     }
     @case ('content') {
+      <app-refresh-status [state]="store.cardState()" (retry)="refresh()" />
       @if (store.statement(); as statement) {
         <article class="statement-document" tabindex="-1" aria-label="Fatura selecionada">
           <app-statement-summary [statement]="statement" (pay)="openPayment(statement)" />
           <app-installment-table
             [installments]="statement.installments"
             [entries]="store.entries()"
+            [pendingDeleteEntryIds]="pendingDeleteEntryIds()"
             (edit)="openEdit($event)"
             (delete)="requestDelete($event)"
             (reprice)="requestReprice($event)"

@@ -23,6 +23,8 @@ import { InstallmentTableComponent } from './components/installment-table/instal
 import { PayStatementDialogComponent } from './components/pay-statement-dialog/pay-statement-dialog.component';
 import { RepriceSubscriptionDialogComponent } from './components/reprice-subscription-dialog/reprice-subscription-dialog.component';
 import { StatementSummaryComponent } from './components/statement-summary/statement-summary.component';
+import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
+import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 
 interface EntryFocusContext {
   readonly cardId: string;
@@ -52,6 +54,7 @@ type CardsViewState =
     CardSelectorComponent,
     StatementSummaryComponent,
     InstallmentTableComponent,
+    RefreshStatusComponent,
   ],
   templateUrl: './cards.page.html',
   styleUrl: './cards.page.scss',
@@ -65,6 +68,19 @@ export class CardsPage implements OnInit {
   private readonly router = inject(Router, { optional: true });
 
   protected readonly actionError = signal('');
+  private readonly pendingDeleteKeys = signal<ReadonlySet<string>>(new Set());
+  protected readonly pendingDeleteEntryIds = computed(() => {
+    const cardId = this.store.selectedCardId();
+    const statementId = this.store.selectedStatementId();
+    if (!cardId || !statementId) return new Set<string>();
+    const pending = this.pendingDeleteKeys();
+    return new Set(
+      this.store
+        .entries()
+        .filter((entry) => pending.has(deleteKey(cardId, statementId, entry.id)))
+        .map((entry) => entry.id),
+    );
+  });
   protected readonly pageState = computed<CardsViewState>(() => {
     const cardsState = this.store.cardsState();
     if (cardsState.kind === 'loading') return { kind: 'loading' };
@@ -88,6 +104,10 @@ export class CardsPage implements OnInit {
     const state = this.store.cardState();
     return state.kind === 'content' && state.refreshing;
   });
+
+  constructor() {
+    registerActiveRouteRefresh(() => this.store.refresh());
+  }
 
   ngOnInit(): void {
     void this.initialize();
@@ -207,7 +227,12 @@ export class CardsPage implements OnInit {
 
   protected requestDelete(entry: CardEntryResponse): void {
     const focus = this.captureEntryFocus(entry.id, 'delete');
-    if (!focus) return;
+    if (
+      !focus ||
+      this.pendingDeleteKeys().has(deleteKey(focus.cardId, focus.statementId, entry.id))
+    ) {
+      return;
+    }
     this.actionError.set('');
     if (isSubscription(entry)) {
       this.openScopeDialog('delete', entry, focus);
@@ -291,18 +316,32 @@ export class CardsPage implements OnInit {
     focus: EntryFocusContext,
     scope: ScopeChoice,
   ): Promise<void> {
+    const key = deleteKey(focus.cardId, focus.statementId, entry.id);
+    if (this.pendingDeleteKeys().has(key)) return;
+    this.setDeletePending(key, true);
+    let failure: unknown = null;
     try {
       await this.store.deleteEntry(entry.id, scope);
-      this.changeDetector.detectChanges();
-      if (this.isCurrentEntryScope(focus)) {
-        this.writeCompletionTarget()?.focus();
-      }
     } catch (error: unknown) {
-      if (!this.isCurrentEntryScope(focus)) return;
-      this.actionError.set(mapApiError(error).message);
+      failure = error;
+    } finally {
+      this.setDeletePending(key, false);
+    }
+    this.changeDetector.detectChanges();
+    if (!this.isCurrentEntryScope(focus)) return;
+    if (failure === null) {
+      this.writeCompletionTarget()?.focus();
+    } else {
+      this.actionError.set(mapApiError(failure).message);
       this.changeDetector.detectChanges();
       this.focusEntryAction(focus);
     }
+  }
+
+  private setDeletePending(key: string, pending: boolean): void {
+    const next = new Set(this.pendingDeleteKeys());
+    pending ? next.add(key) : next.delete(key);
+    this.pendingDeleteKeys.set(next);
   }
 
   private captureEntryFocus(
@@ -372,4 +411,8 @@ export class CardsPage implements OnInit {
   private writeCompletionTarget(): HTMLButtonElement | null {
     return this.host.nativeElement.querySelector<HTMLButtonElement>('[data-page-action="create"]');
   }
+}
+
+function deleteKey(cardId: string, statementId: string, entryId: string): string {
+  return `${cardId}:${statementId}:${entryId}`;
 }

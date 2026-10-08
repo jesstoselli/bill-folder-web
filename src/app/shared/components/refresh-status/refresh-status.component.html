@@ -1,0 +1,7 @@
+@if (failure(); as failure) {
+  <div class="refresh-status" role="alert">
+    <span>{{ failure.message }}</span>
+    <small>Última atualização bem-sucedida: {{ lastSuccess(failure.lastSuccessfulAt) }}.</small>
+    <button type="button" (click)="retry.emit()">Tentar novamente</button>
+  </div>
+}

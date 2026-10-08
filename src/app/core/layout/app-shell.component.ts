@@ -6,6 +6,7 @@ import { filter } from 'rxjs';
 import { AuthSessionService } from '../auth/auth-session.service';
 import { ShellStore } from './shell.store';
 import { SidebarComponent } from './sidebar.component';
+import { TabResumeRefreshService } from '../refresh/active-route-refresh.service';
 
 @Component({
   selector: 'app-shell',
@@ -16,6 +17,7 @@ import { SidebarComponent } from './sidebar.component';
 export class AppShellComponent {
   private readonly router = inject(Router);
   private readonly session = inject(AuthSessionService);
+  private readonly tabResumeRefresh = inject(TabResumeRefreshService);
 
   readonly store = inject(ShellStore);
   readonly activeRoute = signal(this.router.url || '/home');

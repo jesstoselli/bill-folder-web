@@ -25,6 +25,8 @@ import { SavingsTransactionFormComponent } from './components/savings-transactio
 import { SavingsTransactionResponse, SavingsTransactionType } from './savings.models';
 import { savingsTypeSign } from './savings.projections';
 import { SavingsStore } from './savings.store';
+import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
+import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 
 interface RowFocus {
   readonly accountId: string;
@@ -59,6 +61,7 @@ type SavingsViewState =
     PageStateComponent,
     SavingsSelectorComponent,
     SavingsSummaryComponent,
+    RefreshStatusComponent,
   ],
   templateUrl: './savings.page.html',
   styleUrl: './savings.page.scss',
@@ -98,6 +101,10 @@ export class SavingsPage implements OnInit {
     }
     return { kind: transactionState.kind };
   });
+
+  constructor() {
+    registerActiveRouteRefresh(() => this.store.refresh());
+  }
   protected readonly refreshing = computed(() => {
     const accountsState = this.store.accountsState();
     const transactionState = this.store.transactionState();

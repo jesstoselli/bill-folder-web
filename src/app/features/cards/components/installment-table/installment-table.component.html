@@ -45,8 +45,19 @@
                   Editar compra
                 </button>
               }
-              <button type="button" data-action="delete" (click)="delete.emit(entry)">
-                {{ isSubscription(entry) ? 'Excluir assinatura' : 'Excluir compra' }}
+              <button
+                type="button"
+                data-action="delete"
+                [disabled]="deletePending(entry.id)"
+                (click)="delete.emit(entry)"
+              >
+                {{
+                  deletePending(entry.id)
+                    ? 'Excluindo…'
+                    : isSubscription(entry)
+                      ? 'Excluir assinatura'
+                      : 'Excluir compra'
+                }}
               </button>
             </td>
           </tr>
