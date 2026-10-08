@@ -5,6 +5,7 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { APP_ENVIRONMENT } from '../../core/config/app-environment';
 import { CycleResponse } from '../../core/cycles/cycle.models';
 import { CycleStore } from '../../core/cycles/cycle.store';
@@ -42,7 +43,7 @@ describe('SavingsPage write focus across the shared data refresh', () => {
         },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { queryParamMap: convertToParamMap({}) } },
+          useValue: { queryParamMap: of(convertToParamMap({})) },
         },
         { provide: Router, useValue: { navigate: vi.fn(() => Promise.resolve(true)) } },
       ],

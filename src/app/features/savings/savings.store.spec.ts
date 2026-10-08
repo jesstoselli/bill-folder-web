@@ -38,24 +38,37 @@ describe('SavingsStore', () => {
     expect(store.selectedAccount()).toEqual(firstAccount);
   });
 
-  it('selects a valid deep-linked account and deterministically falls back from an invalid one', async () => {
+  it('lets a valid explicit deep link override the persisted selection', async () => {
     await loadAccounts([firstAccount, secondAccount], 'savings-2');
     expect(store.selectedAccountId()).toBe('savings-2');
 
-    const reload = store.loadAccounts('missing-account');
-    backend.expectOne('/v1/savings-accounts/').flush([firstAccount, secondAccount]);
-    await nextMicrotask();
-    backend.expectOne(transactionUrl('savings-2', october)).flush([]);
-    await reload;
-    expect(store.selectedAccountId()).toBe('savings-2');
-
-    const freshStore = TestBed.runInInjectionContext(() => new SavingsStore());
-    const freshLoad = freshStore.loadAccounts('missing-account');
+    const reload = store.loadAccounts('savings-1');
     backend.expectOne('/v1/savings-accounts/').flush([firstAccount, secondAccount]);
     await nextMicrotask();
     backend.expectOne(transactionUrl('savings-1', october)).flush([]);
-    await freshLoad;
-    expect(freshStore.selectedAccountId()).toBe('savings-1');
+    await reload;
+    expect(store.selectedAccountId()).toBe('savings-1');
+  });
+
+  it('falls back to the first account for an invalid or removed explicit deep link', async () => {
+    await loadAccounts([firstAccount, secondAccount], 'savings-2');
+
+    const invalidReload = store.loadAccounts('missing-account');
+    backend.expectOne('/v1/savings-accounts/').flush([firstAccount, secondAccount]);
+    await nextMicrotask();
+    backend.expectOne(transactionUrl('savings-1', october)).flush([]);
+    await invalidReload;
+    expect(store.selectedAccountId()).toBe('savings-1');
+
+    const selectSecond = store.selectAccount('savings-2');
+    backend.expectOne(transactionUrl('savings-2', october)).flush([]);
+    await selectSecond;
+    const removedReload = store.loadAccounts('savings-2');
+    backend.expectOne('/v1/savings-accounts/').flush([firstAccount]);
+    await nextMicrotask();
+    backend.expectOne(transactionUrl('savings-1', october)).flush([]);
+    await removedReload;
+    expect(store.selectedAccountId()).toBe('savings-1');
   });
 
   it('preserves the current selection while that account remains available', async () => {

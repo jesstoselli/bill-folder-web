@@ -71,7 +71,16 @@
       <mat-form-field appearance="outline">
         <mat-label>Transação vinculada (opcional)</mat-label>
         <input matInput formControlName="linkedTransactionId" autocomplete="off" />
-        <mat-hint>ID da outra transação quando houver transferência vinculada.</mat-hint>
+        @if (hasExistingLink) {
+          <mat-hint>O vínculo pode ser substituído, mas não removido nesta versão.</mat-hint>
+        } @else {
+          <mat-hint>ID da outra transação quando houver transferência vinculada.</mat-hint>
+        }
+        @if (form.controls.linkedTransactionId.hasError('linkedRemovalUnsupported')) {
+          <mat-error>O vínculo atual não pode ser removido. Informe outro ID válido.</mat-error>
+        } @else if (form.controls.linkedTransactionId.hasError('guid')) {
+          <mat-error>Informe um ID no formato GUID.</mat-error>
+        }
       </mat-form-field>
     </div>
   </mat-dialog-content>

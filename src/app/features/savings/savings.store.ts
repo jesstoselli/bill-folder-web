@@ -114,11 +114,12 @@ export class SavingsStore {
       }
 
       const currentId = this.selectedAccountIdState();
-      const selectedId = accounts.some((account) => account.id === currentId)
-        ? currentId!
-        : accounts.some((account) => account.id === preferredAccountId)
-          ? preferredAccountId!
-          : accounts[0].id;
+      const selectedId =
+        preferredAccountId === undefined
+          ? accounts.some((account) => account.id === currentId)
+            ? currentId!
+            : accounts[0].id
+          : (accounts.find((account) => account.id === preferredAccountId)?.id ?? accounts[0].id);
       this.selectedAccountIdState.set(selectedId);
       const cycle = this.cycles.current();
       if (cycle) await this.loadTransactions(selectedId, cycle);

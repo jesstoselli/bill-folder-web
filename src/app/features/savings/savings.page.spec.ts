@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 import { CycleResponse } from '../../core/cycles/cycle.models';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { SavingsAccountResponse, SavingsTransactionResponse } from './savings.models';
@@ -13,6 +14,43 @@ describe('SavingsPage', () => {
     const { fixture } = await createFixture({ loadAccounts, accountId: 'savings-2' });
     fixture.detectChanges();
     expect(loadAccounts).toHaveBeenCalledWith('savings-2');
+  });
+
+  it('reacts to accountId changes while the same route instance remains active', async () => {
+    const { fixture, queryParams, selectedAccountId } = await createFixture({
+      accountId: 'savings-1',
+      selectedId: 'savings-2',
+    });
+    fixture.detectChanges();
+    await vi.waitFor(() => expect(selectedAccountId()).toBe('savings-1'));
+
+    queryParams.next(convertToParamMap({ accountId: 'savings-2' }));
+
+    await vi.waitFor(() => expect(selectedAccountId()).toBe('savings-2'));
+  });
+
+  it('canonicalizes an invalid or removed deep link to the deterministic fallback without loops', async () => {
+    const { fixture, queryParams, router, selectedAccountId } = await createFixture({
+      accountId: 'removed-account',
+      selectedId: 'savings-2',
+    });
+    fixture.detectChanges();
+
+    await vi.waitFor(() => {
+      expect(selectedAccountId()).toBe('savings-1');
+      expect(router.navigate).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({
+          queryParams: { accountId: 'savings-1' },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        }),
+      );
+    });
+
+    queryParams.next(convertToParamMap({ accountId: 'savings-1' }));
+    await Promise.resolve();
+    expect(router.navigate).toHaveBeenCalledTimes(1);
   });
 
   it('renders backend balance as dominant and cycle movement as signed subordinate text', async () => {
@@ -85,14 +123,43 @@ async function createFixture(
     transactions?: ReturnType<typeof signal<readonly SavingsTransactionResponse[]>>;
     loadAccounts?: ReturnType<typeof vi.fn>;
     deleteTransaction?: ReturnType<typeof vi.fn>;
+    selectedId?: string;
   } = {},
 ) {
-  const accounts = signal<readonly SavingsAccountResponse[]>([account]);
-  const selectedAccountId = signal<string | null>('savings-1');
+  const accounts = signal<readonly SavingsAccountResponse[]>([account, secondAccount]);
+  const selectedAccountId = signal<string | null>(options.selectedId ?? 'savings-1');
   const transactions =
     options.transactions ?? signal<readonly SavingsTransactionResponse[]>([transaction]);
   const current = signal<CycleResponse | null>(october);
   const router = { navigate: vi.fn(() => Promise.resolve(true)) };
+  const queryParams = new BehaviorSubject(
+    convertToParamMap(
+      options.accountId === undefined || options.accountId === null
+        ? {}
+        : { accountId: options.accountId },
+    ),
+  );
+  const loadAccounts =
+    options.loadAccounts ??
+    vi.fn((preferredId?: string) => {
+      const currentId = selectedAccountId();
+      const nextId =
+        preferredId === undefined
+          ? accounts().some((candidate) => candidate.id === currentId)
+            ? currentId
+            : (accounts()[0]?.id ?? null)
+          : (accounts().find((candidate) => candidate.id === preferredId)?.id ??
+            accounts()[0]?.id ??
+            null);
+      selectedAccountId.set(nextId);
+      return Promise.resolve();
+    });
+  const selectAccount = vi.fn((accountId: string) => {
+    if (accounts().some((candidate) => candidate.id === accountId)) {
+      selectedAccountId.set(accountId);
+    }
+    return Promise.resolve();
+  });
   await TestBed.configureTestingModule({
     imports: [SavingsPage],
     providers: [
@@ -115,11 +182,12 @@ async function createFixture(
           }).asReadonly(),
           accounts: accounts.asReadonly(),
           selectedAccountId: selectedAccountId.asReadonly(),
-          selectedAccount: signal(account).asReadonly(),
+          selectedAccount: () =>
+            accounts().find((candidate) => candidate.id === selectedAccountId()) ?? null,
           transactions: transactions.asReadonly(),
           cycleNet: signal(options.cycleNet ?? 100).asReadonly(),
-          loadAccounts: options.loadAccounts ?? vi.fn(() => Promise.resolve()),
-          selectAccount: vi.fn(() => Promise.resolve()),
+          loadAccounts,
+          selectAccount,
           refresh: vi.fn(() => Promise.resolve()),
           createTransaction: vi.fn(),
           updateTransaction: vi.fn(),
@@ -145,19 +213,22 @@ async function createFixture(
       {
         provide: ActivatedRoute,
         useValue: {
+          queryParamMap: queryParams.asObservable(),
           snapshot: {
-            queryParamMap: convertToParamMap(
-              options.accountId === undefined || options.accountId === null
-                ? {}
-                : { accountId: options.accountId },
-            ),
+            queryParamMap: queryParams.value,
           },
         },
       },
       { provide: Router, useValue: router },
     ],
   }).compileComponents();
-  return { fixture: TestBed.createComponent(SavingsPage), selectedAccountId, current };
+  return {
+    fixture: TestBed.createComponent(SavingsPage),
+    selectedAccountId,
+    current,
+    queryParams,
+    router,
+  };
 }
 
 function findButton(root: HTMLElement, label: string): HTMLButtonElement {
@@ -194,6 +265,14 @@ const account: SavingsAccountResponse = {
   currentBalance: 900,
   createdAt: '',
   updatedAt: '',
+};
+
+const secondAccount: SavingsAccountResponse = {
+  ...account,
+  id: 'savings-2',
+  bankName: 'Banco Horizonte',
+  accountNumber: '98765-4',
+  currentBalance: 2400,
 };
 
 const transaction: SavingsTransactionResponse = {

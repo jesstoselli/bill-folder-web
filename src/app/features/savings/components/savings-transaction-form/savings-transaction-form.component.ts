@@ -46,6 +46,8 @@ export class SavingsTransactionFormComponent {
   readonly data = inject<SavingsTransactionFormDialogData>(MAT_DIALOG_DATA);
   readonly saving = this.writeLock.saving;
   readonly serverError = signal('');
+  readonly hasExistingLink =
+    this.data.mode === 'edit' && Boolean(this.data.transaction.linkedTransactionId?.trim());
   readonly form = this.formBuilder.nonNullable.group({
     type: this.formBuilder.nonNullable.control<SavingsTransactionType>(
       this.initial()?.type ?? 'deposit',
@@ -54,7 +56,10 @@ export class SavingsTransactionFormComponent {
     amount: [this.initial()?.amount ?? 0, [Validators.required, Validators.min(0)]],
     date: [this.initial()?.date ?? todayCivilDate(), [Validators.required, validCivilDate]],
     label: [this.initial()?.label ?? '', Validators.maxLength(200)],
-    linkedTransactionId: [this.initial()?.linkedTransactionId ?? ''],
+    linkedTransactionId: [
+      this.initial()?.linkedTransactionId ?? '',
+      linkedTransactionValidator(this.hasExistingLink),
+    ],
   });
 
   async submit(): Promise<void> {
@@ -64,11 +69,12 @@ export class SavingsTransactionFormComponent {
     }
     this.serverError.set('');
     const value = this.form.getRawValue();
+    const normalizedLabel = value.label.trim();
     const request = {
       type: value.type,
       amount: value.amount,
       date: value.date,
-      label: normalizeOptional(value.label),
+      label: this.data.mode === 'create' ? normalizedLabel || null : normalizedLabel,
       linkedTransactionId: normalizeOptional(value.linkedTransactionId),
     };
     try {
@@ -94,6 +100,18 @@ export class SavingsTransactionFormComponent {
 function normalizeOptional(value: string): string | null {
   const normalized = value.trim();
   return normalized || null;
+}
+
+const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function linkedTransactionValidator(
+  hasExistingLink: boolean,
+): (control: AbstractControl<string>) => ValidationErrors | null {
+  return (control) => {
+    const value = control.value.trim();
+    if (!value) return hasExistingLink ? { linkedRemovalUnsupported: true } : null;
+    return guidPattern.test(value) ? null : { guid: true };
+  };
 }
 
 function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {

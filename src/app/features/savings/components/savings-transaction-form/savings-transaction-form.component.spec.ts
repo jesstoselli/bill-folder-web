@@ -16,7 +16,7 @@ describe('SavingsTransactionFormComponent', () => {
       amount: 125.5,
       date: '2026-10-20',
       label: '  Fundo de emergência  ',
-      linkedTransactionId: '  linked-transaction  ',
+      linkedTransactionId: `  ${validLinkId}  `,
     });
 
     await component.submit();
@@ -27,7 +27,7 @@ describe('SavingsTransactionFormComponent', () => {
       amount: 125.5,
       date: '2026-10-20',
       label: 'Fundo de emergência',
-      linkedTransactionId: 'linked-transaction',
+      linkedTransactionId: validLinkId,
     });
   });
 
@@ -104,6 +104,75 @@ describe('SavingsTransactionFormComponent', () => {
       linkedTransactionId: null,
     });
   });
+
+  it('maps a cleared edit label to an empty string so the backend clears it', async () => {
+    const updateTransaction = vi.fn(() => Promise.resolve(savedTransaction));
+    const component = await createComponent({
+      updateTransaction,
+      data: { mode: 'edit', accountId: 'savings-1', transaction: savedTransaction },
+    });
+    component.form.patchValue({ label: '   ' });
+
+    await component.submit();
+
+    expect(updateTransaction).toHaveBeenCalledWith(
+      'transaction-1',
+      expect.objectContaining({ label: '' }),
+    );
+  });
+
+  it('rejects a nonblank linked transaction that is not a GUID without writing', async () => {
+    const createTransaction = vi.fn(() => Promise.resolve(savedTransaction));
+    const fixture = await createFixture({ createTransaction });
+    const component = fixture.componentInstance;
+    component.form.patchValue({ linkedTransactionId: 'not-a-guid' });
+
+    await component.submit();
+    fixture.detectChanges();
+
+    expect(createTransaction).not.toHaveBeenCalled();
+    expect(component.form.controls.linkedTransactionId.hasError('guid')).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Informe um ID no formato GUID.');
+  });
+
+  it('allows replacing an existing link with a valid GUID', async () => {
+    const linkedTransaction = { ...savedTransaction, linkedTransactionId: validLinkId };
+    const updateTransaction = vi.fn(() => Promise.resolve(linkedTransaction));
+    const component = await createComponent({
+      updateTransaction,
+      data: { mode: 'edit', accountId: 'savings-1', transaction: linkedTransaction },
+    });
+    component.form.patchValue({ linkedTransactionId: replacementLinkId });
+
+    await component.submit();
+
+    expect(updateTransaction).toHaveBeenCalledWith(
+      'transaction-1',
+      expect.objectContaining({ linkedTransactionId: replacementLinkId }),
+    );
+  });
+
+  it('blocks clearing an existing link and explains the PATCH limitation', async () => {
+    const linkedTransaction = { ...savedTransaction, linkedTransactionId: validLinkId };
+    const updateTransaction = vi.fn(() => Promise.resolve(linkedTransaction));
+    const fixture = await createFixture({
+      updateTransaction,
+      data: { mode: 'edit', accountId: 'savings-1', transaction: linkedTransaction },
+    });
+    const component = fixture.componentInstance;
+    component.form.patchValue({ linkedTransactionId: '   ' });
+
+    await component.submit();
+    fixture.detectChanges();
+
+    expect(updateTransaction).not.toHaveBeenCalled();
+    expect(component.form.controls.linkedTransactionId.hasError('linkedRemovalUnsupported')).toBe(
+      true,
+    );
+    expect(fixture.nativeElement.textContent).toContain(
+      'O vínculo atual não pode ser removido. Informe outro ID válido.',
+    );
+  });
 });
 
 async function createComponent(options: Parameters<typeof createFixture>[0] = {}) {
@@ -172,3 +241,6 @@ const savedTransaction: SavingsTransactionResponse = {
   createdAt: '2026-10-18T10:00:00Z',
   updatedAt: '2026-10-18T10:00:00Z',
 };
+
+const validLinkId = '11111111-1111-1111-1111-111111111111';
+const replacementLinkId = '22222222-2222-2222-2222-222222222222';

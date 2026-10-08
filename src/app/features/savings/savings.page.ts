@@ -1,6 +1,7 @@
 import {
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   ElementRef,
   OnInit,
   computed,
@@ -10,6 +11,8 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
+import { distinctUntilChanged, map } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { mapApiError } from '../../core/http/api-error';
 import { CycleNavigatorComponent } from '../../shared/components/cycle-navigator/cycle-navigator.component';
@@ -65,9 +68,12 @@ export class SavingsPage implements OnInit {
   protected readonly cycles = inject(CycleStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly dialog = inject(MatDialog);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly changeDetector = inject(ChangeDetectorRef);
+  private accountQueryGeneration = 0;
+  private accountQueryInitialized = false;
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
   protected readonly pageState = computed<SavingsViewState>(() => {
@@ -103,8 +109,13 @@ export class SavingsPage implements OnInit {
 
   ngOnInit(): void {
     if (this.cycles.state().kind === 'loading') void this.cycles.load();
-    const deepLink = this.route.snapshot.queryParamMap.get('accountId')?.trim() || undefined;
-    void this.store.loadAccounts(deepLink);
+    this.route.queryParamMap
+      .pipe(
+        map((params) => params.get('accountId')?.trim() || undefined),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((accountId) => void this.syncAccountQuery(accountId));
   }
 
   protected selectAccount(accountId: string): void {
@@ -236,6 +247,33 @@ export class SavingsPage implements OnInit {
       this.changeDetector.detectChanges();
       this.focusRowAction(focus);
     }
+  }
+
+  private async syncAccountQuery(accountId: string | undefined): Promise<void> {
+    const generation = ++this.accountQueryGeneration;
+    this.actionError.set('');
+    const accountsState = this.store.accountsState();
+    if (!this.accountQueryInitialized || accountsState.kind !== 'content') {
+      this.accountQueryInitialized = true;
+      await this.store.loadAccounts(accountId);
+    } else if (accountId) {
+      const selectedId =
+        this.store.accounts().find((account) => account.id === accountId)?.id ??
+        this.store.accounts()[0]?.id;
+      if (selectedId && selectedId !== this.store.selectedAccountId()) {
+        await this.store.selectAccount(selectedId);
+      }
+    }
+
+    if (generation !== this.accountQueryGeneration || !accountId) return;
+    const selectedId = this.store.selectedAccountId();
+    if (!selectedId || selectedId === accountId) return;
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { accountId: selectedId },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   private captureScope(): ScopeFocus | null {

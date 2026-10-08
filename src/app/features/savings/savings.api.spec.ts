@@ -68,7 +68,7 @@ describe('SavingsApi', () => {
       amount: 245,
       date: '2026-10-19',
       label: 'Transferência planejada',
-      linkedTransactionId: 'transaction-linked',
+      linkedTransactionId: '11111111-1111-1111-1111-111111111111',
     };
     const update = firstValueFrom(api.updateTransaction('transaction-1', updateBody));
     const patchRequest = backend.expectOne('/v1/savings-transactions/transaction-1');
