@@ -1,0 +1,186 @@
+<section class="expenses-page">
+  <header class="expenses-page__header">
+    <div>
+      <h1 class="bf-heading-page">Despesas do ciclo</h1>
+      <p>Contas organizadas por vencimento e situação.</p>
+    </div>
+    <div class="expenses-page__header-actions">
+      <button type="button" class="expenses-page__refresh" (click)="refresh()">Atualizar</button>
+      <button #createButton type="button" mat-flat-button (click)="openCreate()">
+        Nova despesa
+      </button>
+    </div>
+  </header>
+
+  @if (cycles.current(); as cycle) {
+    <div class="expenses-page__cycle-row">
+      <app-cycle-navigator
+        [label]="cycle.label"
+        [startDate]="cycle.startDate"
+        [endDate]="cycle.endDate"
+        [previousEnabled]="cycles.previous() !== null && !refreshing()"
+        [nextEnabled]="cycles.next() !== null && !refreshing()"
+        (previous)="selectPreviousCycle()"
+        (next)="selectNextCycle()"
+      />
+      @if (refreshing()) {
+        <span class="expenses-page__updating" role="status">Atualizando despesas…</span>
+      }
+    </div>
+  }
+
+  @if (actionError()) {
+    <p class="expenses-page__action-error" role="alert">{{ actionError() }}</p>
+  }
+
+  @switch (store.state().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <div class="expenses-page__error">
+        <app-page-state
+          state="error"
+          title="Não foi possível carregar as despesas"
+          [message]="loadError()"
+        />
+        <button type="button" (click)="refresh()">Tentar novamente</button>
+      </div>
+    }
+    @case ('content') {
+      <div class="expense-ledger">
+        <table>
+          <caption class="u-visually-hidden">
+            Despesas do ciclo agrupadas em atrasadas, próximas e pagas
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Despesa</th>
+              <th scope="col">Vencimento</th>
+              <th scope="col">Categoria</th>
+              <th scope="col" class="expense-ledger__amount">Valor</th>
+              <th scope="col" class="expense-ledger__actions"><span>Ações</span></th>
+            </tr>
+          </thead>
+
+          <tbody aria-labelledby="expenses-overdue-title">
+            <tr class="expense-ledger__group">
+              <th id="expenses-overdue-title" scope="rowgroup" colspan="5">
+                <span>Atrasadas</span>
+                <span>{{ groups().overdue.length }}</span>
+              </th>
+            </tr>
+            @for (expense of groups().overdue; track expense.id) {
+              <ng-container
+                [ngTemplateOutlet]="expenseRow"
+                [ngTemplateOutletContext]="{ $implicit: expense }"
+              />
+            } @empty {
+              <tr class="expense-ledger__empty">
+                <td colspan="5">Nenhuma despesa atrasada.</td>
+              </tr>
+            }
+          </tbody>
+
+          <tbody aria-labelledby="expenses-upcoming-title">
+            <tr class="expense-ledger__group">
+              <th id="expenses-upcoming-title" scope="rowgroup" colspan="5">
+                <span>Próximas</span>
+                <span>{{ groups().upcoming.length }}</span>
+              </th>
+            </tr>
+            @for (expense of groups().upcoming; track expense.id) {
+              <ng-container
+                [ngTemplateOutlet]="expenseRow"
+                [ngTemplateOutletContext]="{ $implicit: expense }"
+              />
+            } @empty {
+              <tr class="expense-ledger__empty">
+                <td colspan="5">Nenhuma despesa próxima.</td>
+              </tr>
+            }
+          </tbody>
+
+          <tbody aria-labelledby="expenses-paid-title">
+            <tr class="expense-ledger__group">
+              <th id="expenses-paid-title" scope="rowgroup" colspan="5">
+                <span>Pagas</span>
+                <span>{{ groups().paid.length }}</span>
+              </th>
+            </tr>
+            @for (expense of groups().paid; track expense.id) {
+              <ng-container
+                [ngTemplateOutlet]="expenseRow"
+                [ngTemplateOutletContext]="{ $implicit: expense }"
+              />
+            } @empty {
+              <tr class="expense-ledger__empty">
+                <td colspan="5">Nenhuma despesa paga.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>
+
+<ng-template #expenseRow let-expense>
+  <tr [attr.data-expense-id]="expense.id">
+    <td data-label="Despesa">
+      <strong>{{ expense.label }}</strong>
+      <span
+        class="expense-ledger__status"
+        [class.expense-ledger__status--overdue]="expense.status === 'overdue'"
+      >
+        {{ statusLabel(expense.status) }}
+      </span>
+      @if (expense.isProvisioned) {
+        <span class="expense-ledger__provision">
+          {{ expense.occurrencesPaid }} de {{ expense.occurrencesTotal }} ocorrências pagas
+        </span>
+      }
+    </td>
+    <td data-label="Vencimento">
+      <time [attr.datetime]="expense.dueDate">{{ formatCivilDate(expense.dueDate) }}</time>
+    </td>
+    <td data-label="Categoria">{{ expense.categoryName }}</td>
+    <td data-label="Valor" class="expense-ledger__amount bf-tabular">
+      {{ formatBrl(expense.displayAmount) }}
+      @if (expense.isProvisioned) {
+        <span>restante</span>
+      }
+    </td>
+    <td class="expense-ledger__actions">
+      <button
+        type="button"
+        class="expense-ledger__menu-trigger"
+        [matMenuTriggerFor]="rowMenu"
+        [attr.aria-label]="'Ações para ' + expense.label"
+        (menuClosed)="handleMenuClosed(expense.id)"
+      >
+        <span aria-hidden="true">•••</span>
+      </button>
+      <mat-menu #rowMenu="matMenu" xPosition="before">
+        @if (expense.isProvisioned) {
+          <button type="button" mat-menu-item disabled>
+            Reajuste por ocorrência disponível em breve
+          </button>
+        } @else {
+          <button type="button" mat-menu-item data-action="edit" (click)="queueEdit(expense)">
+            Editar despesa
+          </button>
+        }
+        <button
+          type="button"
+          mat-menu-item
+          class="expense-ledger__delete"
+          style="color: var(--bf-danger)"
+          (click)="queueDelete(expense)"
+        >
+          {{ expense.isProvisioned ? 'Excluir somente esta ocorrência' : 'Excluir despesa' }}
+        </button>
+      </mat-menu>
+    </td>
+  </tr>
+</ng-template>

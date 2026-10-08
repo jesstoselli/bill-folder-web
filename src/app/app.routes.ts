@@ -46,7 +46,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home.page').then(({ HomePage }) => HomePage),
         data: { title: 'Home' },
       },
-      { path: 'despesas', loadComponent: placeholder, data: { title: 'Despesas' } },
+      {
+        path: 'despesas',
+        loadComponent: () =>
+          import('./features/expenses/expenses.page').then(({ ExpensesPage }) => ExpensesPage),
+        data: { title: 'Despesas' },
+      },
       {
         path: 'gastos-diarios',
         loadComponent: placeholder,

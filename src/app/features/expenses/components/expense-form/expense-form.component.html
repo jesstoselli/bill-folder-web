@@ -1,0 +1,86 @@
+<form class="expense-form" [formGroup]="form" (ngSubmit)="submit()">
+  <header class="expense-form__header">
+    <div>
+      <h2 mat-dialog-title>
+        {{ data.mode === 'create' ? 'Nova despesa' : 'Editar despesa' }}
+      </h2>
+      <p>
+        {{
+          data.mode === 'create'
+            ? 'Registre uma conta pontual neste ciclo.'
+            : 'Atualize os dados desta conta.'
+        }}
+      </p>
+    </div>
+    <button type="button" mat-button mat-dialog-close aria-label="Fechar formulário de despesa">
+      Fechar
+    </button>
+  </header>
+
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p class="expense-form__server-error" role="alert">{{ serverError() }}</p>
+    }
+
+    <div class="expense-form__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Descrição</mat-label>
+        <input matInput formControlName="label" autocomplete="off" />
+        @if (form.controls.label.hasError('required') || form.controls.label.hasError('blank')) {
+          <mat-error>Informe a descrição.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="expense-form__split">
+        <mat-form-field appearance="outline">
+          <mat-label>Vencimento</mat-label>
+          <input matInput type="date" formControlName="dueDate" />
+          @if (form.controls.dueDate.invalid) {
+            <mat-error>Informe um vencimento válido.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Valor esperado</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input
+            matInput
+            type="number"
+            min="0.01"
+            step="0.01"
+            inputmode="decimal"
+            formControlName="expectedAmount"
+          />
+          @if (form.controls.expectedAmount.invalid) {
+            <mat-error>Informe um valor maior que zero.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Categoria</mat-label>
+        <mat-select formControlName="categoryId">
+          @for (category of categories(); track category.id) {
+            <mat-option [value]="category.id">{{ category.namePt }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.categoryId.hasError('required')) {
+          <mat-error>Escolha uma categoria.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Observações</mat-label>
+        <textarea matInput rows="3" formControlName="notes"></textarea>
+        <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close>Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving() || loadingCategories()">
+      {{ saving() ? 'Salvando…' : 'Salvar despesa' }}
+    </button>
+  </mat-dialog-actions>
+</form>

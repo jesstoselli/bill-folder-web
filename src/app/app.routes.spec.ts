@@ -1,6 +1,7 @@
 import { routes } from './app.routes';
 import { anonymousGuard, authGuard } from './core/auth/auth.guard';
 import { HomePage } from './features/home/home.page';
+import { ExpensesPage } from './features/expenses/expenses.page';
 
 describe('application routes', () => {
   it('keeps every MVP destination available behind the application shell', () => {
@@ -45,5 +46,15 @@ describe('application routes', () => {
     expect(homeRoute?.component).toBeUndefined();
     expect(homeRoute?.loadComponent).toBeTypeOf('function');
     await expect(homeRoute?.loadComponent?.()).resolves.toBe(HomePage);
+  });
+
+  it('lazy-loads the expenses ledger behind the application shell', async () => {
+    const expensesRoute = routes
+      .find((route) => route.path === '')
+      ?.children?.find((route) => route.path === 'despesas');
+
+    expect(expensesRoute?.component).toBeUndefined();
+    expect(expensesRoute?.loadComponent).toBeTypeOf('function');
+    await expect(expensesRoute?.loadComponent?.()).resolves.toBe(ExpensesPage);
   });
 });
