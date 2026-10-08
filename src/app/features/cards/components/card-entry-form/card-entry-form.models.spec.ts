@@ -33,6 +33,24 @@ describe('card entry form mapping', () => {
     });
   });
 
+  it('maps blank notes to null when creating a purchase', () => {
+    const write = toCardEntryWrite({ ...baseValue, notes: '   ' });
+
+    expect(write.kind).toBe('entry');
+    expect(write).toEqual({
+      kind: 'entry',
+      request: {
+        cardId: 'card-1',
+        purchaseDate: '2026-10-08',
+        label: 'Curso online',
+        totalAmount: 480,
+        installmentsCount: 4,
+        categoryId: 'category-1',
+        notes: null,
+      },
+    });
+  });
+
   it('maps monthly repeat only to a recurrence template with one charge per cycle', () => {
     const write = toCardEntryWrite({ ...baseValue, repeatMonthly: true });
 
@@ -57,6 +75,14 @@ describe('card entry form mapping', () => {
       label: 'Curso online',
       categoryId: 'category-1',
       notes: 'Formação',
+    });
+  });
+
+  it('maps blank notes to an empty string when clearing them in an edit', () => {
+    expect(toUpdateCardEntryRequest({ ...baseValue, notes: '   ' })).toEqual({
+      label: 'Curso online',
+      categoryId: 'category-1',
+      notes: '',
     });
   });
 });

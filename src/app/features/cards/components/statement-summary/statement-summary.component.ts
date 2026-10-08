@@ -28,4 +28,14 @@ export class StatementSummaryComponent {
         return 'Paga';
     }
   }
+
+  protected paidDateLabel(): string {
+    const paidDate = this.statement().paidDate;
+    return paidDate ? `Paga em ${formatCivilDate(paidDate)}` : 'Data não informada';
+  }
+
+  protected paidAmountLabel(): string {
+    const actualAmount = this.statement().actualAmount;
+    return actualAmount === null ? 'Valor não informado' : `Valor pago ${formatBrl(actualAmount)}`;
+  }
 }

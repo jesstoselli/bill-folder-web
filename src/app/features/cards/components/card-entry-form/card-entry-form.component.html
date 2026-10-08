@@ -66,9 +66,16 @@
       @if (!form.controls.repeatMonthly.value) {
         <mat-form-field appearance="outline" data-field="installments">
           <mat-label>Parcelas</mat-label>
-          <input matInput type="number" min="1" step="1" formControlName="installmentsCount" />
+          <input
+            matInput
+            type="number"
+            min="1"
+            max="36"
+            step="1"
+            formControlName="installmentsCount"
+          />
           @if (form.controls.installmentsCount.invalid) {
-            <mat-error>Informe uma quantidade inteira maior que zero.</mat-error>
+            <mat-error>Informe uma quantidade inteira entre 1 e 36.</mat-error>
           }
         </mat-form-field>
       } @else {

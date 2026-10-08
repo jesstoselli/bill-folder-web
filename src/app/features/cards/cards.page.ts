@@ -27,7 +27,6 @@ interface EntryFocusContext {
   readonly cardId: string;
   readonly statementId: string;
   readonly entryId: string;
-  readonly rowIndex: number;
   readonly action: 'edit' | 'delete' | 'reprice';
 }
 
@@ -258,7 +257,7 @@ export class CardsPage implements OnInit {
       await this.store.deleteEntry(entry.id, scope);
       this.changeDetector.detectChanges();
       if (this.isCurrentEntryScope(focus)) {
-        this.focusAdjacentRow(focus.rowIndex);
+        this.writeCompletionTarget()?.focus();
       }
     } catch (error: unknown) {
       if (!this.isCurrentEntryScope(focus)) return;
@@ -275,8 +274,7 @@ export class CardsPage implements OnInit {
     const cardId = this.store.selectedCardId();
     const statementId = this.store.selectedStatementId();
     if (!cardId || !statementId) return null;
-    const rowIndex = this.rows().findIndex((row) => row.dataset['entryId'] === entryId);
-    return { cardId, statementId, entryId, rowIndex: Math.max(rowIndex, 0), action };
+    return { cardId, statementId, entryId, action };
   }
 
   private captureStatementFocus(): StatementFocusContext | null {
@@ -302,7 +300,7 @@ export class CardsPage implements OnInit {
   private restoreEntryDialogFocus(focus: EntryFocusContext, successfulWrite: boolean): void {
     this.changeDetector.detectChanges();
     if (!this.isCurrentEntryScope(focus)) return;
-    successfulWrite ? this.documentSurface()?.focus() : this.focusEntryAction(focus);
+    successfulWrite ? this.writeCompletionTarget()?.focus() : this.focusEntryAction(focus);
   }
 
   private restoreStatementDialogFocus(
@@ -312,7 +310,7 @@ export class CardsPage implements OnInit {
     this.changeDetector.detectChanges();
     if (!this.isCurrentStatementScope(focus)) return;
     const target = successfulWrite
-      ? this.documentSurface()
+      ? this.writeCompletionTarget()
       : this.host.nativeElement.querySelector<HTMLButtonElement>('.statement-summary button');
     target?.focus();
   }
@@ -325,17 +323,15 @@ export class CardsPage implements OnInit {
     )?.focus();
   }
 
-  private focusAdjacentRow(previousIndex: number): void {
-    const rows = this.rows();
-    const row = rows[Math.min(previousIndex, rows.length - 1)];
-    (row?.querySelector<HTMLButtonElement>('[data-action]') ?? this.documentSurface())?.focus();
-  }
-
   private rows(): HTMLTableRowElement[] {
     return [...this.host.nativeElement.querySelectorAll<HTMLTableRowElement>('[data-entry-id]')];
   }
 
   private documentSurface(): HTMLElement | null {
     return this.host.nativeElement.querySelector<HTMLElement>('.statement-document');
+  }
+
+  private writeCompletionTarget(): HTMLButtonElement | null {
+    return this.host.nativeElement.querySelector<HTMLButtonElement>('[data-page-action="create"]');
   }
 }

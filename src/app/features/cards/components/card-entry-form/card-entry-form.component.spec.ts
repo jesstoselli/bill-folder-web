@@ -88,6 +88,58 @@ describe('CardEntryFormComponent', () => {
     });
   });
 
+  it('accepts 36 installments at the one-off purchase upper boundary', async () => {
+    const createEntry = vi.fn(() => Promise.resolve({ id: 'entry-1' }));
+    const fixture = await createFixture(
+      { mode: 'create', card: { id: 'card-1', name: 'Nubank' } },
+      { createEntry, createRecurrence: vi.fn() },
+    );
+    fixture.componentInstance.form.setValue({
+      cardId: 'card-1',
+      purchaseDate: '2026-10-08',
+      label: 'Notebook',
+      totalAmount: 1200,
+      installmentsCount: 36,
+      categoryId: 'category-1',
+      notes: '',
+      repeatMonthly: false,
+    });
+
+    await fixture.componentInstance.submit();
+
+    expect(createEntry).toHaveBeenCalledWith(expect.objectContaining({ installmentsCount: 36 }));
+  });
+
+  it('rejects 37 installments without writing and exposes the client-side limit', async () => {
+    const createEntry = vi.fn();
+    const fixture = await createFixture(
+      { mode: 'create', card: { id: 'card-1', name: 'Nubank' } },
+      { createEntry, createRecurrence: vi.fn() },
+    );
+    fixture.componentInstance.form.setValue({
+      cardId: 'card-1',
+      purchaseDate: '2026-10-08',
+      label: 'Notebook',
+      totalAmount: 1200,
+      installmentsCount: 37,
+      categoryId: 'category-1',
+      notes: '',
+      repeatMonthly: false,
+    });
+
+    await fixture.componentInstance.submit();
+    fixture.detectChanges();
+
+    const input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      '[data-field="installments"] input',
+    );
+    expect(input?.getAttribute('max')).toBe('36');
+    expect(fixture.nativeElement.textContent).toContain(
+      'Informe uma quantidade inteira entre 1 e 36.',
+    );
+    expect(createEntry).not.toHaveBeenCalled();
+  });
+
   it('edits only mutable backend fields and keeps immutable fields disabled', async () => {
     const updateEntry = vi.fn(() => Promise.resolve({ id: 'entry-1' }));
     const fixture = await createFixture({ mode: 'edit', entry: entry() }, { updateEntry });
@@ -106,6 +158,23 @@ describe('CardEntryFormComponent', () => {
       label: 'Notebook de trabalho',
       categoryId: 'category-1',
       notes: 'Patrimônio',
+    });
+  });
+
+  it('sends an empty string when an existing note is cleared', async () => {
+    const updateEntry = vi.fn(() => Promise.resolve({ id: 'entry-1' }));
+    const fixture = await createFixture(
+      { mode: 'edit', entry: entry({ notes: 'Patrimônio' }) },
+      { updateEntry },
+    );
+
+    fixture.componentInstance.form.patchValue({ notes: '   ' });
+    await fixture.componentInstance.submit();
+
+    expect(updateEntry).toHaveBeenCalledWith('entry-1', {
+      label: 'Notebook',
+      categoryId: 'category-1',
+      notes: '',
     });
   });
 });
@@ -149,7 +218,7 @@ async function createFixture(
   return fixture;
 }
 
-function entry(): CardEntryResponse {
+function entry(overrides: Partial<CardEntryResponse> = {}): CardEntryResponse {
   return {
     id: 'entry-1',
     cardId: 'card-1',
@@ -165,6 +234,7 @@ function entry(): CardEntryResponse {
     updatedAt: '',
     templateId: null,
     installments: [],
+    ...overrides,
   };
 }
 

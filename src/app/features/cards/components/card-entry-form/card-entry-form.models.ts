@@ -54,7 +54,7 @@ export function toUpdateCardEntryRequest(value: CardEntryFormValue): UpdateCardE
   return {
     label: value.label.trim(),
     categoryId: value.categoryId,
-    notes: value.notes.trim() || null,
+    notes: value.notes.trim(),
   };
 }
 

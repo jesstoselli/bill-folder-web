@@ -69,7 +69,7 @@ export class CardEntryFormComponent implements OnInit {
     totalAmount: [this.initialEntry?.totalAmount ?? 0, [Validators.required, Validators.min(0.01)]],
     installmentsCount: [
       this.initialEntry?.installmentsCount ?? 1,
-      [Validators.required, integer, Validators.min(1)],
+      [Validators.required, integer, Validators.min(1), Validators.max(36)],
     ],
     categoryId: [this.initialEntry?.categoryId ?? '', Validators.required],
     notes: [this.initialEntry?.notes ?? '', Validators.maxLength(500)],

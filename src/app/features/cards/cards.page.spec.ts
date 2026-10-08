@@ -52,6 +52,25 @@ describe('CardsPage', () => {
     expect(paid?.querySelector('button')).toBeNull();
   });
 
+  it('renders clear fallbacks when paid statement metadata is null', async () => {
+    const { fixture, controls } = await createFixture('paid');
+    controls.statement.set(
+      detail('paid', {
+        paidDate: null,
+        actualAmount: null,
+        paidFromAccountId: null,
+        paidFromAccountName: null,
+      }),
+    );
+
+    fixture.detectChanges();
+
+    const paid = (fixture.nativeElement as HTMLElement).querySelector('.statement-summary__paid');
+    expect(paid?.textContent).toContain('Data não informada');
+    expect(paid?.textContent).toContain('Conta não informada');
+    expect(paid?.textContent).toContain('Valor não informado');
+  });
+
   it('keeps month navigation compact and disabled at actual bounds', async () => {
     const { fixture, store } = await createFixture('closed');
     const previous = findButton(fixture.nativeElement, 'Fatura anterior');

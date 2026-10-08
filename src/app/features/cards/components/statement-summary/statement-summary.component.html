@@ -39,9 +39,9 @@
 
   @if (statement().status === 'paid') {
     <div class="statement-summary__paid" aria-label="Dados do pagamento registrado">
-      <strong>Paga em {{ formatCivilDate(statement().paidDate!) }}</strong>
+      <strong>{{ paidDateLabel() }}</strong>
       <span>{{ statement().paidFromAccountName || 'Conta não informada' }}</span>
-      <span class="bf-tabular">Valor pago {{ formatBrl(statement().actualAmount!) }}</span>
+      <span class="bf-tabular">{{ paidAmountLabel() }}</span>
     </div>
   }
 </section>
