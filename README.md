@@ -36,10 +36,20 @@ npm run e2e
 
 - `test:ci` runs the Angular unit suite and source-level PWA/security configuration tests.
 - `build:prod` builds the application and then verifies the manifest, generated Angular service
-  worker, absence of API data caching, and copied Cloudflare control files.
+  worker, absence of API data caching, copied Cloudflare control files, CSP authorization for any
+  built inline scripts, and ordinary screen stylesheet loading.
 - `e2e` requires Node 24.15.0, starts the Angular E2E configuration on
-  `http://127.0.0.1:4200`, and runs Chromium against a deterministic same-origin network fixture.
-  It never calls the local or production API and uses no real credentials or secrets.
+  `http://127.0.0.1:4200`, and runs Chromium against a strict, deterministic API server on the
+  distinct origin `http://127.0.0.1:4301`. The fixture validates CORS preflights, credentials,
+  paths, methods, query strings, request bodies, cookie rotation, and access-token refresh without
+  recording credential values. A separate production-artifact smoke test serves the built output
+  with the real `_headers` policy and blocks the production API before any request can leave the
+  browser. No local or production backend is contacted and no real credentials or secrets are used.
+
+The loopback E2E boundary is intentionally HTTP, so Chromium must observe its synthetic refresh
+cookie with `secure: false`. `config/web-auth-cookie-contract.json` records that test-only transport
+limitation and statically requires `Secure`, `HttpOnly`, `SameSite=Lax`, and path
+`/v1/auth/web` for the HTTPS production cookie contract.
 
 Use `npm run e2e:ui` for Playwright UI mode after starting from Node 24.15.0.
 

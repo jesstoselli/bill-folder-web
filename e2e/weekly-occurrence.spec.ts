@@ -21,4 +21,8 @@ test('pays one occurrence of a weekly expense', async ({ api, context, page }) =
     path: '/v1/expenses/expense-weekly/pay-occurrence',
     body: { amount: 150, paidDate: '2026-10-08', paidFromAccountId: null },
   });
+  expect(api.reads).toContainEqual({
+    path: '/v1/expenses/',
+    query: 'from=2026-10-01&to=2026-10-31',
+  });
 });

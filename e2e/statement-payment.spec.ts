@@ -19,4 +19,12 @@ test('pays a closed card statement and reloads its paid state', async ({ api, co
     path: '/v1/card-statements/statement-closed/pay',
     body: { actualAmount: 420.5, paidDate: '2026-10-08', paidFromAccountId: null },
   });
+  expect(api.reads).toContainEqual({
+    path: '/v1/card-statements/',
+    query: 'cardId=card-e2e',
+  });
+  expect(api.reads).toContainEqual({
+    path: '/v1/card-statements/statement-closed',
+    query: '',
+  });
 });

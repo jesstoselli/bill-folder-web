@@ -1,0 +1,14 @@
+{
+  "production": {
+    "path": "/v1/auth/web",
+    "httpOnly": true,
+    "sameSite": "Lax",
+    "secure": true
+  },
+  "localE2eHttp": {
+    "path": "/v1/auth/web",
+    "httpOnly": true,
+    "sameSite": "Lax",
+    "secure": false
+  }
+}

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { access, readFile } from 'node:fs/promises';
 import test from 'node:test';
 
@@ -42,3 +43,36 @@ test('Cloudflare control files survive the production build unchanged', async ()
   assert.equal(builtHeaders, sourceHeaders);
   assert.equal(builtRedirects, sourceRedirects);
 });
+
+test('every built inline script is explicitly authorized by the deployed CSP', async () => {
+  const [index, headers] = await Promise.all([read('index.html'), read('_headers')]);
+  const csp = headers.match(/^\s+Content-Security-Policy:\s*(.+)$/m)?.[1];
+  assert.ok(csp, 'built _headers must contain a CSP');
+  const scriptDirective = csp
+    .split(';')
+    .map((directive) => directive.trim())
+    .find((directive) => directive.startsWith('script-src '));
+  assert.ok(scriptDirective, 'CSP must contain script-src');
+
+  const inlineScripts = [...index.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(([, attributes, body]) => !/\bsrc\s*=/.test(attributes) && body.trim())
+    .map(([, , body]) => body);
+
+  for (const script of inlineScripts) {
+    const hash = createHash('sha256').update(script).digest('base64');
+    assert.match(scriptDirective, new RegExp(`(?:^|\\s)'sha256-${escapeRegExp(hash)}'(?:\\s|$)`));
+  }
+});
+
+test('the built screen stylesheet loads without executable inline promotion', async () => {
+  const index = await read('index.html');
+  const stylesheet = index.match(/<link\b[^>]*\brel="stylesheet"[^>]*>/i)?.[0];
+
+  assert.ok(stylesheet, 'a production stylesheet link is required');
+  assert.doesNotMatch(stylesheet, /\bmedia="print"/i);
+  assert.doesNotMatch(stylesheet, /\bdata-beasties-media=/i);
+});
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}

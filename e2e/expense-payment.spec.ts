@@ -28,4 +28,9 @@ test('creates a one-off expense with deterministic data', async ({ api, context,
       notes: 'Dado local determinístico',
     },
   });
+  expect(api.reads).toContainEqual({
+    path: '/v1/expenses/',
+    query: 'from=2026-10-01&to=2026-10-31',
+  });
+  expect(api.reads).toContainEqual({ path: '/v1/categories', query: '' });
 });

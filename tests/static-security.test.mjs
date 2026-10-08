@@ -15,13 +15,14 @@ test('service worker caches only the application shell and local assets', async 
   assert.equal(serialized.includes('api.billfolder.app'), false);
 });
 
-test('production enables Angular service worker while E2E keeps API traffic same-origin', async () => {
+test('production enables Angular service worker while E2E uses only its isolated API origin', async () => {
   const angular = JSON.parse(await read('angular.json'));
   const build = angular.projects.BillFolderWeb.architect.build;
   const production = build.configurations.production;
   const e2e = build.configurations.e2e;
 
   assert.equal(production.serviceWorker, 'ngsw-config.json');
+  assert.equal(production.optimization?.styles?.inlineCritical, false);
   assert.deepEqual(e2e.fileReplacements, [
     {
       replace: 'src/environments/environment.ts',
@@ -30,7 +31,7 @@ test('production enables Angular service worker while E2E keeps API traffic same
   ]);
 
   const e2eEnvironment = await read('src/environments/environment.e2e.ts');
-  assert.match(e2eEnvironment, /apiBaseUrl:\s*'\/v1'/);
+  assert.match(e2eEnvironment, /apiBaseUrl:\s*'http:\/\/127\.0\.0\.1:4301\/v1'/);
   assert.doesNotMatch(e2eEnvironment, /api\.billfolder\.app/);
 });
 
@@ -56,4 +57,27 @@ test('Cloudflare SPA fallback and security policy are explicit and restrictive',
   assert.match(csp, /object-src 'none'/);
   assert.match(csp, /frame-ancestors 'none'/);
   assert.doesNotMatch(csp, /https:\/\/(?!api\.billfolder\.app)/);
+});
+
+test('auth transport uses distinct origins and requires Secure refresh cookies in production', async () => {
+  const [e2eEnvironment, productionEnvironment, cookieContract] = await Promise.all([
+    read('src/environments/environment.e2e.ts'),
+    read('src/environments/environment.ts'),
+    read('config/web-auth-cookie-contract.json').then(JSON.parse),
+  ]);
+
+  assert.match(e2eEnvironment, /apiBaseUrl:\s*'http:\/\/127\.0\.0\.1:4301\/v1'/);
+  assert.match(productionEnvironment, /apiBaseUrl:\s*'https:\/\/api\.billfolder\.app\/v1'/);
+  assert.deepEqual(cookieContract.production, {
+    path: '/v1/auth/web',
+    httpOnly: true,
+    sameSite: 'Lax',
+    secure: true,
+  });
+  assert.deepEqual(cookieContract.localE2eHttp, {
+    path: '/v1/auth/web',
+    httpOnly: true,
+    sameSite: 'Lax',
+    secure: false,
+  });
 });

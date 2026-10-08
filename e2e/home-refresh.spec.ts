@@ -30,4 +30,8 @@ test('Home reflects a write without reloading the browser page', async ({ api, c
     ),
   ).toBe(pageIdentity);
   expect(api.events).toContain('home:refreshed-after-write');
+  expect(
+    api.reads.filter((read) => read.path === '/v1/home/' && read.query === 'cycleId=cycle-oct-2026')
+      .length,
+  ).toBeGreaterThanOrEqual(2);
 });

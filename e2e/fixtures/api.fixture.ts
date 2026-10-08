@@ -1,7 +1,15 @@
-import { test as base, type BrowserContext, type Route } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import { test as base, type BrowserContext } from '@playwright/test';
 
+const apiOrigin = 'http://127.0.0.1:4301';
+const appOrigin = 'http://127.0.0.1:4200';
 const refreshCookieName = 'bf_refresh';
 const refreshCookiePath = '/v1/auth/web';
+const expectedLogin = {
+  email: 'browser-user@example.test',
+  password: 'local-only-password',
+};
 
 export interface RequestGate {
   readonly requested: Promise<void>;
@@ -14,8 +22,30 @@ export interface ApiWrite {
   readonly body: unknown;
 }
 
+export interface ApiRead {
+  readonly path: string;
+  readonly query: string;
+}
+
+export interface AuthRequestEvidence {
+  readonly operation: 'login' | 'refresh' | 'logout';
+  readonly originAccepted: boolean;
+  readonly bodyValidated: boolean;
+  readonly cookiePresent: boolean;
+  readonly cookieMatchedCurrent: boolean;
+}
+
+export interface CorsPreflightEvidence {
+  readonly path: string;
+  readonly requestedMethod: string;
+  readonly requestedHeaders: readonly string[];
+}
+
 export interface BillFolderApiFixture {
   readonly writes: readonly ApiWrite[];
+  readonly reads: readonly ApiRead[];
+  readonly authRequests: readonly AuthRequestEvidence[];
+  readonly preflights: readonly CorsPreflightEvidence[];
   readonly events: readonly string[];
   startAuthenticated(context: BrowserContext): Promise<void>;
   delayNextRefresh(): RequestGate;
@@ -154,14 +184,19 @@ const statementBase: StatementFixture = {
 };
 
 class DeterministicApiBoundary implements BillFolderApiFixture {
-  private readonly accessToken = crypto.randomUUID();
   private readonly recordedWrites: ApiWrite[] = [];
+  private readonly recordedReads: ApiRead[] = [];
+  private readonly recordedAuthRequests: AuthRequestEvidence[] = [];
+  private readonly recordedPreflights: CorsPreflightEvidence[] = [];
   private readonly recordedEvents: string[] = [];
   private readonly expenses: ExpenseFixture[] = [{ ...weeklyExpense }];
   private statement: StatementFixture = { ...statementBase };
+  private currentAccessToken: string | null = null;
+  private currentRefreshCookie: string | null = null;
   private refreshGate: InternalGate | null = null;
   private logoutGate: InternalGate | null = null;
   private rejectNextHome = false;
+  private awaitingHomeRetry = false;
   private homeRemaining = 1_500;
   private waitingForHomeAfterWrite = false;
 
@@ -169,18 +204,32 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
     return this.recordedWrites;
   }
 
+  get reads(): readonly ApiRead[] {
+    return this.recordedReads;
+  }
+
+  get authRequests(): readonly AuthRequestEvidence[] {
+    return this.recordedAuthRequests;
+  }
+
+  get preflights(): readonly CorsPreflightEvidence[] {
+    return this.recordedPreflights;
+  }
+
   get events(): readonly string[] {
     return this.recordedEvents;
   }
 
   async startAuthenticated(context: BrowserContext): Promise<void> {
+    this.currentRefreshCookie = randomUUID();
     await context.addCookies([
       {
         name: refreshCookieName,
-        value: crypto.randomUUID(),
+        value: this.currentRefreshCookie,
         domain: '127.0.0.1',
         path: refreshCookiePath,
         httpOnly: true,
+        secure: false,
         sameSite: 'Lax',
       },
     ]);
@@ -200,76 +249,222 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
     this.rejectNextHome = true;
   }
 
-  async handle(route: Route): Promise<void> {
-    const request = route.request();
-    const method = request.method();
-    const path = new URL(request.url()).pathname;
+  async handle(request: IncomingMessage, response: ServerResponse): Promise<void> {
+    const method = request.method ?? '';
+    const url = new URL(request.url ?? '/', apiOrigin);
 
-    if (method === 'POST' && path === '/v1/auth/web/login') {
-      await this.json(route, this.authResponse(), 200, this.activeCookie(crypto.randomUUID()));
+    if (request.headers.host !== '127.0.0.1:4301') {
+      this.json(response, { error: 'unexpected_host' }, 421, false);
       return;
     }
-    if (method === 'POST' && path === '/v1/auth/web/refresh') {
-      await this.refresh(route);
+    if (request.headers.origin !== appOrigin) {
+      this.json(response, { error: 'unexpected_origin' }, 403, false);
       return;
     }
-    if (method === 'POST' && path === '/v1/auth/web/logout') {
-      await this.logout(route);
+    if (method === 'OPTIONS') {
+      this.preflight(request, response, url);
+      return;
+    }
+    if (!this.isKnownRequest(method, url)) {
+      this.json(
+        response,
+        { error: 'unexpected_e2e_request', method, path: url.pathname, query: url.search },
+        501,
+      );
       return;
     }
 
-    if (request.headers()['authorization'] !== `Bearer ${this.accessToken}`) {
-      await this.json(route, { error: 'unauthorized' }, 401);
+    if (method === 'POST' && url.pathname === '/v1/auth/web/login') {
+      await this.login(request, response);
+      return;
+    }
+    if (method === 'POST' && url.pathname === '/v1/auth/web/refresh') {
+      await this.refresh(request, response);
+      return;
+    }
+    if (method === 'POST' && url.pathname === '/v1/auth/web/logout') {
+      await this.logout(request, response);
       return;
     }
 
+    const authorization = request.headers.authorization;
+    if (url.pathname === '/v1/home/' && this.rejectNextHome) {
+      this.rejectNextHome = false;
+      this.currentAccessToken = randomUUID();
+      this.awaitingHomeRetry = true;
+    }
+    if (!this.currentAccessToken || authorization !== `Bearer ${this.currentAccessToken}`) {
+      this.recordedEvents.push(`${url.pathname}:stale-token-rejected`);
+      this.json(response, { error: 'expired_access_token' }, 401);
+      return;
+    }
+
+    if (url.pathname === '/v1/home/' && this.awaitingHomeRetry) {
+      this.awaitingHomeRetry = false;
+      this.recordedEvents.push('home:retry-used-current-token');
+    }
+    if (method === 'GET') {
+      this.recordedReads.push({ path: url.pathname, query: url.searchParams.toString() });
+    }
+    await this.protectedRequest(request, response, method, url);
+  }
+
+  private preflight(request: IncomingMessage, response: ServerResponse, url: URL): void {
+    const requestedMethod = request.headers['access-control-request-method'] ?? '';
+    const requestedHeaders = (request.headers['access-control-request-headers'] ?? '')
+      .split(',')
+      .map((header) => header.trim().toLowerCase())
+      .filter(Boolean)
+      .sort();
+    const headersAllowed = requestedHeaders.every((header) =>
+      ['authorization', 'content-type'].includes(header),
+    );
+
+    if (!headersAllowed || !this.isKnownRequest(requestedMethod, url)) {
+      this.json(response, { error: 'unexpected_preflight' }, 403);
+      return;
+    }
+
+    this.recordedPreflights.push({ path: url.pathname, requestedMethod, requestedHeaders });
+    response.writeHead(204, {
+      ...this.corsHeaders(),
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+      'Access-Control-Max-Age': '0',
+    });
+    response.end();
+  }
+
+  private async login(request: IncomingMessage, response: ServerResponse): Promise<void> {
+    const body = await readJson(request);
+    const bodyValidated = deepEqual(body, expectedLogin);
+    this.recordedAuthRequests.push({
+      operation: 'login',
+      originAccepted: true,
+      bodyValidated,
+      cookiePresent: hasRefreshCookie(request),
+      cookieMatchedCurrent: false,
+    });
+    if (!bodyValidated) {
+      this.json(response, { error: 'invalid_login_fixture_body' }, 400);
+      return;
+    }
+
+    this.rotateAccessToken();
+    this.currentRefreshCookie = randomUUID();
+    this.recordedEvents.push('login:accepted');
+    this.json(response, this.authResponse(), 200, this.activeCookie(this.currentRefreshCookie));
+  }
+
+  private async refresh(request: IncomingMessage, response: ServerResponse): Promise<void> {
+    const body = await readJson(request);
+    const receivedCookie = getRefreshCookie(request);
+    const cookieMatchedCurrent =
+      receivedCookie !== null && receivedCookie === this.currentRefreshCookie;
+    this.recordedAuthRequests.push({
+      operation: 'refresh',
+      originAccepted: true,
+      bodyValidated: body === null,
+      cookiePresent: receivedCookie !== null,
+      cookieMatchedCurrent,
+    });
+    if (body !== null || !cookieMatchedCurrent) {
+      this.recordedEvents.push('refresh:rejected');
+      this.json(response, { error: 'logged_out' }, 401);
+      return;
+    }
+
+    const gate = this.refreshGate;
+    if (gate) {
+      this.refreshGate = null;
+      this.recordedEvents.push('refresh:requested');
+      gate.markRequested();
+      await gate.waitForRelease();
+    }
+
+    this.rotateAccessToken();
+    this.currentRefreshCookie = randomUUID();
+    this.recordedEvents.push('refresh:accepted');
+    this.json(response, this.authResponse(), 200, this.activeCookie(this.currentRefreshCookie));
+  }
+
+  private async logout(request: IncomingMessage, response: ServerResponse): Promise<void> {
+    const body = await readJson(request);
+    const receivedCookie = getRefreshCookie(request);
+    const cookieMatchedCurrent =
+      receivedCookie !== null && receivedCookie === this.currentRefreshCookie;
+    this.recordedAuthRequests.push({
+      operation: 'logout',
+      originAccepted: true,
+      bodyValidated: body === null,
+      cookiePresent: receivedCookie !== null,
+      cookieMatchedCurrent,
+    });
+    if (body !== null || !cookieMatchedCurrent) {
+      this.json(response, { error: 'invalid_logout_fixture_request' }, 400);
+      return;
+    }
+
+    this.recordedEvents.push('logout:requested');
+    const gate = this.logoutGate;
+    if (gate) {
+      this.logoutGate = null;
+      gate.markRequested();
+      await gate.waitForRelease();
+    }
+    this.currentAccessToken = null;
+    this.currentRefreshCookie = null;
+    this.recordedEvents.push('logout:accepted');
+    response.writeHead(204, { ...this.corsHeaders(), 'Set-Cookie': this.expiredCookie() });
+    response.end();
+  }
+
+  private async protectedRequest(
+    request: IncomingMessage,
+    response: ServerResponse,
+    method: string,
+    url: URL,
+  ): Promise<void> {
+    const path = url.pathname;
     if (method === 'GET' && path === '/v1/cycles') {
-      await this.json(route, [cycle]);
+      this.json(response, [cycle]);
       return;
     }
     if (method === 'GET' && path === '/v1/cycles/current') {
-      await this.json(route, cycle);
+      this.json(response, cycle);
       return;
     }
     if (method === 'GET' && path === '/v1/home/') {
-      if (this.rejectNextHome) {
-        this.rejectNextHome = false;
-        this.recordedEvents.push('home:unauthorized');
-        await this.json(route, { error: 'expired_access_token' }, 401);
-        return;
-      }
       if (this.waitingForHomeAfterWrite) {
         this.waitingForHomeAfterWrite = false;
         this.recordedEvents.push('home:refreshed-after-write');
       }
-      await this.json(route, this.homeResponse());
+      this.json(response, this.homeResponse());
       return;
     }
     if (method === 'GET' && path === '/v1/daily-expenses') {
-      await this.json(route, []);
+      this.json(response, []);
       return;
     }
     if (method === 'GET' && path === '/v1/categories') {
-      await this.json(route, [category]);
+      this.json(response, [category]);
       return;
     }
     if (method === 'GET' && path === '/v1/checking-accounts') {
-      await this.json(route, [checkingAccount]);
+      this.json(response, [checkingAccount]);
       return;
     }
-    if (path === '/v1/expenses/' && method === 'GET') {
-      await this.json(route, this.expenses);
+    if (method === 'GET' && path === '/v1/expenses/') {
+      this.json(response, this.expenses);
       return;
     }
-    if (path === '/v1/expenses/' && method === 'POST') {
-      const body = request.postDataJSON() as {
-        dueDate: string;
-        label: string;
-        expectedAmount: number;
-        categoryId: string;
-        notes: string | null;
-      };
-      const created = {
+    if (method === 'POST' && path === '/v1/expenses/') {
+      const body = await readJson(request);
+      if (!isCreateExpenseBody(body)) {
+        this.json(response, { error: 'invalid_expense_fixture_body' }, 400);
+        return;
+      }
+      const created: ExpenseFixture = {
         ...weeklyExpense,
         ...body,
         id: 'expense-created',
@@ -284,18 +479,19 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       };
       this.recordWrite(method, path, body);
       const existingIndex = this.expenses.findIndex((expense) => expense.id === created.id);
-      if (existingIndex >= 0) {
-        this.expenses.splice(existingIndex, 1, created);
-      } else {
-        this.expenses.push(created);
-      }
+      if (existingIndex >= 0) this.expenses.splice(existingIndex, 1, created);
+      else this.expenses.push(created);
       this.homeRemaining -= body.expectedAmount;
       this.waitingForHomeAfterWrite = true;
-      await this.json(route, created, 201);
+      this.json(response, created, 201);
       return;
     }
-    if (path === '/v1/expenses/expense-weekly/pay-occurrence' && method === 'POST') {
-      const body = request.postDataJSON();
+    if (method === 'POST' && path === '/v1/expenses/expense-weekly/pay-occurrence') {
+      const body = await readJson(request);
+      if (!deepEqual(body, { amount: 150, paidDate: '2026-10-08', paidFromAccountId: null })) {
+        this.json(response, { error: 'invalid_occurrence_fixture_body' }, 400);
+        return;
+      }
       this.recordWrite(method, path, body);
       this.expenses[0] = {
         ...this.expenses[0],
@@ -305,92 +501,93 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
         paidDate: '2026-10-08',
         updatedAt: '2026-10-08T12:00:00Z',
       };
-      await this.json(route, this.expenses[0]);
+      this.json(response, this.expenses[0]);
       return;
     }
     if (method === 'GET' && path === '/v1/credit-card-accounts/') {
-      await this.json(route, [creditCard]);
+      this.json(response, [creditCard]);
       return;
     }
     if (method === 'GET' && path === '/v1/card-entries/') {
-      await this.json(route, []);
+      this.json(response, []);
       return;
     }
     if (method === 'GET' && path === '/v1/card-statements/') {
-      await this.json(route, [{ ...this.statement, installmentsCount: 0 }]);
+      this.json(response, [{ ...this.statement, installmentsCount: 0 }]);
       return;
     }
     if (method === 'GET' && path === '/v1/card-statements/statement-closed') {
-      await this.json(route, { ...this.statement, installments: [] });
+      this.json(response, { ...this.statement, installments: [] });
       return;
     }
     if (method === 'POST' && path === '/v1/card-statements/statement-closed/pay') {
-      const body = request.postDataJSON() as {
-        actualAmount: number;
-        paidDate: string;
-        paidFromAccountId: string | null;
-      };
+      const body = await readJson(request);
+      const expected = { actualAmount: 420.5, paidDate: '2026-10-08', paidFromAccountId: null };
+      if (!deepEqual(body, expected)) {
+        this.json(response, { error: 'invalid_statement_fixture_body' }, 400);
+        return;
+      }
       this.recordWrite(method, path, body);
       this.statement = {
         ...this.statement,
         status: 'paid',
-        actualAmount: body.actualAmount,
-        paidDate: body.paidDate,
-        paidFromAccountId: body.paidFromAccountId,
+        actualAmount: expected.actualAmount,
+        paidDate: expected.paidDate,
+        paidFromAccountId: expected.paidFromAccountId,
         paidFromAccountName: null,
         updatedAt: '2026-10-08T12:00:00Z',
       };
-      await this.json(route, { ...this.statement, installmentsCount: 0 });
-      return;
+      this.json(response, { ...this.statement, installmentsCount: 0 });
     }
-
-    await this.json(route, { error: 'unexpected_e2e_request', method, path }, 501);
   }
 
-  private async refresh(route: Route): Promise<void> {
-    const cookieHeader = route.request().headers()['cookie'] ?? '';
-    if (!cookieHeader.includes(`${refreshCookieName}=`)) {
-      this.recordedEvents.push('refresh:rejected');
-      await this.json(route, { error: 'logged_out' }, 401);
-      return;
+  private isKnownRequest(method: string, url: URL): boolean {
+    const path = url.pathname;
+    const query = url.searchParams.toString();
+    if (
+      method === 'POST' &&
+      ['/v1/auth/web/login', '/v1/auth/web/refresh', '/v1/auth/web/logout'].includes(path)
+    ) {
+      return query === '';
     }
-
-    const gate = this.refreshGate;
-    if (gate) {
-      this.refreshGate = null;
-      this.recordedEvents.push('refresh:requested');
-      gate.markRequested();
-      await gate.waitForRelease();
+    if (method === 'GET' && ['/v1/cycles', '/v1/cycles/current'].includes(path)) {
+      return query === '';
     }
-
-    this.recordedEvents.push('refresh:accepted');
-    await this.json(route, this.authResponse(), 200, this.activeCookie(crypto.randomUUID()));
+    if (method === 'GET' && path === '/v1/home/') {
+      return query === 'cycleId=cycle-oct-2026';
+    }
+    if (method === 'GET' && path === '/v1/daily-expenses') {
+      return query === 'from=2026-10-01&to=2026-10-31';
+    }
+    if (
+      method === 'GET' &&
+      ['/v1/categories', '/v1/checking-accounts', '/v1/credit-card-accounts/'].includes(path)
+    ) {
+      return query === '';
+    }
+    if (method === 'GET' && path === '/v1/expenses/') {
+      return query === 'from=2026-10-01&to=2026-10-31';
+    }
+    if (method === 'POST' && path === '/v1/expenses/') return query === '';
+    if (method === 'POST' && path === '/v1/expenses/expense-weekly/pay-occurrence') {
+      return query === '';
+    }
+    if (method === 'GET' && ['/v1/card-entries/', '/v1/card-statements/'].includes(path)) {
+      return query === 'cardId=card-e2e';
+    }
+    if (method === 'GET' && path === '/v1/card-statements/statement-closed') return query === '';
+    return method === 'POST' && path === '/v1/card-statements/statement-closed/pay' && query === '';
   }
 
-  private async logout(route: Route): Promise<void> {
-    this.recordedEvents.push('logout:requested');
-    const gate = this.logoutGate;
-    if (gate) {
-      this.logoutGate = null;
-      gate.markRequested();
-      await gate.waitForRelease();
-    }
-    this.recordedEvents.push('logout:accepted');
-    await route.fulfill({
-      status: 204,
-      headers: { 'set-cookie': this.expiredCookie() },
-    });
+  private rotateAccessToken(): void {
+    this.currentAccessToken = randomUUID();
   }
 
   private authResponse() {
     return {
-      accessToken: this.accessToken,
+      accessToken: this.currentAccessToken,
       accessTokenExpiresAt: '2026-10-08T18:00:00Z',
-      user: {
-        id: 'user-e2e',
-        email: 'browser-user@example.test',
-        displayName: 'Browser User',
-      },
+      user: { id: 'user-e2e', email: expectedLogin.email, displayName: 'Browser User' },
     };
   }
 
@@ -435,13 +632,26 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
     return `${refreshCookieName}=; Path=${refreshCookiePath}; HttpOnly; SameSite=Lax; Max-Age=0`;
   }
 
-  private async json(route: Route, body: unknown, status = 200, setCookie?: string): Promise<void> {
-    await route.fulfill({
-      status,
-      contentType: 'application/json',
-      headers: setCookie ? { 'set-cookie': setCookie } : undefined,
-      body: JSON.stringify(body),
+  private corsHeaders(): Record<string, string> {
+    return {
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Origin': appOrigin,
+      Vary: 'Origin',
+    };
+  }
+
+  private json(
+    response: ServerResponse,
+    body: unknown,
+    status = 200,
+    setCookie?: string | false,
+  ): void {
+    response.writeHead(status, {
+      ...(setCookie === false ? {} : this.corsHeaders()),
+      'Content-Type': 'application/json; charset=utf-8',
+      ...(typeof setCookie === 'string' ? { 'Set-Cookie': setCookie } : {}),
     });
+    response.end(JSON.stringify(body));
   }
 }
 
@@ -456,7 +666,6 @@ function createGate(): InternalGate {
   const releasePromise = new Promise<void>((resolve) => {
     releaseResolve = resolve;
   });
-
   return {
     requested: requestedPromise,
     markRequested() {
@@ -477,11 +686,82 @@ function createGate(): InternalGate {
   };
 }
 
+async function readJson(request: IncomingMessage): Promise<unknown> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) chunks.push(Buffer.from(chunk));
+  const text = Buffer.concat(chunks).toString('utf8');
+  return text === '' ? null : JSON.parse(text);
+}
+
+function getRefreshCookie(request: IncomingMessage): string | null {
+  const cookieHeader = request.headers.cookie ?? '';
+  const cookie = cookieHeader
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${refreshCookieName}=`));
+  return cookie ? cookie.slice(refreshCookieName.length + 1) : null;
+}
+
+function hasRefreshCookie(request: IncomingMessage): boolean {
+  return getRefreshCookie(request) !== null;
+}
+
+function deepEqual(actual: unknown, expected: unknown): boolean {
+  return JSON.stringify(actual) === JSON.stringify(expected);
+}
+
+function isCreateExpenseBody(body: unknown): body is {
+  dueDate: string;
+  label: string;
+  expectedAmount: number;
+  categoryId: string;
+  notes: string | null;
+} {
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) return false;
+  const record = body as Record<string, unknown>;
+  const keys = Object.keys(record).sort();
+  return (
+    deepEqual(keys, ['categoryId', 'dueDate', 'expectedAmount', 'label', 'notes']) &&
+    typeof record['dueDate'] === 'string' &&
+    typeof record['label'] === 'string' &&
+    typeof record['expectedAmount'] === 'number' &&
+    record['categoryId'] === category.id &&
+    (typeof record['notes'] === 'string' || record['notes'] === null)
+  );
+}
+
+async function listen(server: Server): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(4301, '127.0.0.1', () => {
+      server.off('error', reject);
+      resolve();
+    });
+  });
+}
+
+async function close(server: Server): Promise<void> {
+  server.closeAllConnections();
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
+}
+
 export const test = base.extend<{ api: BillFolderApiFixture }>({
-  api: async ({ context }, use) => {
+  api: async ({}, use) => {
     const api = new DeterministicApiBoundary();
-    await context.route('**/v1/**', (route) => api.handle(route));
-    await use(api);
+    const server = createServer((request, response) => {
+      void api.handle(request, response).catch((error: unknown) => {
+        response.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'unknown' }));
+      });
+    });
+    await listen(server);
+    try {
+      await use(api);
+    } finally {
+      await close(server);
+    }
   },
 });
 
