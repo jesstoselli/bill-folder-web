@@ -2,6 +2,7 @@ import { routes } from './app.routes';
 import { anonymousGuard, authGuard } from './core/auth/auth.guard';
 import { HomePage } from './features/home/home.page';
 import { ExpensesPage } from './features/expenses/expenses.page';
+import { DailyExpensesPage } from './features/daily-expenses/daily-expenses.page';
 
 describe('application routes', () => {
   it('keeps every MVP destination available behind the application shell', () => {
@@ -56,5 +57,15 @@ describe('application routes', () => {
     expect(expensesRoute?.component).toBeUndefined();
     expect(expensesRoute?.loadComponent).toBeTypeOf('function');
     await expect(expensesRoute?.loadComponent?.()).resolves.toBe(ExpensesPage);
+  });
+
+  it('lazy-loads the daily expenses ledger behind the application shell', async () => {
+    const dailyExpensesRoute = routes
+      .find((route) => route.path === '')
+      ?.children?.find((route) => route.path === 'gastos-diarios');
+
+    expect(dailyExpensesRoute?.component).toBeUndefined();
+    expect(dailyExpensesRoute?.loadComponent).toBeTypeOf('function');
+    await expect(dailyExpensesRoute?.loadComponent?.()).resolves.toBe(DailyExpensesPage);
   });
 });

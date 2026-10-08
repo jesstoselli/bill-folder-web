@@ -1,0 +1,223 @@
+.daily-expenses-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.daily-expenses-page__header,
+.daily-expenses-page__cycle-row,
+.daily-ledger-summary {
+  align-items: end;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.daily-expenses-page__header {
+  h1 {
+    margin: 0;
+  }
+
+  p {
+    color: var(--bf-muted);
+    margin: 0.45rem 0 0;
+  }
+}
+
+.daily-expenses-page__actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.daily-expenses-page__refresh,
+.daily-expenses-page__state button {
+  background: transparent;
+  border: 1px solid var(--bf-outline);
+  border-radius: 999px;
+  color: var(--bf-text);
+  cursor: pointer;
+  min-height: 2.75rem;
+  padding: 0.55rem 1rem;
+
+  &:hover {
+    border-color: var(--bf-primary);
+    color: var(--bf-primary);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--bf-focus-ring);
+    outline: 1px solid var(--bf-primary);
+    outline-offset: 2px;
+  }
+}
+
+.daily-expenses-page__updating {
+  color: var(--bf-muted);
+}
+
+.daily-expenses-page__action-error {
+  border: 1px solid var(--bf-danger);
+  color: var(--bf-danger);
+  margin: 0;
+  padding: 0.75rem 1rem;
+}
+
+.daily-ledger-summary {
+  align-items: baseline;
+  border-block: 1px solid var(--bf-outline);
+  color: var(--bf-muted);
+  padding: 0.7rem 0.25rem;
+
+  strong {
+    color: var(--bf-text);
+    font-size: 1.15rem;
+    font-weight: 500;
+  }
+}
+
+.daily-expense-ledger {
+  background: var(--bf-surface);
+  border: 1px solid var(--bf-outline);
+  border-radius: var(--bf-radius-card);
+  overflow-x: auto;
+
+  table {
+    border-collapse: collapse;
+    min-width: 50rem;
+    width: 100%;
+  }
+
+  th {
+    color: var(--bf-muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+    padding: 0.75rem 0.9rem;
+    text-align: left;
+  }
+
+  td {
+    border-top: 1px solid color-mix(in srgb, var(--bf-outline) 72%, transparent);
+    padding: 0.72rem 0.9rem;
+    vertical-align: middle;
+  }
+
+  td:nth-child(2) strong,
+  td:nth-child(2) span {
+    display: block;
+  }
+}
+
+.daily-expense-ledger__date {
+  color: var(--bf-muted);
+  white-space: nowrap;
+  width: 7.5rem;
+}
+
+.daily-expense-ledger__notes {
+  color: var(--bf-muted);
+  font-size: 0.8rem;
+  max-width: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-expense-ledger__amount {
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.daily-expense-ledger__actions {
+  text-align: right !important;
+  width: 4.5rem;
+}
+
+.daily-expense-ledger__menu-trigger {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--bf-text);
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+
+  &:hover {
+    border-color: var(--bf-outline);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--bf-focus-ring);
+    outline: 1px solid var(--bf-primary);
+  }
+}
+
+@media (max-width: 720px) {
+  .daily-expenses-page__header,
+  .daily-expenses-page__cycle-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .daily-expenses-page__actions {
+    justify-content: space-between;
+  }
+
+  .daily-expense-ledger {
+    overflow: visible;
+
+    table,
+    tbody,
+    tr,
+    td {
+      display: block;
+      min-width: 0;
+      width: 100%;
+    }
+
+    thead {
+      display: none;
+    }
+
+    tr {
+      display: grid;
+      grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+      padding: 0.75rem;
+    }
+
+    td {
+      border: 0;
+      padding: 0.14rem 0.35rem;
+    }
+
+    tr + tr {
+      border-top: 1px solid var(--bf-outline);
+    }
+
+    .daily-expense-ledger__date {
+      grid-column: 1;
+      grid-row: 1 / span 3;
+    }
+
+    td[data-label='Descrição'] {
+      grid-column: 2;
+    }
+
+    td[data-label='Categoria'],
+    td[data-label='Conta'] {
+      color: var(--bf-muted);
+      grid-column: 2;
+    }
+
+    .daily-expense-ledger__amount {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    .daily-expense-ledger__actions {
+      grid-column: 3;
+      grid-row: 2 / span 2;
+      justify-self: end;
+    }
+  }
+}

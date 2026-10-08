@@ -1,0 +1,140 @@
+<section class="daily-expenses-page">
+  <header class="daily-expenses-page__header">
+    <div>
+      <h1 class="bf-heading-page">Gastos diários</h1>
+      <p>Saídas do dia em ordem cronológica, sem misturar contas futuras.</p>
+    </div>
+    <div class="daily-expenses-page__actions">
+      <button type="button" class="daily-expenses-page__refresh" (click)="refresh()">
+        Atualizar
+      </button>
+      <button
+        type="button"
+        mat-flat-button
+        [disabled]="cycles.current() === null"
+        (click)="openCreate()"
+      >
+        Novo gasto
+      </button>
+    </div>
+  </header>
+
+  @if (cycles.current(); as cycle) {
+    <div class="daily-expenses-page__cycle-row">
+      <app-cycle-navigator
+        [label]="cycle.label"
+        [startDate]="cycle.startDate"
+        [endDate]="cycle.endDate"
+        [previousEnabled]="cycles.previous() !== null && !refreshing()"
+        [nextEnabled]="cycles.next() !== null && !refreshing()"
+        (previous)="selectPreviousCycle()"
+        (next)="selectNextCycle()"
+      />
+      @if (refreshing()) {
+        <span class="daily-expenses-page__updating" role="status">Atualizando gastos…</span>
+      }
+    </div>
+  }
+
+  @if (actionError()) {
+    <p class="daily-expenses-page__action-error" role="alert">{{ actionError() }}</p>
+  }
+
+  @switch (pageState().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <div class="daily-expenses-page__state">
+        <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" />
+        <button type="button" (click)="refresh()">Tentar novamente</button>
+      </div>
+    }
+    @case ('no-cycle') {
+      <div class="daily-expenses-page__state">
+        <app-page-state
+          state="empty"
+          title="Nenhum ciclo disponível"
+          message="Crie ou disponibilize um ciclo para registrar e consultar gastos."
+        />
+        <button type="button" (click)="refresh()">Buscar ciclos novamente</button>
+      </div>
+    }
+    @case ('content') {
+      @if (store.expenses().length > 0) {
+        <div class="daily-ledger-summary" aria-label="Resumo dos gastos do ciclo">
+          <span>{{ countLabel(store.expenses().length) }} no ciclo</span>
+          <strong class="bf-tabular">{{ formatBrl(total()) }}</strong>
+        </div>
+
+        <div class="daily-expense-ledger" tabindex="-1" aria-label="Histórico de gastos do ciclo">
+          <table>
+            <caption class="u-visually-hidden">
+              Gastos do ciclo do mais recente para o mais antigo
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Descrição</th>
+                <th scope="col">Categoria</th>
+                <th scope="col">Conta</th>
+                <th scope="col" class="daily-expense-ledger__amount">Valor</th>
+                <th scope="col" class="daily-expense-ledger__actions"><span>Ações</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (expense of store.expenses(); track expense.id) {
+                <tr [attr.data-daily-expense-id]="expense.id">
+                  <td data-label="Data" class="daily-expense-ledger__date bf-tabular">
+                    <time [attr.datetime]="expense.date">{{ formatCivilDate(expense.date) }}</time>
+                  </td>
+                  <td data-label="Descrição">
+                    <strong>{{ expense.label }}</strong>
+                    @if (expense.notes) {
+                      <span class="daily-expense-ledger__notes">{{ expense.notes }}</span>
+                    }
+                  </td>
+                  <td data-label="Categoria">{{ expense.categoryName }}</td>
+                  <td data-label="Conta">{{ expense.accountName }}</td>
+                  <td data-label="Valor" class="daily-expense-ledger__amount bf-tabular">
+                    {{ formatBrl(expense.amount) }}
+                  </td>
+                  <td class="daily-expense-ledger__actions">
+                    <button
+                      type="button"
+                      class="daily-expense-ledger__menu-trigger"
+                      [matMenuTriggerFor]="rowMenu"
+                      [attr.aria-label]="'Ações para ' + expense.label"
+                      (menuClosed)="handleMenuClosed(expense.id)"
+                    >
+                      <span aria-hidden="true">•••</span>
+                    </button>
+                    <mat-menu #rowMenu="matMenu" xPosition="before">
+                      <button type="button" mat-menu-item (click)="queueEdit(expense)">
+                        Editar gasto
+                      </button>
+                      <button
+                        type="button"
+                        mat-menu-item
+                        style="color: var(--bf-danger)"
+                        (click)="queueDelete(expense)"
+                      >
+                        Excluir gasto
+                      </button>
+                    </mat-menu>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <app-page-state
+          state="empty"
+          title="Nenhum gasto neste ciclo"
+          message="Registre uma saída do dia para começar o histórico."
+        />
+      }
+    }
+  }
+</section>

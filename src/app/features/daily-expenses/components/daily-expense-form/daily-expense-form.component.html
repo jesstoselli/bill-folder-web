@@ -1,0 +1,106 @@
+<form class="daily-expense-form" [formGroup]="form" (ngSubmit)="submit()">
+  <header class="daily-expense-form__header">
+    <div>
+      <h2 id="daily-expense-form-title" mat-dialog-title>
+        {{ data.mode === 'create' ? 'Novo gasto' : 'Editar gasto' }}
+      </h2>
+      <p>
+        {{
+          data.mode === 'create'
+            ? 'Registre uma saída do dia neste ciclo.'
+            : 'Atualize este lançamento do histórico.'
+        }}
+      </p>
+    </div>
+    <button
+      type="button"
+      mat-button
+      mat-dialog-close
+      [disabled]="saving()"
+      aria-label="Fechar formulário de gasto"
+    >
+      Fechar
+    </button>
+  </header>
+
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p class="daily-expense-form__error" role="alert">{{ serverError() }}</p>
+    }
+
+    <div class="daily-expense-form__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Descrição</mat-label>
+        <input matInput formControlName="label" autocomplete="off" />
+        @if (form.controls.label.hasError('required') || form.controls.label.hasError('blank')) {
+          <mat-error>Informe a descrição.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="daily-expense-form__split">
+        <mat-form-field appearance="outline">
+          <mat-label>Data</mat-label>
+          <input matInput type="date" formControlName="date" />
+          @if (form.controls.date.invalid) {
+            <mat-error>Informe uma data válida.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Valor</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input
+            matInput
+            type="number"
+            min="0.01"
+            step="0.01"
+            inputmode="decimal"
+            formControlName="amount"
+          />
+          @if (form.controls.amount.invalid) {
+            <mat-error>Informe um valor maior que zero.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Categoria</mat-label>
+        <mat-select formControlName="categoryId">
+          @for (category of categories(); track category.id) {
+            <mat-option [value]="category.id">{{ category.namePt }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.categoryId.hasError('required')) {
+          <mat-error>Escolha uma categoria.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Conta</mat-label>
+        <mat-select formControlName="accountId">
+          @for (account of accounts(); track account.id) {
+            <mat-option [value]="account.id">
+              {{ account.bankName }}{{ account.isPrimary ? ' — principal' : '' }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.controls.accountId.hasError('required')) {
+          <mat-error>Escolha uma conta.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Observações</mat-label>
+        <textarea matInput rows="3" formControlName="notes"></textarea>
+        <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving() || loadingReferences()">
+      {{ saving() ? 'Salvando…' : 'Salvar gasto' }}
+    </button>
+  </mat-dialog-actions>
+</form>

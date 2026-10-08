@@ -54,7 +54,10 @@ export const routes: Routes = [
       },
       {
         path: 'gastos-diarios',
-        loadComponent: placeholder,
+        loadComponent: () =>
+          import('./features/daily-expenses/daily-expenses.page').then(
+            ({ DailyExpensesPage }) => DailyExpensesPage,
+          ),
         data: { title: 'Gastos diários' },
       },
       { path: 'receitas', loadComponent: placeholder, data: { title: 'Receitas' } },
