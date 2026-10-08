@@ -1,0 +1,40 @@
+@if (rows().length) {
+  <ul class="projection-list">
+    @for (row of rows(); track row.kind + '-' + row.id) {
+      <li>
+        <div class="projection-list__identity">
+          <strong>{{ row.title }}</strong>
+          <span>
+            {{ row.subtitle }}
+            @if (row.progress) {
+              <span aria-hidden="true"> · </span>{{ row.progress }}
+            }
+          </span>
+        </div>
+
+        <div class="projection-list__date">
+          <span>{{ row.kind === 'dailyExpense' ? 'Data' : 'Vencimento' }}</span>
+          <time [attr.datetime]="row.dueDate">{{ formatCivilDate(row.dueDate) }}</time>
+        </div>
+
+        <div class="projection-list__value">
+          <app-money [value]="row.amount" />
+          @if (row.context) {
+            <span>{{ row.context }}</span>
+          }
+        </div>
+
+        @if (row.status) {
+          <span
+            class="projection-list__status"
+            [class.projection-list__status--danger]="row.status === 'overdue'"
+          >
+            {{ statusLabel(row.status) }}
+          </span>
+        }
+      </li>
+    }
+  </ul>
+} @else {
+  <p class="projection-list__empty" role="status">{{ emptyMessage() }}</p>
+}

@@ -1,0 +1,32 @@
+<section class="category-breakdown" aria-labelledby="category-title">
+  <header>
+    <div>
+      <h2 id="category-title">Para onde vai</h2>
+      <p>Compromissos do ciclo por categoria.</p>
+    </div>
+    <app-money class="category-breakdown__total" [value]="total()" />
+  </header>
+
+  @if (slices().length) {
+    <ol class="category-breakdown__list">
+      @for (slice of slices(); track slice.id; let index = $index) {
+        <li>
+          <div class="category-breakdown__row">
+            <span class="category-breakdown__rank" aria-hidden="true">{{ index + 1 }}</span>
+            <span class="category-breakdown__name">{{ slice.name }}</span>
+            <app-money [value]="slice.amount" />
+          </div>
+          <span
+            class="category-breakdown__track"
+            role="img"
+            [attr.aria-label]="slice.name + ': ' + slice.share.toFixed(0) + '% do total'"
+          >
+            <span [style.width.%]="slice.share"></span>
+          </span>
+        </li>
+      }
+    </ol>
+  } @else {
+    <p class="category-breakdown__empty">Ainda não há valores distribuídos neste ciclo.</p>
+  }
+</section>

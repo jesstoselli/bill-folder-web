@@ -41,7 +41,11 @@ export const routes: Routes = [
     component: AppShellComponent,
     canActivate: [authGuard],
     children: [
-      { path: 'home', loadComponent: placeholder, data: { title: 'Home' } },
+      {
+        path: 'home',
+        loadComponent: () => import('./features/home/home.page').then(({ HomePage }) => HomePage),
+        data: { title: 'Home' },
+      },
       { path: 'despesas', loadComponent: placeholder, data: { title: 'Despesas' } },
       {
         path: 'gastos-diarios',

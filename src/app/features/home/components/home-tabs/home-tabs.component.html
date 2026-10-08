@@ -1,0 +1,48 @@
+<div class="home-tabs" role="tablist" aria-label="Obrigações do ciclo">
+  <button
+    type="button"
+    role="tab"
+    data-tab="upcoming"
+    aria-controls="home-obligations-panel"
+    [attr.aria-selected]="selected() === 'upcoming'"
+    [attr.tabindex]="selected() === 'upcoming' ? 0 : -1"
+    (click)="select('upcoming')"
+    (keydown)="navigate($event, 'upcoming')"
+  >
+    Próximos
+  </button>
+  <button
+    type="button"
+    role="tab"
+    data-tab="recent"
+    aria-controls="home-obligations-panel"
+    [attr.aria-selected]="selected() === 'recent'"
+    [attr.tabindex]="selected() === 'recent' ? 0 : -1"
+    (click)="select('recent')"
+    (keydown)="navigate($event, 'recent')"
+  >
+    Últimas
+  </button>
+  <button
+    type="button"
+    role="tab"
+    data-tab="overdue"
+    aria-controls="home-obligations-panel"
+    [attr.aria-selected]="selected() === 'overdue'"
+    [attr.tabindex]="selected() === 'overdue' ? 0 : -1"
+    (click)="select('overdue')"
+    (keydown)="navigate($event, 'overdue')"
+  >
+    Atrasadas
+    @if (overdueCount() > 0) {
+      <span
+        class="home-tabs__badge"
+        [attr.aria-label]="
+          overdueCount() + (overdueCount() === 1 ? ' conta atrasada' : ' contas atrasadas')
+        "
+      >
+        {{ overdueCount() }}
+      </span>
+    }
+  </button>
+</div>

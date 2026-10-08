@@ -1,5 +1,6 @@
 import { routes } from './app.routes';
 import { anonymousGuard, authGuard } from './core/auth/auth.guard';
+import { HomePage } from './features/home/home.page';
 
 describe('application routes', () => {
   it('keeps every MVP destination available behind the application shell', () => {
@@ -34,5 +35,15 @@ describe('application routes', () => {
       'redefinir-senha',
     ]);
     expect(publicRoutes.every((route) => route.canActivate?.includes(anonymousGuard))).toBe(true);
+  });
+
+  it('keeps the Home feature lazy-loaded', async () => {
+    const homeRoute = routes
+      .find((route) => route.path === '')
+      ?.children?.find((route) => route.path === 'home');
+
+    expect(homeRoute?.component).toBeUndefined();
+    expect(homeRoute?.loadComponent).toBeTypeOf('function');
+    await expect(homeRoute?.loadComponent?.()).resolves.toBe(HomePage);
   });
 });

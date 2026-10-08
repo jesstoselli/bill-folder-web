@@ -1,0 +1,100 @@
+:host {
+  display: block;
+}
+
+.balance-hero {
+  background-color: var(--bf-surface-high);
+  background-image: repeating-linear-gradient(
+    132deg,
+    transparent 0 0.75rem,
+    color-mix(in srgb, var(--bf-brand) 7%, transparent) 0.75rem 0.8125rem
+  );
+  border: 1px solid var(--bf-primary);
+  border-radius: var(--bf-radius-hero);
+  display: grid;
+  gap: 1.5rem;
+  grid-template-rows: auto minmax(5rem, 1fr) auto;
+  min-height: 19rem;
+  overflow: hidden;
+  padding: clamp(1.5rem, 4vw, 3.25rem);
+  position: relative;
+
+  &::after {
+    border: 1px solid color-mix(in srgb, var(--bf-primary) 32%, transparent);
+    border-radius: calc(var(--bf-radius-hero) - 0.6rem);
+    content: '';
+    inset: 0.6rem;
+    pointer-events: none;
+    position: absolute;
+  }
+}
+
+.balance-hero__copy {
+  align-self: start;
+  position: relative;
+  z-index: 1;
+
+  h2 {
+    font-size: clamp(1.4rem, 2.4vw, 2rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  p {
+    color: var(--bf-muted);
+    margin: 0.5rem 0 0;
+    max-width: 27ch;
+  }
+}
+
+.balance-hero__amount {
+  align-self: center;
+  color: var(--bf-primary);
+  font-size: clamp(3.1rem, 7vw, 6rem);
+  font-weight: 500;
+  justify-self: end;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+  position: relative;
+  z-index: 1;
+}
+
+.balance-hero--negative .balance-hero__amount {
+  color: var(--bf-danger);
+}
+
+.balance-hero__realized {
+  align-items: center;
+  align-self: end;
+  color: var(--bf-muted);
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+
+  strong {
+    color: var(--bf-text);
+    font-size: 1.125rem;
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 700px) {
+  .balance-hero {
+    gap: 1.5rem;
+    min-height: 0;
+  }
+
+  .balance-hero__amount {
+    justify-self: start;
+  }
+
+  .balance-hero__realized {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.125rem;
+    grid-column: auto;
+  }
+}

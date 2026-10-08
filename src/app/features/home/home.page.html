@@ -1,0 +1,93 @@
+<section class="home-page">
+  <header class="home-page__header">
+    <div>
+      <h1 class="bf-heading-page">Resumo do ciclo</h1>
+      <p>Acompanhe o que saiu e o que ainda vence.</p>
+    </div>
+    <button
+      class="home-page__refresh"
+      type="button"
+      [attr.aria-busy]="refreshing()"
+      (click)="refresh()"
+    >
+      Atualizar
+    </button>
+  </header>
+
+  @switch (store.state().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <div class="home-page__error">
+        <app-page-state
+          state="error"
+          title="Não foi possível carregar a Home"
+          [message]="errorMessage()"
+        />
+        <button type="button" (click)="refresh()">Tentar novamente</button>
+      </div>
+    }
+    @case ('content') {
+      @if (content(); as data) {
+        <div class="home-page__cycle-row">
+          <app-cycle-navigator
+            [label]="data.cycle.label"
+            [startDate]="data.cycle.startDate"
+            [endDate]="data.cycle.endDate"
+            [previousEnabled]="cycles.previous() !== null && !refreshing()"
+            [nextEnabled]="cycles.next() !== null && !refreshing()"
+            (previous)="selectPreviousCycle()"
+            (next)="selectNextCycle()"
+          />
+          @if (refreshing()) {
+            <span class="home-page__updating" role="status">Atualizando dados…</span>
+          }
+        </div>
+
+        <div class="home-page__layout">
+          <div class="home-page__primary">
+            <app-balance-hero [balance]="data.balance" />
+
+            <section class="home-page__obligations" aria-labelledby="obligations-title">
+              <div class="home-page__section-header">
+                <div>
+                  <h2 id="obligations-title">Movimento do ciclo</h2>
+                  <p>Contas, faturas e gastos diários em um só lugar.</p>
+                </div>
+                <app-home-tabs
+                  [selected]="selectedTab()"
+                  [overdueCount]="overdueCount()"
+                  (selectedChange)="selectTab($event)"
+                />
+              </div>
+              <div id="home-obligations-panel" role="tabpanel" tabindex="0">
+                <app-projection-list [rows]="visibleRows()" [emptyMessage]="emptyMessage()" />
+              </div>
+            </section>
+          </div>
+
+          <aside class="home-page__secondary" aria-label="Resumo e atalhos">
+            <app-category-breakdown [breakdown]="data.categoryBreakdown" />
+
+            <nav class="home-page__shortcuts" aria-labelledby="shortcuts-title">
+              <h2 id="shortcuts-title">Atalhos</h2>
+              <a routerLink="/gastos-diarios">
+                <span>Gastos diários</span><span aria-hidden="true">Abrir</span>
+              </a>
+              <a routerLink="/despesas">
+                <span>Despesas</span><span aria-hidden="true">Abrir</span>
+              </a>
+              <a routerLink="/receitas">
+                <span>Receitas</span><span aria-hidden="true">Abrir</span>
+              </a>
+              <a routerLink="/cartoes">
+                <span>Cartões</span><span aria-hidden="true">Abrir</span>
+              </a>
+            </nav>
+          </aside>
+        </div>
+      }
+    }
+  }
+</section>

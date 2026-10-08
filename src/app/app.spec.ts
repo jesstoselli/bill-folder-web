@@ -1,10 +1,14 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { App } from './app';
 import { routes } from './app.routes';
 import { AuthSessionService } from './core/auth/auth-session.service';
+import { CycleStore } from './core/cycles/cycle.store';
+import { homeFixture } from './features/home/home.fixtures';
+import { HomeStore } from './features/home/home.store';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -31,6 +35,26 @@ describe('App', () => {
                   '(max-width: 767.98px)': false,
                 },
               }),
+          },
+        },
+        {
+          provide: CycleStore,
+          useValue: {
+            state: signal({ kind: 'content', data: [], refreshing: false }),
+            current: signal(null),
+            previous: signal(null),
+            next: signal(null),
+            load: vi.fn(() => Promise.resolve()),
+          },
+        },
+        {
+          provide: HomeStore,
+          useValue: {
+            state: signal({ kind: 'content', data: homeFixture, refreshing: false }),
+            recentDailyExpenses: signal([]),
+            load: vi.fn(() => Promise.resolve()),
+            refresh: vi.fn(() => Promise.resolve()),
+            selectCycle: vi.fn(() => true),
           },
         },
       ],

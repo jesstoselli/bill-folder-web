@@ -1,0 +1,18 @@
+<section
+  class="balance-hero"
+  [class.balance-hero--negative]="balance().remaining < 0"
+  role="status"
+  aria-labelledby="balance-title"
+>
+  <div class="balance-hero__copy">
+    <h2 id="balance-title">Saldo disponível</h2>
+    <p>Depois do que já foi pago e do que ainda está reservado.</p>
+  </div>
+
+  <app-money class="balance-hero__amount" [value]="balance().remaining" />
+
+  <p class="balance-hero__realized">
+    Realizado no ciclo
+    <strong><app-money [value]="realized()" /></strong>
+  </p>
+</section>
