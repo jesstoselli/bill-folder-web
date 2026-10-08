@@ -33,7 +33,6 @@ export class HomeStore {
   }
 
   async load(cycleId?: string): Promise<void> {
-    this.selectedCycleId = cycleId;
     const generation = ++this.loadGeneration;
     const previousState = this.stateValue();
 
@@ -49,6 +48,10 @@ export class HomeStore {
       if (generation !== this.loadGeneration) {
         return;
       }
+      if (!this.cycleStore.select(home.cycle.id)) {
+        throw new Error(`Home returned unknown cycle ${home.cycle.id}`);
+      }
+      this.selectedCycleId = home.cycle.id;
       this.recentValue.set(recent);
       this.stateValue.set({ kind: 'content', data: home, refreshing: false });
     } catch (error: unknown) {
@@ -69,7 +72,7 @@ export class HomeStore {
   }
 
   selectCycle(cycleId: string): boolean {
-    if (!this.cycleStore.select(cycleId)) {
+    if (!this.cycleStore.cycles().some((cycle) => cycle.id === cycleId)) {
       return false;
     }
     void this.load(cycleId);

@@ -61,7 +61,12 @@
                   (selectedChange)="selectTab($event)"
                 />
               </div>
-              <div id="home-obligations-panel" role="tabpanel" tabindex="0">
+              <div
+                id="home-obligations-panel"
+                role="tabpanel"
+                tabindex="0"
+                [attr.aria-labelledby]="'home-tab-' + selectedTab()"
+              >
                 <app-projection-list [rows]="visibleRows()" [emptyMessage]="emptyMessage()" />
               </div>
             </section>

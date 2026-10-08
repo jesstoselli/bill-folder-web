@@ -1,35 +1,66 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable, Subject, of, throwError } from 'rxjs';
+import { CycleResponse } from '../../core/cycles/cycle.models';
 import { CycleStore } from '../../core/cycles/cycle.store';
+import { CyclesApi } from '../../core/cycles/cycles.api';
 import { DataChangeService } from '../../core/data-change/data-change.service';
 import { DailyExpenseResponse, HomeResponse } from './home.models';
 import { dailyExpense, homeFixture } from './home.fixtures';
 import { HomeApi } from './home.api';
 import { HomeStore } from './home.store';
 
+const cycleA = cycle({
+  id: 'cycle-1',
+  startDate: '2026-10-01',
+  endDate: '2026-10-31',
+  label: 'outubro/2026',
+  isCurrent: true,
+});
+const cycleB = cycle({
+  id: 'cycle-2',
+  startDate: '2026-11-01',
+  endDate: '2026-11-30',
+  label: 'novembro/2026',
+  isCurrent: false,
+});
+const cycleC = cycle({
+  id: 'cycle-3',
+  startDate: '2026-12-01',
+  endDate: '2026-12-31',
+  label: 'dezembro/2026',
+  isCurrent: false,
+});
+
 describe('HomeStore', () => {
   let api: {
     get: ReturnType<typeof vi.fn>;
     listDailyExpenses: ReturnType<typeof vi.fn>;
   };
-  let cycleStore: { select: ReturnType<typeof vi.fn> };
+  let cycleStore: CycleStore;
   let changes: DataChangeService;
   let store: HomeStore;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     api = {
       get: vi.fn((): Observable<HomeResponse> => of(homeFixture)),
       listDailyExpenses: vi.fn((): Observable<DailyExpenseResponse[]> =>
         of([dailyExpense({ id: 'recent' })]),
       ),
     };
-    cycleStore = { select: vi.fn(() => true) };
     TestBed.configureTestingModule({
       providers: [
         { provide: HomeApi, useValue: api },
-        { provide: CycleStore, useValue: cycleStore },
+        {
+          provide: CyclesApi,
+          useValue: {
+            list: vi.fn(() => of([cycleC, cycleA, cycleB])),
+            current: vi.fn(() => of(cycleA)),
+          },
+        },
       ],
     });
+    cycleStore = TestBed.inject(CycleStore);
+    await cycleStore.load();
     changes = TestBed.inject(DataChangeService);
     store = TestBed.inject(HomeStore);
   });
@@ -87,13 +118,116 @@ describe('HomeStore', () => {
   });
 
   it('selects only a known cycle before loading it', async () => {
-    cycleStore.select.mockReturnValueOnce(false);
-
     expect(store.selectCycle('missing')).toBe(false);
     expect(api.get).not.toHaveBeenCalled();
 
+    api.get.mockReturnValueOnce(of(homeForCycle(cycleB)));
     expect(store.selectCycle('cycle-2')).toBe(true);
-    expect(cycleStore.select).toHaveBeenLastCalledWith('cycle-2');
     expect(api.get).toHaveBeenLastCalledWith('cycle-2');
+    await vi.waitFor(() => expect(cycleStore.current()?.id).toBe('cycle-2'));
+  });
+
+  it('keeps selection, bounded navigation and Home content on cycle A when selecting B fails', async () => {
+    await store.load('cycle-1');
+    const pendingB = new Subject<HomeResponse>();
+    api.get.mockReturnValueOnce(pendingB);
+
+    expect(store.selectCycle('cycle-2')).toBe(true);
+
+    expect(cycleStore.current()?.id).toBe('cycle-1');
+    expect(cycleStore.previous()).toBeNull();
+    expect(cycleStore.next()).toBe('cycle-2');
+    expect(store.state()).toEqual({ kind: 'content', data: homeFixture, refreshing: true });
+
+    pendingB.error({ status: 503, code: 'http_503', message: 'indisponível' });
+
+    await vi.waitFor(() =>
+      expect(store.state()).toEqual({ kind: 'content', data: homeFixture, refreshing: false }),
+    );
+    expect(cycleStore.current()?.id).toBe('cycle-1');
+    expect(cycleStore.previous()).toBeNull();
+    expect(cycleStore.next()).toBe('cycle-2');
+
+    await store.refresh();
+    expect(api.get).toHaveBeenLastCalledWith('cycle-1');
+  });
+
+  it('ignores stale B success after cycle C becomes current', async () => {
+    await store.load('cycle-1');
+    const pendingB = new Subject<HomeResponse>();
+    const pendingC = new Subject<HomeResponse>();
+    api.get.mockReturnValueOnce(pendingB).mockReturnValueOnce(pendingC);
+
+    expect(store.selectCycle('cycle-2')).toBe(true);
+    expect(store.selectCycle('cycle-3')).toBe(true);
+
+    pendingC.next(homeForCycle(cycleC));
+    pendingC.complete();
+    await vi.waitFor(() => expect(homeCycleId(store)).toBe('cycle-3'));
+
+    pendingB.next(homeForCycle(cycleB));
+    pendingB.complete();
+    await flushPromises();
+
+    expect(homeCycleId(store)).toBe('cycle-3');
+    expect(cycleStore.current()?.id).toBe('cycle-3');
+    expect(cycleStore.previous()).toBe('cycle-2');
+    expect(cycleStore.next()).toBeNull();
+  });
+
+  it('ignores stale B error after cycle C becomes current', async () => {
+    await store.load('cycle-1');
+    const pendingB = new Subject<HomeResponse>();
+    const pendingC = new Subject<HomeResponse>();
+    api.get.mockReturnValueOnce(pendingB).mockReturnValueOnce(pendingC);
+
+    expect(store.selectCycle('cycle-2')).toBe(true);
+    expect(store.selectCycle('cycle-3')).toBe(true);
+
+    pendingC.next(homeForCycle(cycleC));
+    pendingC.complete();
+    await vi.waitFor(() => expect(homeCycleId(store)).toBe('cycle-3'));
+
+    pendingB.error({ status: 503, code: 'http_503', message: 'indisponível' });
+    await flushPromises();
+
+    expect(homeCycleId(store)).toBe('cycle-3');
+    expect(cycleStore.current()?.id).toBe('cycle-3');
+    expect(cycleStore.previous()).toBe('cycle-2');
+    expect(cycleStore.next()).toBeNull();
   });
 });
+
+function cycle(
+  overrides: Pick<CycleResponse, 'id' | 'startDate' | 'endDate' | 'label' | 'isCurrent'>,
+): CycleResponse {
+  return {
+    ...overrides,
+    isRecurrenceGenerated: true,
+    createdAt: '2026-01-01T10:00:00Z',
+    updatedAt: '2026-01-02T10:00:00Z',
+  };
+}
+
+function homeForCycle(cycleResponse: CycleResponse): HomeResponse {
+  return {
+    ...homeFixture,
+    cycle: {
+      id: cycleResponse.id,
+      startDate: cycleResponse.startDate,
+      endDate: cycleResponse.endDate,
+      label: cycleResponse.label,
+    },
+  };
+}
+
+function homeCycleId(store: HomeStore): string | undefined {
+  const state = store.state();
+  return state.kind === 'content' ? state.data.cycle.id : undefined;
+}
+
+async function flushPromises(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+}
