@@ -10,7 +10,10 @@ import { ResetPasswordPage } from './reset-password.page';
 class RouteStub {}
 
 describe('ResetPasswordPage', () => {
+  let routeEmail: string | null;
+
   beforeEach(async () => {
+    routeEmail = 'jess@example.com';
     await TestBed.configureTestingModule({
       imports: [ResetPasswordPage],
       providers: [
@@ -19,9 +22,11 @@ describe('ResetPasswordPage', () => {
         provideRouter([{ path: 'login', component: RouteStub }]),
         {
           provide: ActivatedRoute,
-          useValue: {
-            snapshot: { queryParamMap: convertToParamMap({ email: 'jess@example.com' }) },
-          },
+          useFactory: () => ({
+            snapshot: {
+              queryParamMap: convertToParamMap(routeEmail === null ? {} : { email: routeEmail }),
+            },
+          }),
         },
         { provide: APP_ENVIRONMENT, useValue: { apiBaseUrl: '/v1', production: false } },
       ],
@@ -37,11 +42,10 @@ describe('ResetPasswordPage', () => {
     ).not.toBeNull();
   });
 
-  it('requires the email query parameter, six numeric digits and the backend password limits', () => {
+  it('requires six numeric digits and the backend password limits', () => {
     const fixture = TestBed.createComponent(ResetPasswordPage);
     const form = fixture.componentInstance.form;
 
-    expect(fixture.componentInstance.email).toBe('jess@example.com');
     form.setValue({ code: '12a456', newPassword: 'short' });
     expect(form.controls.code.hasError('pattern')).toBe(true);
     expect(form.controls.newPassword.hasError('minlength')).toBe(true);
@@ -51,6 +55,40 @@ describe('ResetPasswordPage', () => {
     expect(form.controls.newPassword.hasError('maxlength')).toBe(true);
   });
 
+  it.each([
+    ['absent', null],
+    ['malformed', 'not-an-email'],
+    ['too long', `${'a'.repeat(247)}@mail.com`],
+  ])('disables reset and explains how to recover when query email is %s', (_, email) => {
+    routeEmail = email;
+    const fixture = TestBed.createComponent(ResetPasswordPage);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const submit = root.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const guidance = root.querySelector<HTMLElement>('#reset-email-guidance[role="alert"]');
+
+    expect(fixture.componentInstance.emailControl.invalid).toBe(true);
+    expect(submit?.disabled).toBe(true);
+    expect(guidance?.textContent).toContain('Solicite outro código');
+  });
+
+  it('accepts a valid query email and enables reset when the form is valid', () => {
+    const fixture = TestBed.createComponent(ResetPasswordPage);
+    fixture.componentInstance.form.setValue({
+      code: '123456',
+      newPassword: 'nova-senha-segura',
+    });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.emailControl.valid).toBe(true);
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+        'button[type="submit"]',
+      )?.disabled,
+    ).toBe(false);
+  });
+
   it('submits the email, code and new password then returns to login', async () => {
     const fixture = TestBed.createComponent(ResetPasswordPage);
     fixture.componentInstance.form.setValue({
@@ -58,6 +96,7 @@ describe('ResetPasswordPage', () => {
       newPassword: 'nova-senha-segura',
     });
 
+    fixture.componentInstance.submit();
     fixture.componentInstance.submit();
     const request = TestBed.inject(HttpTestingController).expectOne('/v1/auth/reset-password');
     expect(request.request.body).toEqual({
@@ -69,5 +108,19 @@ describe('ResetPasswordPage', () => {
     await fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/login');
+  });
+
+  it('cancels an in-flight reset when the page is destroyed', () => {
+    const fixture = TestBed.createComponent(ResetPasswordPage);
+    fixture.componentInstance.form.setValue({
+      code: '123456',
+      newPassword: 'nova-senha-segura',
+    });
+
+    fixture.componentInstance.submit();
+    const request = TestBed.inject(HttpTestingController).expectOne('/v1/auth/reset-password');
+    fixture.destroy();
+
+    expect(request.cancelled).toBe(true);
   });
 });

@@ -36,7 +36,6 @@ export class AppShellComponent {
 
   protected logout(): void {
     this.store.closeDrawer();
-    this.session.logout().subscribe();
-    void this.router.navigate(['/login']);
+    this.session.logout().subscribe(() => void this.router.navigate(['/login']));
   }
 }

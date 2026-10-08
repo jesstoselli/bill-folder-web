@@ -98,6 +98,41 @@ describe('authInterceptor', () => {
     expect(router.url).toBe('/login?returnUrl=%2Fhome');
   });
 
+  it('clears the session when refresh fails', async () => {
+    await router.navigateByUrl('/home');
+    const result = firstValueFrom(http.get('/v1/private'));
+    backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
+    const redirected = firstValueFrom(
+      router.events.pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        take(1),
+      ),
+    );
+    backend
+      .expectOne('/v1/auth/web/refresh')
+      .flush(null, { status: 503, statusText: 'Service Unavailable' });
+
+    await expect(result).rejects.toMatchObject({ status: 503 });
+    await redirected;
+    expect(session.isAuthenticated()).toBe(false);
+    expect(router.url).toBe('/login?returnUrl=%2Fhome');
+  });
+
+  it('propagates a non-401 retry failure without clearing the session or route', async () => {
+    await router.navigateByUrl('/home');
+    const result = firstValueFrom(http.get('/v1/private'));
+    backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
+    backend.expectOne('/v1/auth/web/refresh').flush(authResponse);
+    backend
+      .expectOne('/v1/private')
+      .flush(null, { status: 500, statusText: 'Internal Server Error' });
+
+    await expect(result).rejects.toMatchObject({ status: 500 });
+    await Promise.resolve();
+    expect(session.isAuthenticated()).toBe(true);
+    expect(router.url).toBe('/home');
+  });
+
   it('does not intercept or recursively refresh public auth endpoints', async () => {
     const result = firstValueFrom(
       session.login({ email: 'jess@example.com', password: 'wrong-password' }),

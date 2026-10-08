@@ -1,4 +1,5 @@
-import { Component, ElementRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,6 +21,7 @@ export class LoginPage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -35,6 +37,10 @@ export class LoginPage {
   });
 
   submit(): void {
+    if (this.submitting()) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.focusFirstInvalidField();
@@ -45,7 +51,10 @@ export class LoginPage {
     this.submitting.set(true);
     this.session
       .login(this.form.getRawValue())
-      .pipe(finalize(() => this.submitting.set(false)))
+      .pipe(
+        finalize(() => this.submitting.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: () => {
           const requested = this.route.snapshot.queryParamMap.get('returnUrl');

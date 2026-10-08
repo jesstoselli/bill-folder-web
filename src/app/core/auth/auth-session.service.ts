@@ -1,8 +1,8 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import {
   Observable,
   catchError,
+  concatMap,
   defer,
   finalize,
   map,
@@ -19,6 +19,8 @@ export class AuthSessionService {
   private readonly api = inject(AuthApi);
   private readonly state = signal<AuthState>({ kind: 'restoring' });
   private refreshInFlight: Observable<void> | null = null;
+  private logoutInFlight: Observable<void> | null = null;
+  private logoutRequested = false;
   private sessionEpoch = 0;
 
   readonly user: Signal<UserDto | null> = computed(() => {
@@ -34,38 +36,59 @@ export class AuthSessionService {
   restore(): Observable<void> {
     this.state.set({ kind: 'restoring' });
     return this.refreshOnce().pipe(
-      catchError((error: unknown) => {
-        if (error instanceof HttpErrorResponse && error.status === 401) {
-          this.clear();
-          return of(void 0);
-        }
-        return throwError(() => error);
+      catchError(() => {
+        this.clear();
+        return of(void 0);
       }),
     );
   }
 
   login(request: LoginRequest): Observable<void> {
-    return this.api.login(request).pipe(
-      tap((response) => this.accept(response)),
-      map(() => void 0),
+    return this.afterPendingLogout(() =>
+      this.api.login(request).pipe(
+        tap((response) => this.accept(response)),
+        map(() => void 0),
+      ),
     );
   }
 
   signup(request: SignupRequest): Observable<void> {
-    return this.api.signup(request).pipe(
-      tap((response) => this.accept(response)),
-      map(() => void 0),
+    return this.afterPendingLogout(() =>
+      this.api.signup(request).pipe(
+        tap((response) => this.accept(response)),
+        map(() => void 0),
+      ),
     );
   }
 
   logout(): Observable<void> {
-    return defer(() => {
-      this.clear();
-      return this.api.logout().pipe(catchError(() => of(void 0)));
-    });
+    if (this.logoutInFlight) {
+      return this.logoutInFlight;
+    }
+
+    this.logoutRequested = true;
+    this.clear();
+
+    const pendingRefresh = this.refreshInFlight?.pipe(catchError(() => of(void 0))) ?? of(void 0);
+    const logout = pendingRefresh.pipe(
+      concatMap(() => this.api.logout().pipe(catchError(() => of(void 0)))),
+      map(() => void 0),
+      finalize(() => {
+        this.logoutInFlight = null;
+        this.logoutRequested = false;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+
+    this.logoutInFlight = logout;
+    return logout;
   }
 
   refreshOnce(): Observable<void> {
+    if (this.logoutRequested) {
+      return throwError(() => new Error('Refresh blocked while logout is in progress.'));
+    }
+
     if (this.refreshInFlight) {
       return this.refreshInFlight;
     }
@@ -99,6 +122,13 @@ export class AuthSessionService {
       user: response.user,
       accessToken: response.accessToken,
       expiresAt: response.accessTokenExpiresAt,
+    });
+  }
+
+  private afterPendingLogout(operation: () => Observable<void>): Observable<void> {
+    return defer(() => {
+      const pendingLogout = this.logoutInFlight;
+      return pendingLogout ? pendingLogout.pipe(concatMap(() => operation())) : operation();
     });
   }
 }

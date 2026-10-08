@@ -1,4 +1,5 @@
-import { Component, ElementRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,8 +19,13 @@ export class ResetPasswordPage {
   private readonly api = inject(AuthApi);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly email = inject(ActivatedRoute).snapshot.queryParamMap.get('email')?.trim() ?? '';
+  readonly emailControl = new FormControl(this.email, {
+    nonNullable: true,
+    validators: [Validators.required, Validators.email, Validators.maxLength(255)],
+  });
   readonly submitting = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly form = new FormGroup({
@@ -34,10 +40,14 @@ export class ResetPasswordPage {
   });
 
   submit(): void {
-    if (!this.email || this.form.invalid) {
+    if (this.submitting()) {
+      return;
+    }
+
+    if (this.emailControl.invalid || this.form.invalid) {
+      this.emailControl.markAsTouched();
       this.form.markAllAsTouched();
-      if (!this.email) {
-        this.errorMessage.set('Abra o link de recuperação enviado para o seu email.');
+      if (this.emailControl.invalid) {
         return;
       }
       this.focusFirstInvalidField();
@@ -47,8 +57,11 @@ export class ResetPasswordPage {
     this.errorMessage.set(null);
     this.submitting.set(true);
     this.api
-      .resetPassword({ email: this.email, ...this.form.getRawValue() })
-      .pipe(finalize(() => this.submitting.set(false)))
+      .resetPassword({ email: this.emailControl.getRawValue(), ...this.form.getRawValue() })
+      .pipe(
+        finalize(() => this.submitting.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: () => void this.router.navigateByUrl('/login'),
         error: (error: unknown) => {

@@ -57,6 +57,26 @@ describe('AuthSessionService', () => {
     expect(session.isAuthenticated()).toBe(false);
   });
 
+  it('treats a restore network failure as anonymous without rejecting bootstrap', async () => {
+    const restored = firstValueFrom(session.restore());
+    backend
+      .expectOne('/v1/auth/web/refresh')
+      .error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+
+    await expect(restored).resolves.toBeUndefined();
+    expect(session.isAuthenticated()).toBe(false);
+  });
+
+  it('treats a restore 503 as anonymous without rejecting bootstrap', async () => {
+    const restored = firstValueFrom(session.restore());
+    backend
+      .expectOne('/v1/auth/web/refresh')
+      .flush({ error: 'unavailable' }, { status: 503, statusText: 'Service Unavailable' });
+
+    await expect(restored).resolves.toBeUndefined();
+    expect(session.isAuthenticated()).toBe(false);
+  });
+
   it('establishes the session after login and signup', async () => {
     const login = firstValueFrom(
       session.login({ email: 'jess@example.com', password: 'senha-segura' }),
@@ -98,7 +118,7 @@ describe('AuthSessionService', () => {
     expect(session.accessToken()).toBeNull();
   });
 
-  it('does not let an in-flight refresh restore the session after logout', async () => {
+  it('waits for an in-flight refresh and sends remote logout as the last cookie mutation', async () => {
     const login = firstValueFrom(
       session.login({ email: 'jess@example.com', password: 'senha-segura' }),
     );
@@ -108,13 +128,64 @@ describe('AuthSessionService', () => {
     const refresh = firstValueFrom(session.refreshOnce());
     const refreshRequest = backend.expectOne('/v1/auth/web/refresh');
     const logout = firstValueFrom(session.logout());
-    const logoutRequest = backend.expectOne('/v1/auth/web/logout');
+
+    expect(session.isAuthenticated()).toBe(false);
+    backend.expectNone('/v1/auth/web/logout');
+
+    const blockedRefresh = firstValueFrom(session.refreshOnce());
+    backend.expectNone('/v1/auth/web/refresh');
 
     refreshRequest.flush({ ...authResponse, accessToken: 'late-token' });
+    await expect(blockedRefresh).rejects.toThrow('logout');
+    const logoutRequest = backend.expectOne('/v1/auth/web/logout');
     logoutRequest.flush(null);
     await Promise.all([refresh, logout]);
 
     expect(session.isAuthenticated()).toBe(false);
     expect(session.accessToken()).toBeNull();
+
+    const restored = firstValueFrom(session.restore());
+    backend
+      .expectOne('/v1/auth/web/refresh')
+      .flush({ error: 'logged_out' }, { status: 401, statusText: 'Unauthorized' });
+    await restored;
+
+    expect(session.isAuthenticated()).toBe(false);
+  });
+
+  it('waits for a pending logout before starting login', async () => {
+    const logout = firstValueFrom(session.logout());
+    const logoutRequest = backend.expectOne('/v1/auth/web/logout');
+    const login = firstValueFrom(
+      session.login({ email: 'jess@example.com', password: 'senha-segura' }),
+    );
+
+    backend.expectNone('/v1/auth/web/login');
+    logoutRequest.flush(null);
+
+    backend.expectOne('/v1/auth/web/login').flush(authResponse);
+    await Promise.all([logout, login]);
+
+    expect(session.isAuthenticated()).toBe(true);
+  });
+
+  it('waits for a pending logout before starting signup', async () => {
+    const logout = firstValueFrom(session.logout());
+    const logoutRequest = backend.expectOne('/v1/auth/web/logout');
+    const signup = firstValueFrom(
+      session.signup({
+        displayName: 'Jessica',
+        email: 'jessica@example.com',
+        password: 'senha-segura',
+      }),
+    );
+
+    backend.expectNone('/v1/auth/web/signup');
+    logoutRequest.flush(null);
+
+    backend.expectOne('/v1/auth/web/signup').flush(authResponse);
+    await Promise.all([logout, signup]);
+
+    expect(session.isAuthenticated()).toBe(true);
   });
 });

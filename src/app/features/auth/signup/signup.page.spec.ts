@@ -60,6 +60,7 @@ describe('SignupPage', () => {
     });
 
     fixture.componentInstance.submit();
+    fixture.componentInstance.submit();
     const request = TestBed.inject(HttpTestingController).expectOne('/v1/auth/web/signup');
     expect(request.request.body).toEqual({
       displayName: 'Jessica',
@@ -74,5 +75,20 @@ describe('SignupPage', () => {
     await fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/home');
+  });
+
+  it('cancels an in-flight signup when the page is destroyed', () => {
+    const fixture = TestBed.createComponent(SignupPage);
+    fixture.componentInstance.form.setValue({
+      displayName: 'Jessica',
+      email: 'jess@example.com',
+      password: 'senha-segura',
+    });
+
+    fixture.componentInstance.submit();
+    const request = TestBed.inject(HttpTestingController).expectOne('/v1/auth/web/signup');
+    fixture.destroy();
+
+    expect(request.cancelled).toBe(true);
   });
 });

@@ -64,6 +64,7 @@ describe('LoginPage', () => {
     });
 
     fixture.componentInstance.submit();
+    fixture.componentInstance.submit();
     const request = TestBed.inject(HttpTestingController).expectOne('/v1/auth/web/login');
     expect(request.request.body).toEqual({
       email: 'jess@example.com',
@@ -73,5 +74,19 @@ describe('LoginPage', () => {
     await fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/despesas');
+  });
+
+  it('cancels an in-flight login when the page is destroyed', () => {
+    const fixture = TestBed.createComponent(LoginPage);
+    fixture.componentInstance.form.setValue({
+      email: 'jess@example.com',
+      password: 'senha-segura',
+    });
+
+    fixture.componentInstance.submit();
+    const request = TestBed.inject(HttpTestingController).expectOne('/v1/auth/web/login');
+    fixture.destroy();
+
+    expect(request.cancelled).toBe(true);
   });
 });

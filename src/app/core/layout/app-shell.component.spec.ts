@@ -83,6 +83,9 @@ describe('AppShellComponent', () => {
     });
     await login;
 
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/home');
+
     const fixture = TestBed.createComponent(AppShellComponent);
     const store = TestBed.inject(ShellStore);
     store.setMode('drawer');
@@ -92,13 +95,17 @@ describe('AppShellComponent', () => {
     (fixture.nativeElement as HTMLElement)
       .querySelector<HTMLButtonElement>('button[aria-label="Sair"]')
       ?.click();
-    backend
-      .expectOne('/v1/auth/web/logout')
-      .flush({ message: 'offline' }, { status: 503, statusText: 'Unavailable' });
+    const logoutRequest = backend.expectOne('/v1/auth/web/logout');
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/home');
+    expect(session.isAuthenticated()).toBe(false);
+
+    logoutRequest.flush({ message: 'offline' }, { status: 503, statusText: 'Unavailable' });
     await fixture.whenStable();
 
     expect(session.isAuthenticated()).toBe(false);
     expect(store.drawerOpen()).toBe(false);
-    expect(TestBed.inject(Router).url).toBe('/login');
+    expect(router.url).toBe('/login');
   });
 });

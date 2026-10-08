@@ -45,6 +45,7 @@ describe('ForgotPasswordPage', () => {
     fixture.componentInstance.form.setValue({ email: 'jess@example.com' });
 
     fixture.componentInstance.submit();
+    fixture.componentInstance.submit();
     TestBed.inject(HttpTestingController)
       .expectOne('/v1/auth/forgot-password')
       .flush({ devCode: '123456' });
@@ -53,5 +54,16 @@ describe('ForgotPasswordPage', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Se existir uma conta com esse email, enviaremos as instruções.');
     expect(text).not.toContain('123456');
+  });
+
+  it('cancels an in-flight request when the page is destroyed', () => {
+    const fixture = TestBed.createComponent(ForgotPasswordPage);
+    fixture.componentInstance.form.setValue({ email: 'jess@example.com' });
+
+    fixture.componentInstance.submit();
+    const request = TestBed.inject(HttpTestingController).expectOne('/v1/auth/forgot-password');
+    fixture.destroy();
+
+    expect(request.cancelled).toBe(true);
   });
 });

@@ -13,10 +13,19 @@ import { safeInternalReturnUrl } from './auth.guard';
 import { AuthSessionService } from './auth-session.service';
 
 const AUTH_RETRY_ATTEMPTED = new HttpContextToken<boolean>(() => false);
+const PUBLIC_AUTH_PATHS = new Set([
+  '/auth/web/signup',
+  '/auth/web/login',
+  '/auth/web/refresh',
+  '/auth/web/logout',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+]);
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const environment = inject(APP_ENVIRONMENT);
-  if (!isApiRequest(request.url, environment.apiBaseUrl) || isPublicAuthRequest(request.url)) {
+  const apiUrl = resolveApiUrl(request.url, environment.apiBaseUrl);
+  if (!apiUrl || isPublicAuthRequest(apiUrl.request, apiUrl.basePathname)) {
     return next(request);
   }
 
@@ -36,16 +45,23 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
       }
 
       return session.refreshOnce().pipe(
+        catchError((refreshError: unknown) => {
+          expireSession(session, router);
+          return throwError(() => refreshError);
+        }),
         switchMap(() => {
           const retry = withBearer(
             request.clone({ context: request.context.set(AUTH_RETRY_ATTEMPTED, true) }),
             session.accessToken(),
           );
-          return next(retry);
-        }),
-        catchError((refreshOrRetryError: unknown) => {
-          expireSession(session, router);
-          return throwError(() => refreshOrRetryError);
+          return next(retry).pipe(
+            catchError((retryError: unknown) => {
+              if (retryError instanceof HttpErrorResponse && retryError.status === 401) {
+                expireSession(session, router);
+              }
+              return throwError(() => retryError);
+            }),
+          );
         }),
       );
     }),
@@ -56,15 +72,33 @@ function withBearer(request: HttpRequest<unknown>, token: string | null): HttpRe
   return token ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : request;
 }
 
-function isApiRequest(url: string, apiBaseUrl: string): boolean {
-  const normalizedBase = apiBaseUrl.replace(/\/$/, '');
-  return url === normalizedBase || url.startsWith(`${normalizedBase}/`);
+function resolveApiUrl(
+  requestUrl: string,
+  apiBaseUrl: string,
+): { request: URL; basePathname: string } | null {
+  try {
+    const currentOrigin = globalThis.location.origin;
+    const request = new URL(requestUrl, currentOrigin);
+    const base = new URL(apiBaseUrl, currentOrigin);
+    const basePathname = base.pathname.replace(/\/+$/, '') || '/';
+    const comparableRequestPathname = request.pathname.toLowerCase();
+    const comparableBasePathname = basePathname.toLowerCase();
+    const isWithinBase =
+      comparableRequestPathname === comparableBasePathname ||
+      comparableRequestPathname.startsWith(
+        comparableBasePathname === '/' ? '/' : `${comparableBasePathname}/`,
+      );
+
+    return request.origin === base.origin && isWithinBase ? { request, basePathname } : null;
+  } catch {
+    return null;
+  }
 }
 
-function isPublicAuthRequest(url: string): boolean {
-  return /\/auth\/(?:web\/(?:signup|login|refresh|logout)|forgot-password|reset-password)(?:[/?#]|$)/.test(
-    url,
-  );
+function isPublicAuthRequest(request: URL, basePathname: string): boolean {
+  const relativePathname =
+    basePathname === '/' ? request.pathname : request.pathname.slice(basePathname.length);
+  return PUBLIC_AUTH_PATHS.has(relativePathname.toLowerCase());
 }
 
 function expireSession(session: AuthSessionService, router: Router): void {
