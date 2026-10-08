@@ -7,13 +7,15 @@
     "start:e2e": "node scripts/verify-node-version.mjs && ng serve --configuration e2e --host 127.0.0.1 --port 4200",
     "build": "ng build",
     "build:prod": "ng build --configuration production && npm run test:artifacts",
+    "build:preview": "ng build --configuration preview",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:ci": "ng test --watch=false && npm run test:static",
     "test:static": "node --test tests/static-security.test.mjs",
     "test:artifacts": "node --test tests/built-artifacts.test.mjs",
     "e2e": "tsc -p tsconfig.e2e.json && playwright test",
-    "e2e:ui": "playwright test --ui"
+    "e2e:ui": "playwright test --ui",
+    "audit:ci": "npm audit --audit-level=high"
   },
   "private": true,
   "engines": {

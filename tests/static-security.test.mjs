@@ -35,6 +35,31 @@ test('production enables Angular service worker while E2E uses only its isolated
   assert.doesNotMatch(e2eEnvironment, /api\.billfolder\.app/);
 });
 
+test('authenticated preview uses the exact preview origin and production API contract', async () => {
+  const [angular, packageJson, previewEnvironment, headers] = await Promise.all([
+    read('angular.json').then(JSON.parse),
+    read('package.json').then(JSON.parse),
+    read('src/environments/environment.preview.ts'),
+    read('public/_headers'),
+  ]);
+  const preview = angular.projects.BillFolderWeb.architect.build.configurations.preview;
+
+  assert.equal(packageJson.scripts['build:preview'], 'ng build --configuration preview');
+  assert.deepEqual(preview.fileReplacements, [
+    {
+      replace: 'src/environments/environment.ts',
+      with: 'src/environments/environment.preview.ts',
+    },
+  ]);
+  assert.equal(preview.serviceWorker, 'ngsw-config.json');
+  assert.match(previewEnvironment, /apiBaseUrl:\s*'https:\/\/api\.billfolder\.app\/v1'/);
+  assert.match(headers, /connect-src 'self' https:\/\/api\.billfolder\.app/);
+  assert.doesNotMatch(
+    `${JSON.stringify(preview)}${previewEnvironment}${headers}`,
+    /pages\.dev|https?:\/\/\*/i,
+  );
+});
+
 test('Cloudflare SPA fallback and security policy are explicit and restrictive', async () => {
   const redirects = await read('public/_redirects');
   assert.equal(redirects.trim(), '/* /index.html 200');
@@ -71,13 +96,27 @@ test('auth transport uses distinct origins and requires Secure refresh cookies i
   assert.deepEqual(cookieContract.production, {
     path: '/v1/auth/web',
     httpOnly: true,
-    sameSite: 'Lax',
+    sameSite: 'Strict',
     secure: true,
   });
+  assert.deepEqual(cookieContract.preview, cookieContract.production);
   assert.deepEqual(cookieContract.localE2eHttp, {
     path: '/v1/auth/web',
     httpOnly: true,
     sameSite: 'Lax',
     secure: false,
   });
+});
+
+test('CI enforces high-severity dependency audit with an explicit exception policy', async () => {
+  const [workflow, packageJson, exceptions] = await Promise.all([
+    read('.github/workflows/ci.yml'),
+    read('package.json').then(JSON.parse),
+    read('docs/security/npm-audit-exceptions.md'),
+  ]);
+
+  assert.equal(packageJson.scripts['audit:ci'], 'npm audit --audit-level=high');
+  assert.match(workflow, /run: npm run audit:ci/);
+  assert.match(exceptions, /No active exceptions/i);
+  assert.match(exceptions, /expiry/i);
 });
