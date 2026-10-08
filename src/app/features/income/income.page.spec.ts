@@ -78,20 +78,53 @@ describe('IncomePage', () => {
 
     expect(document.activeElement).toBe(refresh);
   });
+
+  it('does not publish a cycle-A delete failure or steal focus after cycle B is selected', async () => {
+    const pendingDelete = deferred<void>();
+    let setRows: (rows: IncomeEntryResponse[]) => void = () => undefined;
+    const setup = await createFixture([income({ id: 'october' })], () => {
+      setRows([]);
+      return pendingDelete.promise;
+    });
+    ({ setRows } = setup);
+    const { fixture, current } = setup;
+    fixture.detectChanges();
+    findRowButton(fixture.nativeElement, 'october', 'Excluir').click();
+
+    current.set(november);
+    setRows([income({ id: 'november', expectedDate: '2026-11-03' })]);
+    fixture.detectChanges();
+    const refresh = findButton(fixture.nativeElement, 'Atualizar');
+    refresh.focus();
+
+    pendingDelete.reject({
+      status: 409,
+      code: 'conflict',
+      message: 'Exclusão de outubro recusada.',
+    });
+    await expect(pendingDelete.promise).rejects.toMatchObject({ status: 409 });
+    await Promise.resolve();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.income-page__error')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-income-id="november"]')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-income-id="october"]')).toBeNull();
+      expect(document.activeElement).toBe(refresh);
+    });
+  });
 });
 
-async function createFixture(rows: IncomeEntryResponse[]) {
+async function createFixture(
+  rows: IncomeEntryResponse[],
+  deleteImplementation: (id: string) => Promise<void> = () => Promise.resolve(),
+) {
   const current = signal<CycleResponse | null>(october);
   const entries = signal(rows);
-  const groups = signal({
-    expected: rows.filter((item) => item.status === 'expected'),
-    received: rows.filter((item) => item.status === 'received'),
-    late: rows.filter((item) => item.status === 'late'),
-    notOccurred: rows.filter((item) => item.status === 'notOccurred'),
-    other: rows.filter(
-      (item) => !['expected', 'received', 'late', 'notOccurred'].includes(item.status),
-    ),
-  });
+  const groups = signal(groupRows(rows));
+  const setRows = (nextRows: IncomeEntryResponse[]) => {
+    entries.set(nextRows);
+    groups.set(groupRows(nextRows));
+  };
   await TestBed.configureTestingModule({
     imports: [IncomePage],
     providers: [
@@ -105,7 +138,7 @@ async function createFixture(rows: IncomeEntryResponse[]) {
           create: vi.fn(() => Promise.resolve(income())),
           update: vi.fn(() => Promise.resolve(income())),
           confirmReceived: vi.fn(() => Promise.resolve(income({ status: 'received' }))),
-          delete: vi.fn(() => Promise.resolve()),
+          delete: vi.fn((id: string) => deleteImplementation(id)),
         },
       },
       {
@@ -127,7 +160,19 @@ async function createFixture(rows: IncomeEntryResponse[]) {
       { provide: IncomeApi, useValue: { listSources: () => of([]) } },
     ],
   }).compileComponents();
-  return { fixture: TestBed.createComponent(IncomePage), current };
+  return { fixture: TestBed.createComponent(IncomePage), current, setRows };
+}
+
+function groupRows(rows: IncomeEntryResponse[]) {
+  return {
+    expected: rows.filter((item) => item.status === 'expected'),
+    received: rows.filter((item) => item.status === 'received'),
+    late: rows.filter((item) => item.status === 'late'),
+    notOccurred: rows.filter((item) => item.status === 'notOccurred'),
+    other: rows.filter(
+      (item) => !['expected', 'received', 'late', 'notOccurred'].includes(item.status),
+    ),
+  };
 }
 
 function findButton(root: HTMLElement, label: string): HTMLButtonElement {
@@ -136,6 +181,22 @@ function findButton(root: HTMLElement, label: string): HTMLButtonElement {
   );
   if (!button) throw new Error(`Button not found: ${label}`);
   return button;
+}
+
+function findRowButton(root: HTMLElement, id: string, label: string): HTMLButtonElement {
+  const row = root.querySelector<HTMLElement>(`[data-income-id="${id}"]`);
+  if (!row) throw new Error(`Row not found: ${id}`);
+  return findButton(row, label);
+}
+
+function deferred<T>() {
+  let resolve: (value: T) => void = () => undefined;
+  let reject: (reason: unknown) => void = () => undefined;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
 }
 
 function income(overrides: Partial<IncomeEntryResponse> = {}): IncomeEntryResponse {

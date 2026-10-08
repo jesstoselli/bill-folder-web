@@ -146,9 +146,10 @@ export class AdjustmentsPage implements OnInit {
       this.changeDetector.detectChanges();
       if (this.isCurrent(focus)) this.focusAdjacent(focus.rowIndex);
     } catch (error: unknown) {
+      if (!this.isCurrent(focus)) return;
       this.actionError.set(mapApiError(error).message);
       this.changeDetector.detectChanges();
-      if (this.isCurrent(focus)) this.focusAction(focus);
+      this.focusAction(focus);
     }
   }
   private captureFocus(adjustmentId: string, action: RowFocus['action']): RowFocus | null {
@@ -174,7 +175,11 @@ export class AdjustmentsPage implements OnInit {
   }
   private focusAdjacent(index: number): void {
     const row = this.rows()[Math.min(index, this.rows().length - 1)];
-    (row?.querySelector<HTMLButtonElement>('[data-row-action]') ?? this.sheet())?.focus();
+    (
+      row?.querySelector<HTMLButtonElement>('[data-row-action]') ??
+      this.sheet() ??
+      this.createFallback()
+    )?.focus();
   }
   private rows(): HTMLTableRowElement[] {
     return [
@@ -183,5 +188,8 @@ export class AdjustmentsPage implements OnInit {
   }
   private sheet(): HTMLElement | null {
     return this.host.nativeElement.querySelector<HTMLElement>('.adjustments-sheet');
+  }
+  private createFallback(): HTMLButtonElement | null {
+    return this.host.nativeElement.querySelector<HTMLButtonElement>('.adjustments-page__create');
   }
 }

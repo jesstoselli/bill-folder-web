@@ -73,6 +73,61 @@ describe('AdjustmentsPage', () => {
     fixture.detectChanges();
     expect(document.activeElement).toBe(refresh);
   });
+
+  it('does not publish a cycle-A delete failure or steal focus after cycle B is selected', async () => {
+    const pendingDelete = deferred<void>();
+    const { fixture, adjustments, current } = await createFixture(
+      [adjustment({ id: 'october' })],
+      -40,
+      (id) => {
+        adjustments.set(adjustments().filter((row) => row.id !== id));
+        return pendingDelete.promise;
+      },
+    );
+    fixture.detectChanges();
+    findRowButton(fixture.nativeElement, 'october', 'Excluir').click();
+
+    current.set(novemberCycle);
+    adjustments.set([adjustment({ id: 'november', date: '2026-11-03' })]);
+    fixture.detectChanges();
+    const refresh = findButton(fixture.nativeElement, 'Atualizar');
+    refresh.focus();
+
+    pendingDelete.reject({
+      status: 409,
+      code: 'conflict',
+      message: 'Exclusão de outubro recusada.',
+    });
+    await expect(pendingDelete.promise).rejects.toMatchObject({ status: 409 });
+    await Promise.resolve();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.adjustments-page__error')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-adjustment-id="november"]')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-adjustment-id="october"]')).toBeNull();
+      expect(document.activeElement).toBe(refresh);
+    });
+  });
+
+  it('moves focus to Novo ajuste after successfully deleting the only row', async () => {
+    const { fixture, adjustments } = await createFixture(
+      [adjustment({ id: 'only' })],
+      -40,
+      (id) => {
+        adjustments.set(adjustments().filter((row) => row.id !== id));
+        return Promise.resolve();
+      },
+    );
+    fixture.detectChanges();
+    findRowButton(fixture.nativeElement, 'only', 'Excluir').click();
+
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      const create = findButton(fixture.nativeElement, 'Novo ajuste');
+      expect(fixture.nativeElement.textContent).toContain('Nenhum ajuste neste ciclo');
+      expect(document.activeElement).toBe(create);
+    });
+  });
 });
 
 async function createFixture(
@@ -130,6 +185,16 @@ function findRowButton(root: HTMLElement, id: string, label: string): HTMLButton
   const row = root.querySelector<HTMLElement>(`[data-adjustment-id="${id}"]`);
   if (!row) throw new Error(`Row not found: ${id}`);
   return findButton(row, label);
+}
+
+function deferred<T>() {
+  let resolve: (value: T) => void = () => undefined;
+  let reject: (reason: unknown) => void = () => undefined;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
 }
 function adjustment(overrides: Partial<CycleAdjustmentResponse> = {}): CycleAdjustmentResponse {
   return {

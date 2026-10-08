@@ -191,9 +191,10 @@ export class IncomePage implements OnInit {
       this.changeDetector.detectChanges();
       if (this.isCurrentCycle(focus)) this.focusAdjacentRow(focus.rowIndex);
     } catch (error: unknown) {
+      if (!this.isCurrentCycle(focus)) return;
       this.actionError.set(mapApiError(error).message);
       this.changeDetector.detectChanges();
-      if (this.isCurrentCycle(focus)) this.focusRowAction(focus);
+      this.focusRowAction(focus);
     }
   }
 
