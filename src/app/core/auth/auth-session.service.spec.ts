@@ -153,25 +153,86 @@ describe('AuthSessionService', () => {
     expect(session.isAuthenticated()).toBe(false);
   });
 
-  it('waits for a pending logout before starting login', async () => {
+  it('waits for an in-flight login and sends remote logout as the final cookie mutation', async () => {
+    const login = firstValueFrom(
+      session.login({ email: 'jess@example.com', password: 'senha-segura' }),
+    );
+    const loginRequest = backend.expectOne('/v1/auth/web/login');
+    const logout = firstValueFrom(session.logout());
+
+    expect(session.isAuthenticated()).toBe(false);
+    backend.expectNone('/v1/auth/web/logout');
+
+    loginRequest.flush(authResponse);
+    expect(session.isAuthenticated()).toBe(false);
+
+    backend.expectOne('/v1/auth/web/logout').flush(null);
+    await Promise.all([login, logout]);
+
+    expect(session.isAuthenticated()).toBe(false);
+    expect(session.accessToken()).toBeNull();
+  });
+
+  it('waits for an in-flight signup and sends remote logout as the final cookie mutation', async () => {
+    const signup = firstValueFrom(
+      session.signup({
+        displayName: 'Jessica',
+        email: 'jessica@example.com',
+        password: 'senha-segura',
+      }),
+    );
+    const signupRequest = backend.expectOne('/v1/auth/web/signup');
+    const logout = firstValueFrom(session.logout());
+
+    expect(session.isAuthenticated()).toBe(false);
+    backend.expectNone('/v1/auth/web/logout');
+
+    signupRequest.flush(authResponse);
+    expect(session.isAuthenticated()).toBe(false);
+
+    backend.expectOne('/v1/auth/web/logout').flush(null);
+    await Promise.all([signup, logout]);
+
+    expect(session.isAuthenticated()).toBe(false);
+    expect(session.accessToken()).toBeNull();
+  });
+
+  it('serializes login and signup requested while logout is pending', async () => {
     const logout = firstValueFrom(session.logout());
     const logoutRequest = backend.expectOne('/v1/auth/web/logout');
     const login = firstValueFrom(
       session.login({ email: 'jess@example.com', password: 'senha-segura' }),
     );
+    const signup = firstValueFrom(
+      session.signup({
+        displayName: 'Jessica',
+        email: 'jessica@example.com',
+        password: 'senha-segura',
+      }),
+    );
 
     backend.expectNone('/v1/auth/web/login');
+    backend.expectNone('/v1/auth/web/signup');
     logoutRequest.flush(null);
 
-    backend.expectOne('/v1/auth/web/login').flush(authResponse);
-    await Promise.all([logout, login]);
+    const loginRequest = backend.expectOne('/v1/auth/web/login');
+    backend.expectNone('/v1/auth/web/signup');
+    loginRequest.flush(authResponse);
 
-    expect(session.isAuthenticated()).toBe(true);
+    backend.expectOne('/v1/auth/web/signup').flush({
+      ...authResponse,
+      user: { ...authResponse.user, displayName: 'Jessica', email: 'jessica@example.com' },
+    });
+    await Promise.all([logout, login, signup]);
+
+    expect(session.user()?.displayName).toBe('Jessica');
   });
 
-  it('waits for a pending logout before starting signup', async () => {
-    const logout = firstValueFrom(session.logout());
-    const logoutRequest = backend.expectOne('/v1/auth/web/logout');
+  it('continues queued cookie mutations after an earlier operation fails', async () => {
+    const login = firstValueFrom(
+      session.login({ email: 'jess@example.com', password: 'senha-segura' }),
+    );
+    const loginRequest = backend.expectOne('/v1/auth/web/login');
     const signup = firstValueFrom(
       session.signup({
         displayName: 'Jessica',
@@ -181,10 +242,34 @@ describe('AuthSessionService', () => {
     );
 
     backend.expectNone('/v1/auth/web/signup');
-    logoutRequest.flush(null);
+    loginRequest.flush(null, { status: 503, statusText: 'Service Unavailable' });
+    await expect(login).rejects.toMatchObject({ status: 503 });
 
     backend.expectOne('/v1/auth/web/signup').flush(authResponse);
-    await Promise.all([logout, signup]);
+    await signup;
+
+    expect(session.isAuthenticated()).toBe(true);
+  });
+
+  it('releases the cookie mutation queue when a caller cancels', async () => {
+    const loginSubscription = session
+      .login({ email: 'jess@example.com', password: 'senha-segura' })
+      .subscribe();
+    const loginRequest = backend.expectOne('/v1/auth/web/login');
+    const signup = firstValueFrom(
+      session.signup({
+        displayName: 'Jessica',
+        email: 'jessica@example.com',
+        password: 'senha-segura',
+      }),
+    );
+
+    backend.expectNone('/v1/auth/web/signup');
+    loginSubscription.unsubscribe();
+    expect(loginRequest.cancelled).toBe(true);
+
+    backend.expectOne('/v1/auth/web/signup').flush(authResponse);
+    await signup;
 
     expect(session.isAuthenticated()).toBe(true);
   });
