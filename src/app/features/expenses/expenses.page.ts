@@ -18,18 +18,29 @@ import { PageStateComponent } from '../../shared/components/page-state/page-stat
 import { formatCivilDate } from '../../shared/formatters/civil-date';
 import { formatBrl } from '../../shared/formatters/money';
 import { ExpenseFormComponent } from './components/expense-form/expense-form.component';
+import { PayExpenseDialogComponent } from './components/pay-expense-dialog/pay-expense-dialog.component';
+import { PayOccurrenceDialogComponent } from './components/pay-occurrence-dialog/pay-occurrence-dialog.component';
+import { RecurrenceFormComponent } from './components/recurrence-form/recurrence-form.component';
+import { RepriceProvisionedDialogComponent } from './components/reprice-provisioned-dialog/reprice-provisioned-dialog.component';
 import { ExpenseProjection, groupExpenses } from './expense-projections';
 import { ExpensesStore } from './expenses.store';
+import { RecurrenceScopeDialogComponent } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope-dialog.component';
+import { ScopeChoice } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
 
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: ExpenseProjection }
   | {
+      readonly kind: 'pay' | 'pay-occurrence' | 'reprice';
+      readonly expense: ExpenseProjection;
+      readonly focusContext: RowFocusContext;
+    }
+  | {
       readonly kind: 'delete';
       readonly expense: ExpenseProjection;
-      readonly focusContext: DeleteFocusContext;
+      readonly focusContext: RowFocusContext;
     };
 
-interface DeleteFocusContext {
+interface RowFocusContext {
   readonly cycleId: string;
   readonly expenseId: string;
   readonly rowIndex: number;
@@ -122,9 +133,62 @@ export class ExpensesPage implements OnInit {
     });
   }
 
+  protected openRecurrence(): void {
+    if (this.cycles.current() === null) {
+      return;
+    }
+    this.actionError.set('');
+    this.dialog.open(RecurrenceFormComponent, {
+      data: {},
+      width: '40rem',
+      maxWidth: 'calc(100vw - 2rem)',
+      maxHeight: 'calc(100dvh - 2rem)',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      ariaLabelledBy: 'recurrence-form-title',
+      ariaDescribedBy: 'recurrence-form-description',
+    });
+  }
+
   protected queueEdit(expense: ExpenseProjection): void {
     if (!expense.isProvisioned) {
       this.pendingAction = { kind: 'edit', expense };
+    }
+  }
+
+  protected queuePayment(expense: ExpenseProjection): void {
+    const cycle = this.cycles.current();
+    if (cycle === null || !this.canPay(expense)) {
+      return;
+    }
+    const focusContext = this.captureRowFocus(cycle.id, expense.id);
+    if (expense.isProvisioned) {
+      if ((expense.occurrencesTotal ?? 0) > expense.occurrencesPaid) {
+        this.pendingAction = { kind: 'pay-occurrence', expense, focusContext };
+      }
+      return;
+    }
+    this.pendingAction = { kind: 'pay', expense, focusContext };
+  }
+
+  protected canPay(expense: ExpenseProjection): boolean {
+    if (expense.status === 'paid') {
+      return false;
+    }
+    if (expense.isProvisioned) {
+      return (expense.occurrencesTotal ?? 0) > expense.occurrencesPaid;
+    }
+    return expense.status === 'pending' || expense.status === 'overdue';
+  }
+
+  protected queueReprice(expense: ExpenseProjection): void {
+    const cycle = this.cycles.current();
+    if (cycle !== null && expense.isProvisioned) {
+      this.pendingAction = {
+        kind: 'reprice',
+        expense,
+        focusContext: this.captureRowFocus(cycle.id, expense.id),
+      };
     }
   }
 
@@ -136,7 +200,7 @@ export class ExpensesPage implements OnInit {
     this.pendingAction = {
       kind: 'delete',
       expense,
-      focusContext: this.captureDeleteFocus(cycle.id, expense.id),
+      focusContext: this.captureRowFocus(cycle.id, expense.id),
     };
   }
 
@@ -147,12 +211,26 @@ export class ExpensesPage implements OnInit {
     }
     this.pendingAction = null;
 
-    if (action.kind === 'edit') {
-      this.openEdit(action.expense);
-      return;
+    switch (action.kind) {
+      case 'edit':
+        this.openEdit(action.expense);
+        return;
+      case 'pay':
+        this.openPayment(action.expense, action.focusContext);
+        return;
+      case 'pay-occurrence':
+        this.openOccurrencePayment(action.expense, action.focusContext);
+        return;
+      case 'reprice':
+        this.openScopeDialog('reprice', action.expense, action.focusContext);
+        return;
+      case 'delete':
+        if (action.expense.templateId !== null) {
+          this.openScopeDialog('delete', action.expense, action.focusContext);
+        } else {
+          void this.deleteExpense(action.expense, action.focusContext, 'this');
+        }
     }
-
-    void this.deleteExpense(action.expense, action.focusContext);
   }
 
   protected selectPreviousCycle(): void {
@@ -203,13 +281,95 @@ export class ExpensesPage implements OnInit {
     });
   }
 
+  private openPayment(expense: ExpenseProjection, focusContext: RowFocusContext): void {
+    this.actionError.set('');
+    this.dialog
+      .open(PayExpenseDialogComponent, {
+        data: { expense },
+        width: '33rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        maxHeight: 'calc(100dvh - 2rem)',
+        autoFocus: 'first-tabbable',
+        restoreFocus: false,
+        ariaLabelledBy: 'pay-expense-title',
+        ariaDescribedBy: 'pay-expense-description',
+      })
+      .afterClosed()
+      .subscribe((result) => this.restoreDialogFocus(focusContext, result !== undefined));
+  }
+
+  private openOccurrencePayment(expense: ExpenseProjection, focusContext: RowFocusContext): void {
+    this.actionError.set('');
+    this.dialog
+      .open(PayOccurrenceDialogComponent, {
+        data: { expense },
+        width: '35rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        maxHeight: 'calc(100dvh - 2rem)',
+        autoFocus: 'first-tabbable',
+        restoreFocus: false,
+        ariaLabelledBy: 'pay-occurrence-title',
+        ariaDescribedBy: 'pay-occurrence-description',
+      })
+      .afterClosed()
+      .subscribe((result) => this.restoreDialogFocus(focusContext, result !== undefined));
+  }
+
+  private openScopeDialog(
+    action: 'delete' | 'reprice',
+    expense: ExpenseProjection,
+    focusContext: RowFocusContext,
+  ): void {
+    this.dialog
+      .open(RecurrenceScopeDialogComponent, {
+        data: { action, expenseLabel: expense.label },
+        width: '32rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        autoFocus: 'first-tabbable',
+        restoreFocus: false,
+        ariaLabelledBy: 'recurrence-scope-title',
+        ariaDescribedBy: 'recurrence-scope-description',
+      })
+      .afterClosed()
+      .subscribe((scope: ScopeChoice | undefined) => {
+        if (scope === undefined) {
+          this.restoreDialogFocus(focusContext, false);
+        } else if (action === 'delete') {
+          void this.deleteExpense(expense, focusContext, scope);
+        } else {
+          this.openReprice(expense, scope, focusContext);
+        }
+      });
+  }
+
+  private openReprice(
+    expense: ExpenseProjection,
+    scope: ScopeChoice,
+    focusContext: RowFocusContext,
+  ): void {
+    this.dialog
+      .open(RepriceProvisionedDialogComponent, {
+        data: { expense, scope },
+        width: '33rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        maxHeight: 'calc(100dvh - 2rem)',
+        autoFocus: 'first-tabbable',
+        restoreFocus: false,
+        ariaLabelledBy: 'reprice-provisioned-title',
+        ariaDescribedBy: 'reprice-provisioned-description',
+      })
+      .afterClosed()
+      .subscribe((result) => this.restoreDialogFocus(focusContext, result !== undefined));
+  }
+
   private async deleteExpense(
     expense: ExpenseProjection,
-    focusContext: DeleteFocusContext,
+    focusContext: RowFocusContext,
+    scope: ScopeChoice,
   ): Promise<void> {
     this.actionError.set('');
     try {
-      await this.store.deleteOne(expense.id, 'this');
+      await this.store.deleteOne(expense.id, scope);
       this.changeDetector.detectChanges();
       if (this.isCurrentCycle(focusContext)) {
         this.focusAdjacentRow(focusContext.rowIndex);
@@ -223,7 +383,7 @@ export class ExpensesPage implements OnInit {
     }
   }
 
-  private captureDeleteFocus(cycleId: string, expenseId: string): DeleteFocusContext {
+  private captureRowFocus(cycleId: string, expenseId: string): RowFocusContext {
     const rowIndex = this.rowActionTriggers().findIndex(
       (trigger) => trigger.closest<HTMLTableRowElement>('tr')?.dataset['expenseId'] === expenseId,
     );
@@ -234,16 +394,28 @@ export class ExpensesPage implements OnInit {
     };
   }
 
-  private isCurrentCycle(context: DeleteFocusContext): boolean {
+  private isCurrentCycle(context: RowFocusContext): boolean {
     return this.cycles.current()?.id === context.cycleId;
   }
 
-  private focusRestoredRow(context: DeleteFocusContext): void {
+  private focusRestoredRow(context: RowFocusContext): void {
     const trigger = this.rowActionTriggers().find(
       (candidate) =>
         candidate.closest<HTMLTableRowElement>('tr')?.dataset['expenseId'] === context.expenseId,
     );
     (trigger ?? this.ledgerFallback())?.focus();
+  }
+
+  private restoreDialogFocus(context: RowFocusContext, successfulWrite: boolean): void {
+    this.changeDetector.detectChanges();
+    if (!this.isCurrentCycle(context)) {
+      return;
+    }
+    if (successfulWrite) {
+      this.ledgerFallback()?.focus();
+    } else {
+      this.focusRestoredRow(context);
+    }
   }
 
   private focusAdjacentRow(previousIndex: number): void {

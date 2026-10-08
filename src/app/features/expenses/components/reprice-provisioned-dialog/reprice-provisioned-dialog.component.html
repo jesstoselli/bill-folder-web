@@ -1,0 +1,50 @@
+<form class="reprice-dialog" [formGroup]="form" (ngSubmit)="submit()">
+  <header>
+    <div>
+      <h2 id="reprice-provisioned-title" mat-dialog-title>Reajustar valor por sessão</h2>
+      <p id="reprice-provisioned-description">{{ data.expense.label }}</p>
+    </div>
+    <button type="button" mat-button mat-dialog-close aria-label="Fechar reajuste">Fechar</button>
+  </header>
+
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p id="reprice-provisioned-error" class="reprice-dialog__error" role="alert">
+        {{ serverError() }}
+      </p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Novo valor por sessão</mat-label>
+      <span matTextPrefix>R$&nbsp;</span>
+      <input
+        matInput
+        type="number"
+        min="0.01"
+        step="0.01"
+        inputmode="decimal"
+        formControlName="amount"
+      />
+      @if (form.controls.amount.invalid) {
+        <mat-error>Informe um valor maior que zero.</mat-error>
+      }
+    </mat-form-field>
+
+    <section class="reprice-dialog__context" aria-live="polite">
+      <span>Total recalculado neste ciclo</span>
+      <strong>{{ formatBrl(recalculatedTotal()) }}</strong>
+      <p>
+        O total é calculado automaticamente para
+        {{ data.expense.occurrencesTotal }} ocorrências. Você está alterando apenas o valor por
+        sessão.
+      </p>
+    </section>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close>Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving()">
+      {{ saving() ? 'Reajustando…' : 'Salvar novo valor' }}
+    </button>
+  </mat-dialog-actions>
+</form>

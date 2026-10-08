@@ -1,0 +1,154 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { firstValueFrom } from 'rxjs';
+import { mapApiError } from '../../../../core/http/api-error';
+import { CategoryDto, ReferenceDataApi } from '../../../../core/reference/reference-data.api';
+import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { ExpensesStore } from '../../expenses.store';
+import { ExpenseRecurrenceFrequency } from '../../expenses.models';
+import { RecurrenceFormValue, toCreateExpenseRecurrenceRequest } from './recurrence-form.models';
+
+@Component({
+  selector: 'app-recurrence-form',
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+  ],
+  templateUrl: './recurrence-form.component.html',
+  styleUrl: './recurrence-form.component.scss',
+})
+export class RecurrenceFormComponent implements OnInit {
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly references = inject(ReferenceDataApi);
+  private readonly store = inject(ExpensesStore);
+  private readonly dialogRef = inject(MatDialogRef<RecurrenceFormComponent>);
+  readonly data = inject<Record<string, never>>(MAT_DIALOG_DATA, { optional: true });
+
+  readonly categories = signal<readonly CategoryDto[]>([]);
+  readonly loadingCategories = signal(true);
+  readonly saving = signal(false);
+  readonly serverError = signal('');
+  readonly form = this.formBuilder.nonNullable.group(
+    {
+      defaultLabel: ['', [Validators.required, nonBlank, Validators.maxLength(200)]],
+      defaultAmount: [0, [Validators.required, Validators.min(0.01)]],
+      defaultCategoryId: ['', Validators.required],
+      frequency: this.formBuilder.nonNullable.control<ExpenseRecurrenceFrequency>(
+        'weekly',
+        Validators.required,
+      ),
+      dueDay: [1],
+      weekday: [1],
+      startDate: [todayCivilDate(), [Validators.required, validCivilDate]],
+      endDate: ['', validOptionalCivilDate],
+    },
+    { validators: validDateRange },
+  );
+
+  ngOnInit(): void {
+    this.configureCadenceValidators(this.form.controls.frequency.value);
+    this.form.controls.frequency.valueChanges.subscribe((frequency) =>
+      this.configureCadenceValidators(frequency),
+    );
+    void this.loadCategories();
+  }
+
+  async submit(): Promise<void> {
+    if (this.form.invalid || this.saving()) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.serverError.set('');
+    this.saving.set(true);
+    try {
+      const result = await this.store.createRecurrence(
+        toCreateExpenseRecurrenceRequest(this.form.getRawValue() as RecurrenceFormValue),
+      );
+      this.dialogRef.close(result);
+    } catch (error: unknown) {
+      this.serverError.set(mapApiError(error).message);
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private async loadCategories(): Promise<void> {
+    try {
+      const categories = await firstValueFrom(this.references.categories());
+      this.categories.set(
+        [...categories].sort(
+          (left, right) =>
+            left.displayOrder - right.displayOrder || left.namePt.localeCompare(right.namePt),
+        ),
+      );
+    } catch (error: unknown) {
+      this.serverError.set(mapApiError(error).message);
+    } finally {
+      this.loadingCategories.set(false);
+    }
+  }
+
+  private configureCadenceValidators(frequency: ExpenseRecurrenceFrequency): void {
+    const dueDay = this.form.controls.dueDay;
+    const weekday = this.form.controls.weekday;
+    dueDay.clearValidators();
+    weekday.clearValidators();
+    if (frequency === 'weekly') {
+      weekday.setValidators([Validators.required, Validators.min(0), Validators.max(6)]);
+    } else {
+      dueDay.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
+    }
+    dueDay.updateValueAndValidity({ emitEvent: false });
+    weekday.updateValueAndValidity({ emitEvent: false });
+  }
+}
+
+function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
+  return control.value.trim().length > 0 ? null : { blank: true };
+}
+
+function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {
+  if (!control.value) {
+    return null;
+  }
+  try {
+    parseCivilDate(control.value);
+    return null;
+  } catch {
+    return { civilDate: true };
+  }
+}
+
+function validOptionalCivilDate(control: AbstractControl<string>): ValidationErrors | null {
+  return control.value ? validCivilDate(control) : null;
+}
+
+function validDateRange(control: AbstractControl): ValidationErrors | null {
+  const startDate = control.get('startDate')?.value as string | undefined;
+  const endDate = control.get('endDate')?.value as string | undefined;
+  return startDate && endDate && endDate < startDate ? { dateRange: true } : null;
+}
+
+function todayCivilDate(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

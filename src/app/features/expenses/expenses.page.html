@@ -7,6 +7,14 @@
     <div class="expenses-page__header-actions">
       <button type="button" class="expenses-page__refresh" (click)="refresh()">Atualizar</button>
       <button
+        type="button"
+        class="expenses-page__refresh"
+        [disabled]="cycles.current() === null"
+        (click)="openRecurrence()"
+      >
+        Nova recorrência
+      </button>
+      <button
         #createButton
         type="button"
         mat-flat-button
@@ -174,9 +182,14 @@
         <span aria-hidden="true">•••</span>
       </button>
       <mat-menu #rowMenu="matMenu" xPosition="before">
+        @if (canPay(expense)) {
+          <button type="button" mat-menu-item data-action="pay" (click)="queuePayment(expense)">
+            {{ expense.isProvisioned ? 'Pagar ocorrência' : 'Pagar despesa' }}
+          </button>
+        }
         @if (expense.isProvisioned) {
-          <button type="button" mat-menu-item disabled>
-            Reajuste por ocorrência disponível em breve
+          <button type="button" mat-menu-item data-action="reprice" (click)="queueReprice(expense)">
+            Reajustar valor por sessão
           </button>
         } @else {
           <button type="button" mat-menu-item data-action="edit" (click)="queueEdit(expense)">
@@ -190,7 +203,7 @@
           style="color: var(--bf-danger)"
           (click)="queueDelete(expense)"
         >
-          {{ expense.isProvisioned ? 'Excluir somente esta ocorrência' : 'Excluir despesa' }}
+          {{ expense.templateId ? 'Excluir recorrência' : 'Excluir despesa' }}
         </button>
       </mat-menu>
     </td>

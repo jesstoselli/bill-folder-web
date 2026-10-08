@@ -243,4 +243,43 @@ describe('ExpensesStore', () => {
       refreshing: false,
     });
   });
+
+  it('sends payment and recurrence writes through the store without mutating cycle state', async () => {
+    const payment = store.pay(firstExpense.id, {
+      actualAmount: 118.5,
+      paidDate: '2026-10-12',
+      paidFromAccountId: null,
+    });
+    const paymentRequest = backend.expectOne('/v1/expenses/expense-1');
+    expect(paymentRequest.request.body).toEqual({
+      actualAmount: 118.5,
+      paidDate: '2026-10-12',
+      paidFromAccountId: null,
+      status: 'paid',
+    });
+    paymentRequest.flush({ ...firstExpense, status: 'paid', actualAmount: 118.5 });
+    await expect(payment).resolves.toMatchObject({ status: 'paid' });
+
+    const occurrence = store.payOccurrence(firstExpense.id, {
+      amount: 150,
+      paidDate: '2026-10-13',
+      paidFromAccountId: 'account-1',
+    });
+    backend
+      .expectOne('/v1/expenses/expense-1/pay-occurrence')
+      .flush({ ...firstExpense, occurrencesPaid: 1, paidToDate: 150 });
+    await expect(occurrence).resolves.toMatchObject({ occurrencesPaid: 1 });
+
+    const reprice = store.repriceProvisioned(firstExpense.id, {
+      amount: 175,
+      scope: 'thisAndFollowing',
+    });
+    const repriceRequest = backend.expectOne('/v1/expenses/expense-1/update-amount');
+    expect(repriceRequest.request.body).toEqual({ amount: 175, scope: 'thisAndFollowing' });
+    repriceRequest.flush({ ...firstExpense, occurrenceAmount: 175 });
+    await expect(reprice).resolves.toMatchObject({ occurrenceAmount: 175 });
+
+    expect(store.state()).toEqual({ kind: 'loading' });
+    expect(changes.version()).toBe(3);
+  });
 });

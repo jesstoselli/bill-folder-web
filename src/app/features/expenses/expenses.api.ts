@@ -7,9 +7,14 @@ import { notifyingWrite } from '../../core/data-change/notifying-write';
 import { mapApiError } from '../../core/http/api-error';
 import { apiUrl } from '../../core/http/api-url';
 import {
+  CreateExpenseRecurrenceRequest,
   CreateExpenseRequest,
   ExpenseDeleteScope,
+  ExpenseRecurrenceResponse,
   ExpenseResponse,
+  PayExpenseRequest,
+  PayOccurrenceRequest,
+  RepriceProvisionedExpenseRequest,
   UpdateExpenseRequest,
 } from './expenses.models';
 
@@ -19,6 +24,7 @@ export class ExpensesApi {
   private readonly changes = inject(DataChangeService);
   private readonly baseUrl = inject(APP_ENVIRONMENT).apiBaseUrl;
   private readonly expensesUrl = apiUrl(this.baseUrl, 'expenses');
+  private readonly recurrencesUrl = apiUrl(this.baseUrl, 'expense-recurrences');
 
   list(from: string, to: string): Observable<ExpenseResponse[]> {
     const params = new HttpParams().set('from', from).set('to', to);
@@ -38,6 +44,40 @@ export class ExpensesApi {
     return notifyingWrite(
       this.changes,
       this.http.patch<ExpenseResponse>(`${this.expensesUrl}/${id}`, request).pipe(this.mapErrors()),
+    );
+  }
+
+  pay(id: string, request: PayExpenseRequest): Observable<ExpenseResponse> {
+    return this.update(id, { ...request, status: 'paid' });
+  }
+
+  payOccurrence(id: string, request: PayOccurrenceRequest): Observable<ExpenseResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http
+        .post<ExpenseResponse>(`${this.expensesUrl}/${id}/pay-occurrence`, request)
+        .pipe(this.mapErrors()),
+    );
+  }
+
+  repriceProvisioned(
+    id: string,
+    request: RepriceProvisionedExpenseRequest,
+  ): Observable<ExpenseResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http
+        .post<ExpenseResponse>(`${this.expensesUrl}/${id}/update-amount`, request)
+        .pipe(this.mapErrors()),
+    );
+  }
+
+  createRecurrence(request: CreateExpenseRecurrenceRequest): Observable<ExpenseRecurrenceResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http
+        .post<ExpenseRecurrenceResponse>(`${this.recurrencesUrl}/`, request)
+        .pipe(this.mapErrors()),
     );
   }
 

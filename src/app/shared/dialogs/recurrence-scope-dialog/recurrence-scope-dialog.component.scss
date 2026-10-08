@@ -1,0 +1,79 @@
+:host {
+  display: block;
+}
+
+.recurrence-scope {
+  min-width: min(30rem, calc(100vw - 2rem));
+
+  header {
+    border-bottom: 1px solid var(--bf-outline);
+    padding: 1.25rem 1.5rem 1rem;
+  }
+
+  h2 {
+    font-size: 1.65rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0;
+    padding: 0;
+  }
+
+  header p {
+    color: var(--bf-muted);
+    margin: 0.35rem 0 0;
+    max-width: 38rem;
+  }
+}
+
+mat-dialog-content {
+  padding-top: 1.25rem;
+}
+
+.recurrence-scope__choices {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.recurrence-scope__choice {
+  background: var(--bf-surface-high);
+  border: 1px solid var(--bf-outline);
+  border-radius: 0.75rem;
+  color: var(--bf-text);
+  cursor: pointer;
+  display: grid;
+  gap: 0.25rem;
+  min-height: 5.5rem;
+  padding: 1rem 1.1rem;
+  text-align: left;
+  width: 100%;
+
+  strong {
+    color: var(--bf-primary);
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+
+  span {
+    color: var(--bf-muted);
+  }
+
+  &:hover {
+    border-color: var(--bf-primary);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--bf-focus-ring);
+    outline: 1px solid var(--bf-primary);
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 560px) {
+  .recurrence-scope {
+    min-width: 0;
+
+    header {
+      padding-inline: 1rem;
+    }
+  }
+}

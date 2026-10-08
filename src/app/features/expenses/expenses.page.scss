@@ -24,6 +24,7 @@
 
 .expenses-page__header-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 

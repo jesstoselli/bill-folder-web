@@ -79,7 +79,7 @@ describe('ExpensesPage actions', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(overlay.querySelector('[data-action="edit"]')).toBeNull();
-    expect(overlay.textContent).toContain('Reajuste por ocorrência disponível em breve');
+    expect(overlay.textContent).toContain('Reajustar valor por sessão');
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();
@@ -242,8 +242,85 @@ describe('ExpensesPage actions', () => {
     ]
       .map((button) => button.textContent?.trim())
       .filter(Boolean);
-    expect(enabledActions).toEqual(['Excluir somente esta ocorrência']);
+    expect(enabledActions).toEqual(['Reajustar valor por sessão', 'Excluir recorrência']);
     expect(overlay.textContent).not.toMatch(/pagar|pagamento/i);
+  });
+
+  it('opens normal payment for a pending one-off expense', async () => {
+    const { fixture } = await createActionFixture(
+      [expense({ id: 'ordinary', label: 'Internet' })],
+      () => Promise.resolve(),
+    );
+    fixture.detectChanges();
+
+    await chooseMenuAction(fixture, 'ordinary', 'Pagar despesa');
+
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    expect(overlay.querySelector('[role="dialog"]')?.textContent).toContain('Registrar pagamento');
+    expect(overlay.querySelector('[role="dialog"]')?.textContent).toContain('Internet');
+  });
+
+  it('opens occurrence payment with progress for a provisioned expense in progress', async () => {
+    const provisioned = expense({
+      id: 'provisioned',
+      label: 'Terapia',
+      templateId: 'template-1',
+      occurrenceAmount: 150,
+      occurrencesTotal: 4,
+      occurrencesPaid: 1,
+      paidToDate: 150,
+      expectedAmount: 600,
+    });
+    const { fixture } = await createActionFixture([provisioned], () => Promise.resolve());
+    fixture.detectChanges();
+
+    await chooseMenuAction(fixture, 'provisioned', 'Pagar ocorrência');
+
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const dialog = overlay.querySelector('[role="dialog"]');
+    expect(dialog?.textContent).toContain('Registrar ocorrência');
+    expect(dialog?.textContent).toContain('1 de 4 pagas');
+    expect(dialog?.textContent).toMatch(/R\$\s*450,00/);
+  });
+
+  it('maps a recurring delete choice to thisAndFollowing', async () => {
+    const recurring = expense({
+      id: 'recurring',
+      label: 'Terapia',
+      templateId: 'template-1',
+      occurrenceAmount: 150,
+      occurrencesTotal: 4,
+      occurrencesPaid: 1,
+      paidToDate: 150,
+      expectedAmount: 600,
+    });
+    const { fixture, deleteOne } = await createActionFixture([recurring], () => Promise.resolve());
+    fixture.detectChanges();
+
+    await chooseMenuAction(fixture, 'recurring', 'Excluir recorrência');
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    findButton(overlay, 'Esta e as próximas').click();
+    fixture.detectChanges();
+    await vi.waitFor(() => expect(deleteOne).toHaveBeenCalledWith('recurring', 'thisAndFollowing'));
+  });
+
+  it('restores payment cancellation focus to the row action trigger', async () => {
+    const { fixture } = await createActionFixture(
+      [expense({ id: 'ordinary', label: 'Internet' })],
+      () => Promise.resolve(),
+    );
+    fixture.detectChanges();
+
+    await chooseMenuAction(fixture, 'ordinary', 'Pagar despesa');
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    findButton(overlay, 'Cancelar').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const trigger = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '[data-expense-id="ordinary"] .expense-ledger__menu-trigger',
+    );
+    expect(document.activeElement).toBe(trigger);
   });
 
   it('gives the create dialog an accessible name and restores focus to its trigger', async () => {
@@ -377,9 +454,16 @@ async function createActionFixture(
           deleteOne,
           create: vi.fn(() => Promise.resolve()),
           update: vi.fn(() => Promise.resolve()),
+          pay: vi.fn(() => Promise.resolve(expense())),
+          payOccurrence: vi.fn(() => Promise.resolve(expense())),
+          repriceProvisioned: vi.fn(() => Promise.resolve(expense())),
+          createRecurrence: vi.fn(() => Promise.resolve()),
         },
       },
-      { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
+      {
+        provide: ReferenceDataApi,
+        useValue: { categories: () => of([]), checkingAccounts: () => of([]) },
+      },
       {
         provide: CycleStore,
         useValue: {
@@ -400,6 +484,27 @@ async function createActionFixture(
   }).compileComponents();
 
   return { fixture: TestBed.createComponent(ExpensesPage), current, expenses, deleteOne };
+}
+
+async function chooseMenuAction(
+  fixture: ReturnType<typeof TestBed.createComponent<ExpensesPage>>,
+  expenseId: string,
+  label: string,
+): Promise<void> {
+  const trigger = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+    `[data-expense-id="${expenseId}"] .expense-ledger__menu-trigger`,
+  );
+  if (!trigger) {
+    throw new Error(`Row action not found: ${expenseId}`);
+  }
+  trigger.click();
+  fixture.detectChanges();
+  await fixture.whenStable();
+
+  const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+  findButton(overlay, label).click();
+  fixture.detectChanges();
+  await fixture.whenStable();
 }
 
 async function chooseDelete(

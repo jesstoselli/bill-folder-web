@@ -1,0 +1,118 @@
+<form class="recurrence-form" [formGroup]="form" (ngSubmit)="submit()">
+  <header>
+    <div>
+      <h2 id="recurrence-form-title" mat-dialog-title>Nova recorrência</h2>
+      <p id="recurrence-form-description">Defina o valor e a cadência da despesa.</p>
+    </div>
+    <button type="button" mat-button mat-dialog-close aria-label="Fechar nova recorrência">
+      Fechar
+    </button>
+  </header>
+
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p id="recurrence-form-error" class="recurrence-form__error" role="alert">
+        {{ serverError() }}
+      </p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descrição</mat-label>
+      <input matInput formControlName="defaultLabel" autocomplete="off" />
+      @if (
+        form.controls.defaultLabel.hasError('required') ||
+        form.controls.defaultLabel.hasError('blank')
+      ) {
+        <mat-error>Informe a descrição.</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="recurrence-form__split">
+      <mat-form-field appearance="outline">
+        <mat-label>Valor por ocorrência</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input
+          matInput
+          type="number"
+          min="0.01"
+          step="0.01"
+          inputmode="decimal"
+          formControlName="defaultAmount"
+        />
+        @if (form.controls.defaultAmount.invalid) {
+          <mat-error>Informe um valor maior que zero.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Categoria</mat-label>
+        <mat-select formControlName="defaultCategoryId">
+          @for (category of categories(); track category.id) {
+            <mat-option [value]="category.id">{{ category.namePt }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.defaultCategoryId.invalid) {
+          <mat-error>Escolha uma categoria.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="recurrence-form__cadence">
+      <mat-form-field appearance="outline">
+        <mat-label>Frequência</mat-label>
+        <mat-select formControlName="frequency">
+          <mat-option value="weekly">Semanal</mat-option>
+          <mat-option value="monthly">Mensal</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      @if (form.controls.frequency.value === 'weekly') {
+        <mat-form-field appearance="outline" data-field="weekday">
+          <mat-label>Dia da semana</mat-label>
+          <mat-select formControlName="weekday">
+            <mat-option [value]="0">Domingo</mat-option>
+            <mat-option [value]="1">Segunda-feira</mat-option>
+            <mat-option [value]="2">Terça-feira</mat-option>
+            <mat-option [value]="3">Quarta-feira</mat-option>
+            <mat-option [value]="4">Quinta-feira</mat-option>
+            <mat-option [value]="5">Sexta-feira</mat-option>
+            <mat-option [value]="6">Sábado</mat-option>
+          </mat-select>
+        </mat-form-field>
+      } @else {
+        <mat-form-field appearance="outline" data-field="due-day">
+          <mat-label>Dia de vencimento</mat-label>
+          <input matInput type="number" min="1" max="31" formControlName="dueDay" />
+          @if (form.controls.dueDay.invalid) {
+            <mat-error>Use um dia entre 1 e 31.</mat-error>
+          }
+        </mat-form-field>
+      }
+    </div>
+
+    <div class="recurrence-form__split">
+      <mat-form-field appearance="outline">
+        <mat-label>Início</mat-label>
+        <input matInput type="date" formControlName="startDate" />
+        @if (form.controls.startDate.invalid) {
+          <mat-error>Informe uma data válida.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fim (opcional)</mat-label>
+        <input matInput type="date" formControlName="endDate" />
+        @if (form.controls.endDate.invalid || form.hasError('dateRange')) {
+          <mat-error>A data final deve ser posterior ao início.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close>Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving() || loadingCategories()">
+      {{ saving() ? 'Criando…' : 'Criar recorrência' }}
+    </button>
+  </mat-dialog-actions>
+</form>

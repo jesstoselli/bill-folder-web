@@ -5,11 +5,19 @@ import { CycleStore } from '../../core/cycles/cycle.store';
 import { DataChangeService } from '../../core/data-change/data-change.service';
 import { mapApiError } from '../../core/http/api-error';
 import { LoadState } from '../../shared/states/load-state';
+import {
+  ScopeChoice,
+  scopeToDeleteQuery,
+  scopeToRepriceBody,
+} from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
 import { ExpensesApi } from './expenses.api';
 import {
+  CreateExpenseRecurrenceRequest,
   CreateExpenseRequest,
-  ExpenseDeleteScope,
+  ExpenseRecurrenceResponse,
   ExpenseResponse,
+  PayExpenseRequest,
+  PayOccurrenceRequest,
   UpdateExpenseRequest,
 } from './expenses.models';
 
@@ -120,13 +128,37 @@ export class ExpensesStore {
     return firstValueFrom(this.api.update(id, request));
   }
 
-  async deleteOne(id: string, scope: ExpenseDeleteScope): Promise<void> {
+  pay(id: string, request: PayExpenseRequest): Promise<ExpenseResponse> {
+    return firstValueFrom(this.api.pay(id, request));
+  }
+
+  payOccurrence(id: string, request: PayOccurrenceRequest): Promise<ExpenseResponse> {
+    return firstValueFrom(this.api.payOccurrence(id, request));
+  }
+
+  repriceProvisioned(
+    id: string,
+    request: { readonly amount: number; readonly scope: ScopeChoice },
+  ): Promise<ExpenseResponse> {
+    return firstValueFrom(
+      this.api.repriceProvisioned(id, {
+        amount: request.amount,
+        scope: scopeToRepriceBody(request.scope),
+      }),
+    );
+  }
+
+  createRecurrence(request: CreateExpenseRecurrenceRequest): Promise<ExpenseRecurrenceResponse> {
+    return firstValueFrom(this.api.createRecurrence(request));
+  }
+
+  async deleteOne(id: string, scope: ScopeChoice): Promise<void> {
     const cycleId = this.stateCycleId();
     const key = deleteKey(cycleId, id);
     this.updatePendingDelete(key, true);
 
     try {
-      await firstValueFrom(this.api.deleteOne(id, scope));
+      await firstValueFrom(this.api.deleteOne(id, scopeToDeleteQuery(scope)));
       if (this.stateCycleId() === cycleId) {
         const state = this.sourceState();
         if (state.kind === 'content') {

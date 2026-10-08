@@ -1,0 +1,39 @@
+<section class="recurrence-scope">
+  <header>
+    <h2 id="recurrence-scope-title" mat-dialog-title>
+      {{ data.action === 'delete' ? 'O que você quer excluir?' : 'Onde aplicar o novo valor?' }}
+    </h2>
+    <p id="recurrence-scope-description">
+      {{ data.expenseLabel }} faz parte de uma recorrência. Escolha o alcance desta alteração.
+    </p>
+  </header>
+
+  <mat-dialog-content>
+    <div class="recurrence-scope__choices">
+      <button type="button" class="recurrence-scope__choice" (click)="choose('this')">
+        <strong>Somente esta</strong>
+        <span>
+          @if (data.action === 'delete') {
+            Remove esta despesa e mantém as próximas ocorrências.
+          } @else {
+            Altera o valor por sessão apenas neste ciclo.
+          }
+        </span>
+      </button>
+      <button type="button" class="recurrence-scope__choice" (click)="choose('thisAndFollowing')">
+        <strong>Esta e as próximas</strong>
+        <span>
+          @if (data.action === 'delete') {
+            Remove esta e as futuras não pagas e encerra a recorrência.
+          } @else {
+            Altera este ciclo, os próximos e o valor padrão da recorrência.
+          }
+        </span>
+      </button>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close>Cancelar</button>
+  </mat-dialog-actions>
+</section>

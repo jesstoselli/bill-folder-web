@@ -42,3 +42,49 @@ export interface UpdateExpenseRequest {
 }
 
 export type ExpenseDeleteScope = 'this' | 'this_and_following';
+
+export interface PayExpenseRequest {
+  readonly actualAmount: number;
+  readonly paidDate: string;
+  readonly paidFromAccountId: string | null;
+}
+
+export interface PayOccurrenceRequest {
+  readonly amount: number;
+  readonly paidDate: string;
+  readonly paidFromAccountId: string | null;
+}
+
+export interface RepriceProvisionedExpenseRequest {
+  readonly amount: number;
+  readonly scope: 'this' | 'thisAndFollowing';
+}
+
+export type ExpenseRecurrenceFrequency = 'monthly' | 'weekly';
+
+export interface CreateExpenseRecurrenceRequest {
+  readonly defaultLabel: string;
+  readonly defaultAmount: number;
+  readonly defaultCategoryId: string;
+  readonly frequency: ExpenseRecurrenceFrequency;
+  readonly dueDay?: number;
+  readonly weekday?: number;
+  readonly startDate: string;
+  readonly endDate: string | null;
+}
+
+export interface ExpenseRecurrenceResponse {
+  readonly id: string;
+  readonly defaultLabel: string;
+  readonly defaultAmount: number;
+  readonly defaultCategoryId: string;
+  readonly defaultCategoryName: string;
+  readonly frequency: ExpenseRecurrenceFrequency;
+  readonly dueDay: number | null;
+  readonly weekday: number | null;
+  readonly startDate: string;
+  readonly endDate: string | null;
+  readonly isActive: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}

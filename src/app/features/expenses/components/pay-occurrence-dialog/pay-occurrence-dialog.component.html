@@ -1,0 +1,80 @@
+<form class="occurrence-dialog" [formGroup]="form" (ngSubmit)="submit()">
+  <header>
+    <div>
+      <h2 id="pay-occurrence-title" mat-dialog-title>Registrar ocorrência</h2>
+      <p id="pay-occurrence-description">{{ data.expense.label }}</p>
+    </div>
+    <button type="button" mat-button mat-dialog-close aria-label="Fechar pagamento da ocorrência">
+      Fechar
+    </button>
+  </header>
+
+  <mat-dialog-content>
+    @if (serverError()) {
+      <p id="pay-occurrence-error" class="occurrence-dialog__error" role="alert">
+        {{ serverError() }}
+      </p>
+    }
+
+    <section class="occurrence-dialog__progress" aria-label="Progresso da recorrência">
+      <div>
+        <strong
+          >{{ data.expense.occurrencesPaid }} de {{ data.expense.occurrencesTotal }} pagas</strong
+        >
+        <span>Progresso neste ciclo</span>
+      </div>
+      <div>
+        <strong>{{ formatBrl(remainingReserved()) }}</strong>
+        <span>restante reservado</span>
+      </div>
+    </section>
+
+    <div class="occurrence-dialog__amount">
+      <span>Valor desta sessão</span>
+      <mat-form-field appearance="outline">
+        <mat-label>Valor pago</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input
+          matInput
+          type="number"
+          min="0.01"
+          step="0.01"
+          inputmode="decimal"
+          formControlName="amount"
+        />
+        @if (form.controls.amount.invalid) {
+          <mat-error>Informe um valor maior que zero.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="occurrence-dialog__details">
+      <mat-form-field appearance="outline">
+        <mat-label>Data do pagamento</mat-label>
+        <input matInput type="date" formControlName="paidDate" />
+        @if (form.controls.paidDate.invalid) {
+          <mat-error>Informe uma data válida.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Conta usada (opcional)</mat-label>
+        <mat-select formControlName="paidFromAccountId">
+          <mat-option [value]="null">Não informar</mat-option>
+          @for (account of accounts(); track account.id) {
+            <mat-option [value]="account.id">
+              {{ account.bankName }}{{ account.isPrimary ? ' — principal' : '' }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button type="button" mat-button mat-dialog-close>Cancelar</button>
+    <button type="submit" mat-flat-button [disabled]="saving() || loadingAccounts()">
+      {{ saving() ? 'Registrando…' : 'Registrar ocorrência' }}
+    </button>
+  </mat-dialog-actions>
+</form>
