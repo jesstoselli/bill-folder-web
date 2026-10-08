@@ -4,7 +4,13 @@
       <h2 id="recurrence-form-title" mat-dialog-title>Nova recorrência</h2>
       <p id="recurrence-form-description">Defina o valor e a cadência da despesa.</p>
     </div>
-    <button type="button" mat-button mat-dialog-close aria-label="Fechar nova recorrência">
+    <button
+      type="button"
+      mat-button
+      mat-dialog-close
+      [disabled]="saving()"
+      aria-label="Fechar nova recorrência"
+    >
       Fechar
     </button>
   </header>
@@ -82,9 +88,9 @@
       } @else {
         <mat-form-field appearance="outline" data-field="due-day">
           <mat-label>Dia de vencimento</mat-label>
-          <input matInput type="number" min="1" max="31" formControlName="dueDay" />
+          <input matInput type="number" min="1" max="31" step="1" formControlName="dueDay" />
           @if (form.controls.dueDay.invalid) {
-            <mat-error>Use um dia entre 1 e 31.</mat-error>
+            <mat-error>Use um dia inteiro entre 1 e 31.</mat-error>
           }
         </mat-form-field>
       }
@@ -110,7 +116,7 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button type="button" mat-button mat-dialog-close>Cancelar</button>
+    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
     <button type="submit" mat-flat-button [disabled]="saving() || loadingCategories()">
       {{ saving() ? 'Criando…' : 'Criar recorrência' }}
     </button>

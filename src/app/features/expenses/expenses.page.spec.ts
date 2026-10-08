@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { OverlayContainer } from '@angular/cdk/overlay';
+import { MatDialog, MatDialogState } from '@angular/material/dialog';
 import { CycleResponse } from '../../core/cycles/cycle.models';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { ReferenceDataApi } from '../../core/reference/reference-data.api';
@@ -9,6 +10,10 @@ import { ExpenseResponse } from './expenses.models';
 import { ExpensesPage } from './expenses.page';
 import { ExpensesStore } from './expenses.store';
 import { of } from 'rxjs';
+import { RecurrenceFormComponent } from './components/recurrence-form/recurrence-form.component';
+import { PayExpenseDialogComponent } from './components/pay-expense-dialog/pay-expense-dialog.component';
+import { PayOccurrenceDialogComponent } from './components/pay-occurrence-dialog/pay-occurrence-dialog.component';
+import { RepriceProvisionedDialogComponent } from './components/reprice-provisioned-dialog/reprice-provisioned-dialog.component';
 
 describe('ExpensesPage actions', () => {
   it('prevents generic total editing for a provisioned expense', async () => {
@@ -283,6 +288,146 @@ describe('ExpensesPage actions', () => {
     expect(dialog?.textContent).toMatch(/R\$\s*450,00/);
   });
 
+  it('keeps normal payment open during a delayed write and restores success focus', async () => {
+    const pendingPayment = deferred<ExpenseResponse>();
+    const pay = vi.fn(() => pendingPayment.promise);
+    const { fixture } = await createActionFixture(
+      [expense({ id: 'ordinary', label: 'Internet' })],
+      () => Promise.resolve(),
+      { pay },
+    );
+    fixture.detectChanges();
+
+    await chooseMenuAction(fixture, 'ordinary', 'Pagar despesa');
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const dialogRef = TestBed.inject(MatDialog).openDialogs.at(-1);
+    const component = dialogRef?.componentInstance as PayExpenseDialogComponent;
+    let closedResult: unknown;
+    dialogRef?.afterClosed().subscribe((result) => (closedResult = result));
+    const submitting = component.submit();
+    await expectWriteDialogLocked(fixture, overlay);
+
+    pendingPayment.resolve(expense({ id: 'ordinary', status: 'paid' }));
+    await submitting;
+    await expectSuccessfulWriteFocus(fixture, overlay);
+    expect(closedResult).toEqual(expense({ id: 'ordinary', status: 'paid' }));
+  });
+
+  it('keeps occurrence payment open during a delayed write and restores success focus', async () => {
+    const provisioned = expense({
+      id: 'provisioned',
+      label: 'Terapia',
+      templateId: 'template-1',
+      occurrenceAmount: 150,
+      occurrencesTotal: 4,
+      occurrencesPaid: 1,
+      paidToDate: 150,
+      expectedAmount: 600,
+    });
+    const pendingPayment = deferred<ExpenseResponse>();
+    const payOccurrence = vi.fn(() => pendingPayment.promise);
+    const { fixture } = await createActionFixture([provisioned], () => Promise.resolve(), {
+      payOccurrence,
+    });
+    fixture.detectChanges();
+
+    await chooseMenuAction(fixture, 'provisioned', 'Pagar ocorrência');
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const dialogRef = TestBed.inject(MatDialog).openDialogs.at(-1);
+    const component = dialogRef?.componentInstance as PayOccurrenceDialogComponent;
+    let closedResult: unknown;
+    dialogRef?.afterClosed().subscribe((result) => (closedResult = result));
+    const submitting = component.submit();
+    await expectWriteDialogLocked(fixture, overlay);
+
+    pendingPayment.resolve({ ...provisioned, occurrencesPaid: 2, paidToDate: 300 });
+    await submitting;
+    await expectSuccessfulWriteFocus(fixture, overlay);
+    expect(closedResult).toEqual({ ...provisioned, occurrencesPaid: 2, paidToDate: 300 });
+  });
+
+  it('keeps recurrence creation open during a delayed write and restores trigger focus', async () => {
+    const pendingRecurrence = deferred<unknown>();
+    const createRecurrence = vi.fn(() => pendingRecurrence.promise);
+    const { fixture } = await createActionFixture([], () => Promise.resolve(), {
+      createRecurrence,
+    });
+    fixture.detectChanges();
+    const createButton = findButton(fixture.nativeElement, 'Nova recorrência');
+    createButton.focus();
+    createButton.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const dialogRef = TestBed.inject(MatDialog).openDialogs.at(-1);
+    const component = dialogRef?.componentInstance as RecurrenceFormComponent;
+    let closedResult: unknown;
+    dialogRef?.afterClosed().subscribe((result) => (closedResult = result));
+    component.form.setValue({
+      defaultLabel: 'Terapia',
+      defaultAmount: 150,
+      defaultCategoryId: 'category-1',
+      frequency: 'weekly',
+      dueDay: 10,
+      weekday: 3,
+      startDate: '2026-10-01',
+      endDate: '',
+    });
+    fixture.detectChanges();
+
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const submitting = component.submit();
+    await expectWriteDialogLocked(fixture, overlay);
+
+    pendingRecurrence.resolve({ id: 'recurrence-1' });
+    await submitting;
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(overlay.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(createButton);
+    });
+    expect(closedResult).toEqual({ id: 'recurrence-1' });
+  });
+
+  it('keeps repricing open during a delayed write and restores success focus', async () => {
+    const provisioned = expense({
+      id: 'provisioned',
+      label: 'Terapia',
+      templateId: 'template-1',
+      occurrenceAmount: 150,
+      occurrencesTotal: 4,
+      occurrencesPaid: 1,
+      paidToDate: 150,
+      expectedAmount: 600,
+    });
+    const pendingReprice = deferred<ExpenseResponse>();
+    const repriceProvisioned = vi.fn(() => pendingReprice.promise);
+    const { fixture } = await createActionFixture([provisioned], () => Promise.resolve(), {
+      repriceProvisioned,
+    });
+    fixture.detectChanges();
+
+    await chooseMenuAction(fixture, 'provisioned', 'Reajustar valor por sessão');
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    findButton(overlay, 'Somente esta').click();
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(overlay.textContent).toContain('Salvar novo valor');
+    });
+    const dialogRef = TestBed.inject(MatDialog).openDialogs.at(-1);
+    const component = dialogRef?.componentInstance as RepriceProvisionedDialogComponent;
+    let closedResult: unknown;
+    dialogRef?.afterClosed().subscribe((result) => (closedResult = result));
+    const submitting = component.submit();
+    await expectWriteDialogLocked(fixture, overlay);
+
+    pendingReprice.resolve({ ...provisioned, occurrenceAmount: 175 });
+    await submitting;
+    await expectSuccessfulWriteFocus(fixture, overlay);
+    expect(closedResult).toEqual({ ...provisioned, occurrenceAmount: 175 });
+  });
+
   it('maps a recurring delete choice to thisAndFollowing', async () => {
     const recurring = expense({
       id: 'recurring',
@@ -435,30 +580,34 @@ async function createPageFixture(options: {
 async function createActionFixture(
   rows: ExpenseResponse[],
   deleteImplementation: (id: string) => Promise<void>,
+  writeOverrides: ActionWriteOverrides = {},
 ) {
   const expenseState = signal({ kind: 'content' as const, data: rows, refreshing: false });
   const expenses = signal(rows);
   const current = signal<CycleResponse | null>(octoberCycle);
   const deleteOne = vi.fn((id: string) => deleteImplementation(id));
 
+  const store = {
+    state: expenseState.asReadonly(),
+    expenses: expenses.asReadonly(),
+    load: vi.fn(() => Promise.resolve()),
+    refresh: vi.fn(() => Promise.resolve()),
+    deleteOne,
+    create: vi.fn(() => Promise.resolve()),
+    update: vi.fn(() => Promise.resolve()),
+    pay: vi.fn(() => Promise.resolve(expense())),
+    payOccurrence: vi.fn(() => Promise.resolve(expense())),
+    repriceProvisioned: vi.fn(() => Promise.resolve(expense())),
+    createRecurrence: vi.fn(() => Promise.resolve()),
+    ...writeOverrides,
+  };
+
   await TestBed.configureTestingModule({
     imports: [ExpensesPage],
     providers: [
       {
         provide: ExpensesStore,
-        useValue: {
-          state: expenseState.asReadonly(),
-          expenses: expenses.asReadonly(),
-          load: vi.fn(() => Promise.resolve()),
-          refresh: vi.fn(() => Promise.resolve()),
-          deleteOne,
-          create: vi.fn(() => Promise.resolve()),
-          update: vi.fn(() => Promise.resolve()),
-          pay: vi.fn(() => Promise.resolve(expense())),
-          payOccurrence: vi.fn(() => Promise.resolve(expense())),
-          repriceProvisioned: vi.fn(() => Promise.resolve(expense())),
-          createRecurrence: vi.fn(() => Promise.resolve()),
-        },
+        useValue: store,
       },
       {
         provide: ReferenceDataApi,
@@ -483,8 +632,15 @@ async function createActionFixture(
     ],
   }).compileComponents();
 
-  return { fixture: TestBed.createComponent(ExpensesPage), current, expenses, deleteOne };
+  return { fixture: TestBed.createComponent(ExpensesPage), current, expenses, deleteOne, store };
 }
+
+type ActionWriteOverrides = Partial<
+  Record<
+    'pay' | 'payOccurrence' | 'repriceProvisioned' | 'createRecurrence',
+    ReturnType<typeof vi.fn>
+  >
+>;
 
 async function chooseMenuAction(
   fixture: ReturnType<typeof TestBed.createComponent<ExpensesPage>>,
@@ -541,6 +697,67 @@ function findButton(root: HTMLElement, label: string): HTMLButtonElement {
     throw new Error(`Button not found: ${label}`);
   }
   return button;
+}
+
+async function expectWriteDialogLocked(
+  fixture: ReturnType<typeof TestBed.createComponent<ExpensesPage>>,
+  overlay: HTMLElement,
+): Promise<void> {
+  fixture.detectChanges();
+  await Promise.resolve();
+  fixture.detectChanges();
+
+  const dialog = overlay.querySelector<HTMLElement>('[role="dialog"]');
+  if (!dialog) {
+    throw new Error('Write dialog not found');
+  }
+  const close = findButton(dialog, 'Fechar');
+  const cancel = findButton(dialog, 'Cancelar');
+  const dialogRef = TestBed.inject(MatDialog).openDialogs.at(-1);
+  expect(close.disabled).toBe(true);
+  expect(cancel.disabled).toBe(true);
+
+  close.click();
+  expect(dialogRef?.getState()).toBe(MatDialogState.OPEN);
+  cancel.click();
+  expect(dialogRef?.getState()).toBe(MatDialogState.OPEN);
+  const backdrops = overlay.querySelectorAll<HTMLElement>('.cdk-overlay-backdrop');
+  backdrops.item(backdrops.length - 1).click();
+  expect(dialogRef?.getState()).toBe(MatDialogState.OPEN);
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  fixture.detectChanges();
+  await Promise.resolve();
+  fixture.detectChanges();
+
+  expect(overlay.querySelector('[role="dialog"]')).not.toBeNull();
+  expect(dialogRef?.getState()).toBe(MatDialogState.OPEN);
+}
+
+async function expectSuccessfulWriteFocus(
+  fixture: ReturnType<typeof TestBed.createComponent<ExpensesPage>>,
+  overlay: HTMLElement,
+): Promise<void> {
+  await vi.waitFor(() => {
+    fixture.detectChanges();
+    expect(overlay.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(
+      (fixture.nativeElement as HTMLElement).querySelector('.expense-ledger'),
+    );
+  });
+}
+
+function deferred<T>(): {
+  readonly promise: Promise<T>;
+  readonly resolve: (value: T) => void;
+  readonly reject: (reason: unknown) => void;
+} {
+  let resolve: (value: T) => void = () => undefined;
+  let reject: (reason: unknown) => void = () => undefined;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
 }
 
 const octoberCycle: CycleResponse = {

@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
+import { DataChangeService } from '../../../../core/data-change/data-change.service';
 import { ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { ExpensesStore } from '../../expenses.store';
 import { RecurrenceFormComponent } from './recurrence-form.component';
@@ -87,15 +88,40 @@ describe('RecurrenceFormComponent', () => {
     expect(form.valid).toBe(true);
   });
 
-  it('keeps recurrence values and the server error visible after failure', async () => {
-    const createRecurrence = vi.fn(() =>
-      Promise.reject({
-        status: 400,
-        code: 'invalid_category',
-        message: 'Categoria inválida.',
-      }),
-    );
+  it('rejects a fractional monthly due day without writing or bumping data changes', async () => {
+    const createRecurrence = vi.fn(() => Promise.resolve());
     const fixture = await createFixture(createRecurrence);
+    const component = fixture.componentInstance;
+    const changes = TestBed.inject(DataChangeService);
+    component.form.setValue({
+      defaultLabel: 'Terapia',
+      defaultAmount: 150,
+      defaultCategoryId: 'category-1',
+      frequency: 'monthly',
+      dueDay: 1.5,
+      weekday: 3,
+      startDate: '2026-10-01',
+      endDate: '',
+    });
+
+    await component.submit();
+
+    expect(component.form.controls.dueDay.hasError('integer')).toBe(true);
+    expect(component.form.invalid).toBe(true);
+    expect(createRecurrence).not.toHaveBeenCalled();
+    expect(changes.version()).toBe(0);
+  });
+
+  it('keeps recurrence values, restores dismissal and shows the server error after failure', async () => {
+    let rejectCreate: (reason: unknown) => void = () => undefined;
+    const createRecurrence = vi.fn(
+      () =>
+        new Promise((_, reject) => {
+          rejectCreate = reject;
+        }),
+    );
+    const dialogRef = { close: vi.fn(), disableClose: false };
+    const fixture = await createFixture(createRecurrence, dialogRef);
     const component = fixture.componentInstance;
     component.form.setValue({
       defaultLabel: 'Terapia',
@@ -108,7 +134,19 @@ describe('RecurrenceFormComponent', () => {
       endDate: '',
     });
 
-    await component.submit();
+    const submitting = component.submit();
+    fixture.detectChanges();
+
+    expect(dialogRef.disableClose).toBe(true);
+    expect(findButton(fixture.nativeElement, 'Fechar').disabled).toBe(true);
+    expect(findButton(fixture.nativeElement, 'Cancelar').disabled).toBe(true);
+
+    rejectCreate({
+      status: 400,
+      code: 'invalid_category',
+      message: 'Categoria inválida.',
+    });
+    await submitting;
     fixture.detectChanges();
 
     expect(component.form.getRawValue()).toMatchObject({
@@ -120,15 +158,27 @@ describe('RecurrenceFormComponent', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
       'Categoria inválida.',
     );
+    expect(dialogRef.disableClose).toBe(false);
+    expect(findButton(fixture.nativeElement, 'Fechar').disabled).toBe(false);
+    expect(findButton(fixture.nativeElement, 'Cancelar').disabled).toBe(false);
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    findButton(fixture.nativeElement, 'Cancelar').click();
+    expect(dialogRef.close).toHaveBeenCalledWith('');
   });
 });
 
-async function createFixture(createRecurrence: ReturnType<typeof vi.fn>) {
+async function createFixture(
+  createRecurrence: ReturnType<typeof vi.fn>,
+  dialogRef: { close: ReturnType<typeof vi.fn>; disableClose: boolean } = {
+    close: vi.fn(),
+    disableClose: false,
+  },
+) {
   await TestBed.configureTestingModule({
     imports: [RecurrenceFormComponent],
     providers: [
       { provide: MAT_DIALOG_DATA, useValue: {} },
-      { provide: MatDialogRef, useValue: { close: vi.fn() } },
+      { provide: MatDialogRef, useValue: dialogRef },
       { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
       { provide: ExpensesStore, useValue: { createRecurrence } },
     ],
@@ -137,4 +187,14 @@ async function createFixture(createRecurrence: ReturnType<typeof vi.fn>) {
   fixture.detectChanges();
   await fixture.whenStable();
   return fixture;
+}
+
+function findButton(root: HTMLElement, label: string): HTMLButtonElement {
+  const button = [...root.querySelectorAll<HTMLButtonElement>('button')].find((candidate) =>
+    candidate.textContent?.includes(label),
+  );
+  if (!button) {
+    throw new Error(`Button not found: ${label}`);
+  }
+  return button;
 }

@@ -4,7 +4,13 @@
       <h2 id="pay-occurrence-title" mat-dialog-title>Registrar ocorrência</h2>
       <p id="pay-occurrence-description">{{ data.expense.label }}</p>
     </div>
-    <button type="button" mat-button mat-dialog-close aria-label="Fechar pagamento da ocorrência">
+    <button
+      type="button"
+      mat-button
+      mat-dialog-close
+      [disabled]="saving()"
+      aria-label="Fechar pagamento da ocorrência"
+    >
       Fechar
     </button>
   </header>
@@ -72,7 +78,7 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button type="button" mat-button mat-dialog-close>Cancelar</button>
+    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
     <button type="submit" mat-flat-button [disabled]="saving() || loadingAccounts()">
       {{ saving() ? 'Registrando…' : 'Registrar ocorrência' }}
     </button>

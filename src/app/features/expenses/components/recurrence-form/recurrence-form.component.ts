@@ -15,6 +15,7 @@ import { firstValueFrom } from 'rxjs';
 import { mapApiError } from '../../../../core/http/api-error';
 import { CategoryDto, ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpensesStore } from '../../expenses.store';
 import { ExpenseRecurrenceFrequency } from '../../expenses.models';
 import { RecurrenceFormValue, toCreateExpenseRecurrenceRequest } from './recurrence-form.models';
@@ -37,11 +38,12 @@ export class RecurrenceFormComponent implements OnInit {
   private readonly references = inject(ReferenceDataApi);
   private readonly store = inject(ExpensesStore);
   private readonly dialogRef = inject(MatDialogRef<RecurrenceFormComponent>);
+  private readonly writeLock = new WriteDialogLock(this.dialogRef);
   readonly data = inject<Record<string, never>>(MAT_DIALOG_DATA, { optional: true });
 
   readonly categories = signal<readonly CategoryDto[]>([]);
   readonly loadingCategories = signal(true);
-  readonly saving = signal(false);
+  readonly saving = this.writeLock.saving;
   readonly serverError = signal('');
   readonly form = this.formBuilder.nonNullable.group(
     {
@@ -69,13 +71,12 @@ export class RecurrenceFormComponent implements OnInit {
   }
 
   async submit(): Promise<void> {
-    if (this.form.invalid || this.saving()) {
+    if (this.form.invalid || !this.writeLock.begin()) {
       this.form.markAllAsTouched();
       return;
     }
 
     this.serverError.set('');
-    this.saving.set(true);
     try {
       const result = await this.store.createRecurrence(
         toCreateExpenseRecurrenceRequest(this.form.getRawValue() as RecurrenceFormValue),
@@ -83,8 +84,7 @@ export class RecurrenceFormComponent implements OnInit {
       this.dialogRef.close(result);
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
-    } finally {
-      this.saving.set(false);
+      this.writeLock.release();
     }
   }
 
@@ -112,7 +112,7 @@ export class RecurrenceFormComponent implements OnInit {
     if (frequency === 'weekly') {
       weekday.setValidators([Validators.required, Validators.min(0), Validators.max(6)]);
     } else {
-      dueDay.setValidators([Validators.required, Validators.min(1), Validators.max(31)]);
+      dueDay.setValidators([Validators.required, integer, Validators.min(1), Validators.max(31)]);
     }
     dueDay.updateValueAndValidity({ emitEvent: false });
     weekday.updateValueAndValidity({ emitEvent: false });
@@ -121,6 +121,10 @@ export class RecurrenceFormComponent implements OnInit {
 
 function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim().length > 0 ? null : { blank: true };
+}
+
+function integer(control: AbstractControl<number>): ValidationErrors | null {
+  return Number.isInteger(control.value) ? null : { integer: true };
 }
 
 function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {

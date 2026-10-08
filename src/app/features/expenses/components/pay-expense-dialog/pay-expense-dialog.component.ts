@@ -12,6 +12,7 @@ import {
 } from '../../../../core/reference/reference-data.api';
 import { mapApiError } from '../../../../core/http/api-error';
 import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpenseResponse } from '../../expenses.models';
 import { ExpensesStore } from '../../expenses.store';
 
@@ -37,11 +38,12 @@ export class PayExpenseDialogComponent implements OnInit {
   private readonly references = inject(ReferenceDataApi);
   private readonly store = inject(ExpensesStore);
   private readonly dialogRef = inject(MatDialogRef<PayExpenseDialogComponent>);
+  private readonly writeLock = new WriteDialogLock(this.dialogRef);
   readonly data = inject<PayExpenseDialogData>(MAT_DIALOG_DATA);
 
   readonly accounts = signal<readonly CheckingAccountResponse[]>([]);
   readonly loadingAccounts = signal(true);
-  readonly saving = signal(false);
+  readonly saving = this.writeLock.saving;
   readonly serverError = signal('');
   readonly form = this.formBuilder.group({
     actualAmount: this.formBuilder.nonNullable.control(this.data.expense.expectedAmount, [
@@ -60,20 +62,18 @@ export class PayExpenseDialogComponent implements OnInit {
   }
 
   async submit(): Promise<void> {
-    if (this.form.invalid || this.saving()) {
+    if (this.form.invalid || !this.writeLock.begin()) {
       this.form.markAllAsTouched();
       return;
     }
 
     this.serverError.set('');
-    this.saving.set(true);
     try {
       const result = await this.store.pay(this.data.expense.id, this.form.getRawValue());
       this.dialogRef.close(result);
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
-    } finally {
-      this.saving.set(false);
+      this.writeLock.release();
     }
   }
 

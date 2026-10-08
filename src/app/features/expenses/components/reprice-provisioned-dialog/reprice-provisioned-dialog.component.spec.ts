@@ -4,10 +4,15 @@ import { ExpensesStore } from '../../expenses.store';
 import { RepriceProvisionedDialogComponent } from './reprice-provisioned-dialog.component';
 
 describe('RepriceProvisionedDialogComponent', () => {
-  it('describes per-session repricing, recalculates month context and retains failures', async () => {
-    const repriceProvisioned = vi.fn(() =>
-      Promise.reject({ status: 400, code: 'validation_error', message: 'Valor recusado.' }),
+  it('describes per-session repricing, restores dismissal and retains failures', async () => {
+    let rejectReprice: (reason: unknown) => void = () => undefined;
+    const repriceProvisioned = vi.fn(
+      () =>
+        new Promise((_, reject) => {
+          rejectReprice = reject;
+        }),
     );
+    const dialogRef = { close: vi.fn(), disableClose: false };
     await TestBed.configureTestingModule({
       imports: [RepriceProvisionedDialogComponent],
       providers: [
@@ -24,7 +29,7 @@ describe('RepriceProvisionedDialogComponent', () => {
             scope: 'thisAndFollowing',
           },
         },
-        { provide: MatDialogRef, useValue: { close: vi.fn() } },
+        { provide: MatDialogRef, useValue: dialogRef },
         { provide: ExpensesStore, useValue: { repriceProvisioned } },
       ],
     }).compileComponents();
@@ -36,7 +41,15 @@ describe('RepriceProvisionedDialogComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('por sessão');
     expect(fixture.nativeElement.textContent).toMatch(/R\$\s*700,00/);
-    await component.submit();
+    const submitting = component.submit();
+    fixture.detectChanges();
+
+    expect(dialogRef.disableClose).toBe(true);
+    expect(findButton(fixture.nativeElement, 'Fechar').disabled).toBe(true);
+    expect(findButton(fixture.nativeElement, 'Cancelar').disabled).toBe(true);
+
+    rejectReprice({ status: 400, code: 'validation_error', message: 'Valor recusado.' });
+    await submitting;
     fixture.detectChanges();
 
     expect(repriceProvisioned).toHaveBeenCalledWith('expense-1', {
@@ -47,5 +60,21 @@ describe('RepriceProvisionedDialogComponent', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
       'Valor recusado.',
     );
+    expect(dialogRef.disableClose).toBe(false);
+    expect(findButton(fixture.nativeElement, 'Fechar').disabled).toBe(false);
+    expect(findButton(fixture.nativeElement, 'Cancelar').disabled).toBe(false);
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    findButton(fixture.nativeElement, 'Cancelar').click();
+    expect(dialogRef.close).toHaveBeenCalledWith('');
   });
 });
+
+function findButton(root: HTMLElement, label: string): HTMLButtonElement {
+  const button = [...root.querySelectorAll<HTMLButtonElement>('button')].find((candidate) =>
+    candidate.textContent?.includes(label),
+  );
+  if (!button) {
+    throw new Error(`Button not found: ${label}`);
+  }
+  return button;
+}

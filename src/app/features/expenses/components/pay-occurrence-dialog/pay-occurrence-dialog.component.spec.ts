@@ -6,11 +6,16 @@ import { ExpensesStore } from '../../expenses.store';
 import { PayOccurrenceDialogComponent } from './pay-occurrence-dialog.component';
 
 describe('PayOccurrenceDialogComponent', () => {
-  it('prefills the session amount and preserves values when payment fails', async () => {
-    const payOccurrence = vi.fn(() =>
-      Promise.reject({ status: 400, code: 'invalid_account', message: 'Conta inválida.' }),
+  it('prefills the session amount, restores dismissal and preserves values when payment fails', async () => {
+    let rejectPayment: (reason: unknown) => void = () => undefined;
+    const payOccurrence = vi.fn(
+      () =>
+        new Promise((_, reject) => {
+          rejectPayment = reject;
+        }),
     );
-    const fixture = await createFixture(payOccurrence);
+    const dialogRef = { close: vi.fn(), disableClose: false };
+    const fixture = await createFixture(payOccurrence, dialogRef);
     const component = fixture.componentInstance;
 
     expect(component.form.controls.amount.value).toBe(150);
@@ -19,7 +24,15 @@ describe('PayOccurrenceDialogComponent', () => {
       paidDate: '2026-10-14',
       paidFromAccountId: 'account-1',
     });
-    await component.submit();
+    const submitting = component.submit();
+    fixture.detectChanges();
+
+    expect(dialogRef.disableClose).toBe(true);
+    expect(findButton(fixture.nativeElement, 'Fechar').disabled).toBe(true);
+    expect(findButton(fixture.nativeElement, 'Cancelar').disabled).toBe(true);
+
+    rejectPayment({ status: 400, code: 'invalid_account', message: 'Conta inválida.' });
+    await submitting;
     fixture.detectChanges();
 
     expect(payOccurrence).toHaveBeenCalledWith('expense-1', {
@@ -37,6 +50,12 @@ describe('PayOccurrenceDialogComponent', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
       'Conta inválida.',
     );
+    expect(dialogRef.disableClose).toBe(false);
+    expect(findButton(fixture.nativeElement, 'Fechar').disabled).toBe(false);
+    expect(findButton(fixture.nativeElement, 'Cancelar').disabled).toBe(false);
+    expect(dialogRef.close).not.toHaveBeenCalled();
+    findButton(fixture.nativeElement, 'Cancelar').click();
+    expect(dialogRef.close).toHaveBeenCalledWith('');
   });
 
   it('blocks duplicate occurrence submissions while saving', async () => {
@@ -59,7 +78,13 @@ describe('PayOccurrenceDialogComponent', () => {
   });
 });
 
-async function createFixture(payOccurrence: ReturnType<typeof vi.fn>) {
+async function createFixture(
+  payOccurrence: ReturnType<typeof vi.fn>,
+  dialogRef: { close: ReturnType<typeof vi.fn>; disableClose: boolean } = {
+    close: vi.fn(),
+    disableClose: false,
+  },
+) {
   await TestBed.configureTestingModule({
     imports: [PayOccurrenceDialogComponent],
     providers: [
@@ -77,7 +102,7 @@ async function createFixture(payOccurrence: ReturnType<typeof vi.fn>) {
           },
         },
       },
-      { provide: MatDialogRef, useValue: { close: vi.fn() } },
+      { provide: MatDialogRef, useValue: dialogRef },
       { provide: ReferenceDataApi, useValue: { checkingAccounts: () => of([]) } },
       { provide: ExpensesStore, useValue: { payOccurrence } },
     ],
@@ -86,4 +111,14 @@ async function createFixture(payOccurrence: ReturnType<typeof vi.fn>) {
   fixture.detectChanges();
   await fixture.whenStable();
   return fixture;
+}
+
+function findButton(root: HTMLElement, label: string): HTMLButtonElement {
+  const button = [...root.querySelectorAll<HTMLButtonElement>('button')].find((candidate) =>
+    candidate.textContent?.includes(label),
+  );
+  if (!button) {
+    throw new Error(`Button not found: ${label}`);
+  }
+  return button;
 }
