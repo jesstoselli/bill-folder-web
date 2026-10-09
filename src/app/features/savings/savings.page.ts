@@ -1,13 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  DestroyRef,
-  ElementRef,
-  OnInit,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs';
@@ -23,25 +14,13 @@ import { SavingsTransactionFormComponent } from './components/savings-transactio
 import { SavingsTransactionResponse, SavingsTransactionType } from './savings.models';
 import { savingsTypeSign } from './savings.projections';
 import { SavingsStore } from './savings.store';
+import { RowFocus, RowFocusTicket } from '../../shared/focus/row-focus';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { InlineAlertComponent } from '../../shared/components/inline-alert/inline-alert.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.component';
-
-interface RowFocus {
-  readonly accountId: string;
-  readonly cycleId: string;
-  readonly transactionId: string;
-  readonly rowIndex: number;
-  readonly action: 'edit' | 'delete';
-}
-
-interface ScopeFocus {
-  readonly accountId: string;
-  readonly cycleId: string;
-}
 
 type SavingsViewState =
   | { readonly kind: 'loading' }
@@ -77,8 +56,16 @@ export class SavingsPage implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly dialog = inject(MatDialog);
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly rowFocus = new RowFocus({
+    rowAttribute: 'data-transaction-id',
+    scope: () => {
+      const accountId = this.store.selectedAccountId();
+      const cycleId = this.cycles.current()?.id;
+      return accountId && cycleId ? `${accountId}:${cycleId}` : null;
+    },
+    savedTarget: ['[data-page-action="create"]'],
+    missingRowTarget: ['.savings-ledger'],
+  });
   private accountQueryGeneration = 0;
   private accountQueryInitialized = false;
   protected readonly actionError = signal('');
@@ -159,12 +146,13 @@ export class SavingsPage implements OnInit {
   }
 
   protected openCreate(): void {
-    const focus = this.captureScope();
-    if (!focus) return;
+    const accountId = this.store.selectedAccountId();
+    const focus = this.rowFocus.capture();
+    if (!accountId || !focus) return;
     this.actionError.set('');
     this.dialog
       .open(SavingsTransactionFormComponent, {
-        data: { mode: 'create', accountId: focus.accountId },
+        data: { mode: 'create', accountId },
         width: '36rem',
         maxWidth: 'calc(100vw - 2rem)',
         maxHeight: 'calc(100dvh - 2rem)',
@@ -173,16 +161,17 @@ export class SavingsPage implements OnInit {
         ariaLabelledBy: 'savings-transaction-form-title',
       })
       .afterClosed()
-      .subscribe(() => this.restoreStableFocus(focus));
+      .subscribe(() => this.rowFocus.afterDialog(focus, true));
   }
 
   protected openEdit(transaction: SavingsTransactionResponse): void {
-    const focus = this.captureRowFocus(transaction.id, 'edit');
-    if (!focus) return;
+    const accountId = this.store.selectedAccountId();
+    const focus = this.rowFocus.capture(transaction.id, 'edit');
+    if (!accountId || !focus) return;
     this.actionError.set('');
     this.dialog
       .open(SavingsTransactionFormComponent, {
-        data: { mode: 'edit', accountId: focus.accountId, transaction },
+        data: { mode: 'edit', accountId, transaction },
         position: { right: '0' },
         width: 'min(32rem, 100vw)',
         maxWidth: '100vw',
@@ -194,13 +183,11 @@ export class SavingsPage implements OnInit {
         panelClass: 'bf-savings-transaction-side-sheet',
       })
       .afterClosed()
-      .subscribe((result) =>
-        result === undefined ? this.restoreRowFocus(focus) : this.restoreStableFocus(focus),
-      );
+      .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }
 
   protected deleteTransaction(transaction: SavingsTransactionResponse): void {
-    const focus = this.captureRowFocus(transaction.id, 'delete');
+    const focus = this.rowFocus.capture(transaction.id, 'delete');
     if (focus) void this.performDelete(transaction.id, focus);
   }
 
@@ -246,17 +233,15 @@ export class SavingsPage implements OnInit {
     }
   }
 
-  private async performDelete(id: string, focus: RowFocus): Promise<void> {
+  private async performDelete(id: string, focus: RowFocusTicket): Promise<void> {
     this.actionError.set('');
     try {
       await this.store.deleteTransaction(id);
-      this.changeDetector.detectChanges();
-      if (this.isCurrent(focus)) this.focusAdjacent(focus.rowIndex);
+      this.rowFocus.afterDelete(focus, true);
     } catch (error: unknown) {
-      if (!this.isCurrent(focus)) return;
+      if (!this.rowFocus.isCurrent(focus)) return;
       this.actionError.set(mapApiError(error).message);
-      this.changeDetector.detectChanges();
-      this.focusRowAction(focus);
+      this.rowFocus.afterDelete(focus, false);
     }
   }
 
@@ -288,62 +273,5 @@ export class SavingsPage implements OnInit {
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
-  }
-
-  private captureScope(): ScopeFocus | null {
-    const accountId = this.store.selectedAccountId();
-    const cycleId = this.cycles.current()?.id;
-    return accountId && cycleId ? { accountId, cycleId } : null;
-  }
-
-  private captureRowFocus(transactionId: string, action: RowFocus['action']): RowFocus | null {
-    const scope = this.captureScope();
-    if (!scope) return null;
-    const rowIndex = this.rows().findIndex((row) => row.dataset['transactionId'] === transactionId);
-    return { ...scope, transactionId, rowIndex: Math.max(rowIndex, 0), action };
-  }
-
-  private isCurrent(focus: ScopeFocus): boolean {
-    return (
-      this.store.selectedAccountId() === focus.accountId &&
-      this.cycles.current()?.id === focus.cycleId
-    );
-  }
-
-  private restoreRowFocus(focus: RowFocus): void {
-    this.changeDetector.detectChanges();
-    if (this.isCurrent(focus)) this.focusRowAction(focus);
-  }
-
-  private restoreStableFocus(focus: ScopeFocus): void {
-    this.changeDetector.detectChanges();
-    if (this.isCurrent(focus)) this.createButton()?.focus();
-  }
-
-  private focusRowAction(focus: RowFocus): void {
-    (
-      this.host.nativeElement.querySelector<HTMLButtonElement>(
-        `[data-transaction-id="${focus.transactionId}"] [data-action="${focus.action}"]`,
-      ) ?? this.ledger()
-    )?.focus();
-  }
-
-  private focusAdjacent(index: number): void {
-    const row = this.rows()[Math.min(index, this.rows().length - 1)];
-    (row?.querySelector<HTMLButtonElement>('[data-row-action]') ?? this.createButton())?.focus();
-  }
-
-  private rows(): HTMLTableRowElement[] {
-    return [
-      ...this.host.nativeElement.querySelectorAll<HTMLTableRowElement>('[data-transaction-id]'),
-    ];
-  }
-
-  private ledger(): HTMLElement | null {
-    return this.host.nativeElement.querySelector<HTMLElement>('.savings-ledger');
-  }
-
-  private createButton(): HTMLButtonElement | null {
-    return this.host.nativeElement.querySelector<HTMLButtonElement>('[data-page-action="create"]');
   }
 }

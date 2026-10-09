@@ -1,14 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  OnInit,
-  computed,
-  effect,
-  inject,
-  signal,
-  untracked,
-} from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
@@ -27,6 +17,7 @@ import { ExpenseProjection, groupExpenses, projectExpense } from './expense-proj
 import { ExpensesStore } from './expenses.store';
 import { RecurrenceScopeDialogComponent } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope-dialog.component';
 import { ScopeChoice } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
+import { RowFocus, RowFocusTicket } from '../../shared/focus/row-focus';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -39,19 +30,13 @@ type PendingAction =
   | {
       readonly kind: 'pay' | 'pay-occurrence' | 'reprice';
       readonly expense: ExpenseProjection;
-      readonly focusContext: RowFocusContext;
+      readonly focusContext: RowFocusTicket;
     }
   | {
       readonly kind: 'delete';
       readonly expense: ExpenseProjection;
-      readonly focusContext: RowFocusContext;
+      readonly focusContext: RowFocusTicket;
     };
-
-interface RowFocusContext {
-  readonly cycleId: string;
-  readonly expenseId: string;
-  readonly rowIndex: number;
-}
 
 type ExpensesViewState =
   | { readonly kind: 'loading' }
@@ -79,8 +64,11 @@ export class ExpensesPage implements OnInit {
   protected readonly store = inject(ExpensesStore);
   protected readonly cycles = inject(CycleStore);
   private readonly dialog = inject(MatDialog);
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly rowFocus = new RowFocus({
+    rowAttribute: 'data-expense-id',
+    scope: () => this.cycles.current()?.id ?? null,
+    savedTarget: ['.expense-ledger'],
+  });
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly router = inject(Router, { optional: true });
   private readonly deepLink = signal(this.readDeepLink());
@@ -136,7 +124,7 @@ export class ExpensesPage implements OnInit {
       }
       const source = this.store.expenses().find((item) => item.id === link.expenseId);
       const expense = source ? projectExpense(source) : undefined;
-      untracked(() => this.consumeDeepLink(link.action, expense, cycle.id));
+      untracked(() => this.consumeDeepLink(link.action, expense));
     });
   }
 
@@ -183,11 +171,13 @@ export class ExpensesPage implements OnInit {
   }
 
   protected queuePayment(expense: ExpenseProjection): void {
-    const cycle = this.cycles.current();
-    if (cycle === null || !this.canPay(expense)) {
+    if (!this.canPay(expense)) {
       return;
     }
-    const focusContext = this.captureRowFocus(cycle.id, expense.id);
+    const focusContext = this.rowFocus.capture(expense.id);
+    if (focusContext === null) {
+      return;
+    }
     if (expense.isProvisioned) {
       if ((expense.occurrencesTotal ?? 0) > expense.occurrencesPaid) {
         this.pendingAction = { kind: 'pay-occurrence', expense, focusContext };
@@ -208,26 +198,17 @@ export class ExpensesPage implements OnInit {
   }
 
   protected queueReprice(expense: ExpenseProjection): void {
-    const cycle = this.cycles.current();
-    if (cycle !== null && expense.isProvisioned) {
-      this.pendingAction = {
-        kind: 'reprice',
-        expense,
-        focusContext: this.captureRowFocus(cycle.id, expense.id),
-      };
+    const focusContext = this.rowFocus.capture(expense.id);
+    if (focusContext !== null && expense.isProvisioned) {
+      this.pendingAction = { kind: 'reprice', expense, focusContext };
     }
   }
 
   protected queueDelete(expense: ExpenseProjection): void {
-    const cycle = this.cycles.current();
-    if (cycle === null) {
-      return;
+    const focusContext = this.rowFocus.capture(expense.id);
+    if (focusContext !== null) {
+      this.pendingAction = { kind: 'delete', expense, focusContext };
     }
-    this.pendingAction = {
-      kind: 'delete',
-      expense,
-      focusContext: this.captureRowFocus(cycle.id, expense.id),
-    };
   }
 
   protected handleMenuClosed(expenseId: string): void {
@@ -307,7 +288,7 @@ export class ExpensesPage implements OnInit {
     });
   }
 
-  private openPayment(expense: ExpenseProjection, focusContext: RowFocusContext): void {
+  private openPayment(expense: ExpenseProjection, focusContext: RowFocusTicket): void {
     this.actionError.set('');
     this.dialog
       .open(PayExpenseDialogComponent, {
@@ -321,10 +302,10 @@ export class ExpensesPage implements OnInit {
         ariaDescribedBy: 'pay-expense-description',
       })
       .afterClosed()
-      .subscribe((result) => this.restoreDialogFocus(focusContext, result !== undefined));
+      .subscribe((result) => this.rowFocus.afterDialog(focusContext, result !== undefined));
   }
 
-  private openOccurrencePayment(expense: ExpenseProjection, focusContext: RowFocusContext): void {
+  private openOccurrencePayment(expense: ExpenseProjection, focusContext: RowFocusTicket): void {
     this.actionError.set('');
     this.dialog
       .open(PayOccurrenceDialogComponent, {
@@ -338,7 +319,7 @@ export class ExpensesPage implements OnInit {
         ariaDescribedBy: 'pay-occurrence-description',
       })
       .afterClosed()
-      .subscribe((result) => this.restoreDialogFocus(focusContext, result !== undefined));
+      .subscribe((result) => this.rowFocus.afterDialog(focusContext, result !== undefined));
   }
 
   private async initialize(): Promise<void> {
@@ -368,7 +349,6 @@ export class ExpensesPage implements OnInit {
   private consumeDeepLink(
     action: 'pay' | 'pay-occurrence',
     expense: ExpenseProjection | undefined,
-    cycleId: string,
   ): void {
     this.deepLink.set(null);
     void this.router?.navigate([], {
@@ -381,7 +361,10 @@ export class ExpensesPage implements OnInit {
       this.actionError.set('A despesa indicada não está disponível para pagamento.');
       return;
     }
-    const focus = this.captureRowFocus(cycleId, expense.id);
+    const focus = this.rowFocus.capture(expense.id);
+    if (focus === null) {
+      return;
+    }
     if (action === 'pay-occurrence' && expense.isProvisioned) {
       this.openOccurrencePayment(expense, focus);
     } else if (action === 'pay' && !expense.isProvisioned) {
@@ -394,7 +377,7 @@ export class ExpensesPage implements OnInit {
   private openScopeDialog(
     action: 'delete' | 'reprice',
     expense: ExpenseProjection,
-    focusContext: RowFocusContext,
+    focusContext: RowFocusTicket,
   ): void {
     this.dialog
       .open(RecurrenceScopeDialogComponent, {
@@ -409,7 +392,7 @@ export class ExpensesPage implements OnInit {
       .afterClosed()
       .subscribe((scope: ScopeChoice | undefined) => {
         if (scope === undefined) {
-          this.restoreDialogFocus(focusContext, false);
+          this.rowFocus.afterDialog(focusContext, false);
         } else if (action === 'delete') {
           void this.deleteExpense(expense, focusContext, scope);
         } else {
@@ -421,7 +404,7 @@ export class ExpensesPage implements OnInit {
   private openReprice(
     expense: ExpenseProjection,
     scope: ScopeChoice,
-    focusContext: RowFocusContext,
+    focusContext: RowFocusTicket,
   ): void {
     this.dialog
       .open(RepriceProvisionedDialogComponent, {
@@ -435,80 +418,21 @@ export class ExpensesPage implements OnInit {
         ariaDescribedBy: 'reprice-provisioned-description',
       })
       .afterClosed()
-      .subscribe((result) => this.restoreDialogFocus(focusContext, result !== undefined));
+      .subscribe((result) => this.rowFocus.afterDialog(focusContext, result !== undefined));
   }
 
   private async deleteExpense(
     expense: ExpenseProjection,
-    focusContext: RowFocusContext,
+    focusContext: RowFocusTicket,
     scope: ScopeChoice,
   ): Promise<void> {
     this.actionError.set('');
     try {
       await this.store.deleteOne(expense.id, scope);
-      this.changeDetector.detectChanges();
-      if (this.isCurrentCycle(focusContext)) {
-        this.focusAdjacentRow(focusContext.rowIndex);
-      }
+      this.rowFocus.afterDelete(focusContext, true);
     } catch (error: unknown) {
       this.actionError.set(mapApiError(error).message);
-      this.changeDetector.detectChanges();
-      if (this.isCurrentCycle(focusContext)) {
-        this.focusRestoredRow(focusContext);
-      }
+      this.rowFocus.afterDelete(focusContext, false);
     }
-  }
-
-  private captureRowFocus(cycleId: string, expenseId: string): RowFocusContext {
-    const rowIndex = this.rowActionTriggers().findIndex(
-      (trigger) => trigger.closest<HTMLTableRowElement>('tr')?.dataset['expenseId'] === expenseId,
-    );
-    return {
-      cycleId,
-      expenseId,
-      rowIndex: Math.max(rowIndex, 0),
-    };
-  }
-
-  private isCurrentCycle(context: RowFocusContext): boolean {
-    return this.cycles.current()?.id === context.cycleId;
-  }
-
-  private focusRestoredRow(context: RowFocusContext): void {
-    const trigger = this.rowActionTriggers().find(
-      (candidate) =>
-        candidate.closest<HTMLTableRowElement>('tr')?.dataset['expenseId'] === context.expenseId,
-    );
-    (trigger ?? this.ledgerFallback())?.focus();
-  }
-
-  private restoreDialogFocus(context: RowFocusContext, successfulWrite: boolean): void {
-    this.changeDetector.detectChanges();
-    if (!this.isCurrentCycle(context)) {
-      return;
-    }
-    if (successfulWrite) {
-      this.ledgerFallback()?.focus();
-    } else {
-      this.focusRestoredRow(context);
-    }
-  }
-
-  private focusAdjacentRow(previousIndex: number): void {
-    const triggers = this.rowActionTriggers();
-    const trigger = triggers[Math.min(previousIndex, triggers.length - 1)];
-    (trigger ?? this.ledgerFallback())?.focus();
-  }
-
-  private rowActionTriggers(): HTMLButtonElement[] {
-    return [
-      ...this.host.nativeElement.querySelectorAll<HTMLButtonElement>(
-        '.expense-ledger__menu-trigger',
-      ),
-    ];
-  }
-
-  private ledgerFallback(): HTMLElement | null {
-    return this.host.nativeElement.querySelector<HTMLElement>('.expense-ledger');
   }
 }

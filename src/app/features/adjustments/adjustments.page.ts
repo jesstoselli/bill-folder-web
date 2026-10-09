@@ -1,12 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  OnInit,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { mapApiError } from '../../core/http/api-error';
@@ -16,6 +8,7 @@ import { formatBrl } from '../../shared/formatters/money';
 import { AdjustmentFormComponent } from './components/adjustment-form/adjustment-form.component';
 import { CycleAdjustmentResponse, CycleAdjustmentType } from './adjustments.models';
 import { AdjustmentsStore } from './adjustments.store';
+import { RowFocus, RowFocusTicket } from '../../shared/focus/row-focus';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -23,12 +16,6 @@ import { InlineAlertComponent } from '../../shared/components/inline-alert/inlin
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.component';
 
-interface RowFocus {
-  readonly cycleId: string;
-  readonly adjustmentId: string;
-  readonly rowIndex: number;
-  readonly action: 'edit' | 'delete';
-}
 type AdjustmentsViewState =
   | { readonly kind: 'loading' }
   | { readonly kind: 'error'; readonly source: 'cycles' | 'adjustments'; readonly message: string }
@@ -53,8 +40,11 @@ export class AdjustmentsPage implements OnInit {
   protected readonly store = inject(AdjustmentsStore);
   protected readonly cycles = inject(CycleStore);
   private readonly dialog = inject(MatDialog);
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly rowFocus = new RowFocus({
+    rowAttribute: 'data-adjustment-id',
+    scope: () => this.cycles.current()?.id ?? null,
+    savedTarget: ['.adjustments-sheet', '.adjustments-page__create'],
+  });
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
   protected readonly formatBrl = formatBrl;
@@ -96,7 +86,7 @@ export class AdjustmentsPage implements OnInit {
     });
   }
   protected openEdit(adjustment: CycleAdjustmentResponse): void {
-    const focus = this.captureFocus(adjustment.id, 'edit');
+    const focus = this.rowFocus.capture(adjustment.id, 'edit');
     if (!focus) return;
     this.actionError.set('');
     this.dialog
@@ -113,10 +103,10 @@ export class AdjustmentsPage implements OnInit {
         panelClass: 'bf-adjustment-side-sheet',
       })
       .afterClosed()
-      .subscribe((result) => this.restoreDialogFocus(focus, result !== undefined));
+      .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }
   protected deleteAdjustment(adjustment: CycleAdjustmentResponse): void {
-    const focus = this.captureFocus(adjustment.id, 'delete');
+    const focus = this.rowFocus.capture(adjustment.id, 'delete');
     if (focus) void this.performDelete(adjustment.id, focus);
   }
   protected selectPreviousCycle(): void {
@@ -155,57 +145,15 @@ export class AdjustmentsPage implements OnInit {
       : 'Não foi possível carregar os ajustes';
   }
 
-  private async performDelete(id: string, focus: RowFocus): Promise<void> {
+  private async performDelete(id: string, focus: RowFocusTicket): Promise<void> {
     this.actionError.set('');
     try {
       await this.store.delete(id);
-      this.changeDetector.detectChanges();
-      if (this.isCurrent(focus)) this.focusAdjacent(focus.rowIndex);
+      this.rowFocus.afterDelete(focus, true);
     } catch (error: unknown) {
-      if (!this.isCurrent(focus)) return;
+      if (!this.rowFocus.isCurrent(focus)) return;
       this.actionError.set(mapApiError(error).message);
-      this.changeDetector.detectChanges();
-      this.focusAction(focus);
+      this.rowFocus.afterDelete(focus, false);
     }
-  }
-  private captureFocus(adjustmentId: string, action: RowFocus['action']): RowFocus | null {
-    const cycleId = this.cycles.current()?.id;
-    if (!cycleId) return null;
-    const rowIndex = this.rows().findIndex((row) => row.dataset['adjustmentId'] === adjustmentId);
-    return { cycleId, adjustmentId, rowIndex: Math.max(rowIndex, 0), action };
-  }
-  private restoreDialogFocus(focus: RowFocus, successful: boolean): void {
-    this.changeDetector.detectChanges();
-    if (!this.isCurrent(focus)) return;
-    successful ? this.sheet()?.focus() : this.focusAction(focus);
-  }
-  private isCurrent(focus: RowFocus): boolean {
-    return this.cycles.current()?.id === focus.cycleId;
-  }
-  private focusAction(focus: RowFocus): void {
-    (
-      this.host.nativeElement.querySelector<HTMLButtonElement>(
-        `[data-adjustment-id="${focus.adjustmentId}"] [data-action="${focus.action}"]`,
-      ) ?? this.sheet()
-    )?.focus();
-  }
-  private focusAdjacent(index: number): void {
-    const row = this.rows()[Math.min(index, this.rows().length - 1)];
-    (
-      row?.querySelector<HTMLButtonElement>('[data-row-action]') ??
-      this.sheet() ??
-      this.createFallback()
-    )?.focus();
-  }
-  private rows(): HTMLTableRowElement[] {
-    return [
-      ...this.host.nativeElement.querySelectorAll<HTMLTableRowElement>('[data-adjustment-id]'),
-    ];
-  }
-  private sheet(): HTMLElement | null {
-    return this.host.nativeElement.querySelector<HTMLElement>('.adjustments-sheet');
-  }
-  private createFallback(): HTMLButtonElement | null {
-    return this.host.nativeElement.querySelector<HTMLButtonElement>('.adjustments-page__create');
   }
 }

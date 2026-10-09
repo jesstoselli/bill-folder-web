@@ -171,6 +171,7 @@
       <button
         type="button"
         class="expense-ledger__menu-trigger"
+        data-row-action
         [matMenuTriggerFor]="rowMenu"
         [attr.aria-label]="'Ações para ' + expense.label"
         (menuClosed)="handleMenuClosed(expense.id)"

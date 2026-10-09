@@ -1,12 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  OnInit,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { CycleStore } from '../../core/cycles/cycle.store';
@@ -17,6 +9,7 @@ import { formatBrl } from '../../shared/formatters/money';
 import { DailyExpenseFormComponent } from './components/daily-expense-form/daily-expense-form.component';
 import { DailyExpenseResponse } from './daily-expenses.models';
 import { DailyExpensesStore } from './daily-expenses.store';
+import { RowFocus, RowFocusTicket } from '../../shared/focus/row-focus';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -25,14 +18,16 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.component';
 
 type PendingAction =
-  | { readonly kind: 'edit'; readonly expense: DailyExpenseResponse; readonly focus: RowFocus }
-  | { readonly kind: 'delete'; readonly expense: DailyExpenseResponse; readonly focus: RowFocus };
-
-interface RowFocus {
-  readonly cycleId: string;
-  readonly expenseId: string;
-  readonly rowIndex: number;
-}
+  | {
+      readonly kind: 'edit';
+      readonly expense: DailyExpenseResponse;
+      readonly focus: RowFocusTicket;
+    }
+  | {
+      readonly kind: 'delete';
+      readonly expense: DailyExpenseResponse;
+      readonly focus: RowFocusTicket;
+    };
 
 type DailyExpensesViewState =
   | { readonly kind: 'loading' }
@@ -59,8 +54,11 @@ export class DailyExpensesPage implements OnInit {
   protected readonly store = inject(DailyExpensesStore);
   protected readonly cycles = inject(CycleStore);
   private readonly dialog = inject(MatDialog);
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly rowFocus = new RowFocus({
+    rowAttribute: 'data-daily-expense-id',
+    scope: () => this.cycles.current()?.id ?? null,
+    savedTarget: ['.daily-expense-ledger'],
+  });
   private pendingAction: PendingAction | null = null;
 
   protected readonly pageState = computed<DailyExpensesViewState>(() => {
@@ -130,14 +128,14 @@ export class DailyExpensesPage implements OnInit {
   }
 
   protected queueEdit(expense: DailyExpenseResponse): void {
-    const focus = this.captureRowFocus(expense.id);
+    const focus = this.rowFocus.capture(expense.id);
     if (focus) {
       this.pendingAction = { kind: 'edit', expense, focus };
     }
   }
 
   protected queueDelete(expense: DailyExpenseResponse): void {
-    const focus = this.captureRowFocus(expense.id);
+    const focus = this.rowFocus.capture(expense.id);
     if (focus) {
       this.pendingAction = { kind: 'delete', expense, focus };
     }
@@ -179,7 +177,7 @@ export class DailyExpensesPage implements OnInit {
     return count === 1 ? '1 lançamento' : `${count} lançamentos`;
   }
 
-  private openEdit(expense: DailyExpenseResponse, focus: RowFocus): void {
+  private openEdit(expense: DailyExpenseResponse, focus: RowFocusTicket): void {
     this.actionError.set('');
     this.dialog
       .open(DailyExpenseFormComponent, {
@@ -195,76 +193,17 @@ export class DailyExpensesPage implements OnInit {
         panelClass: 'bf-daily-expense-side-sheet',
       })
       .afterClosed()
-      .subscribe((result) => this.restoreDialogFocus(focus, result !== undefined));
+      .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }
 
-  private async deleteExpense(id: string, focus: RowFocus): Promise<void> {
+  private async deleteExpense(id: string, focus: RowFocusTicket): Promise<void> {
     this.actionError.set('');
     try {
       await this.store.delete(id);
-      this.changeDetector.detectChanges();
-      if (this.isCurrentCycle(focus)) {
-        this.focusAdjacentRow(focus.rowIndex);
-      }
+      this.rowFocus.afterDelete(focus, true);
     } catch (error: unknown) {
       this.actionError.set(mapApiError(error).message);
-      this.changeDetector.detectChanges();
-      if (this.isCurrentCycle(focus)) {
-        this.focusRestoredRow(focus);
-      }
+      this.rowFocus.afterDelete(focus, false);
     }
-  }
-
-  private captureRowFocus(expenseId: string): RowFocus | null {
-    const cycle = this.cycles.current();
-    if (cycle === null) {
-      return null;
-    }
-    const rowIndex = this.rowActionTriggers().findIndex(
-      (trigger) =>
-        trigger.closest<HTMLTableRowElement>('tr')?.dataset['dailyExpenseId'] === expenseId,
-    );
-    return { cycleId: cycle.id, expenseId, rowIndex: Math.max(rowIndex, 0) };
-  }
-
-  private restoreDialogFocus(focus: RowFocus, successfulWrite: boolean): void {
-    this.changeDetector.detectChanges();
-    if (!this.isCurrentCycle(focus)) {
-      return;
-    }
-    if (successfulWrite) {
-      this.ledgerFallback()?.focus();
-    } else {
-      this.focusRestoredRow(focus);
-    }
-  }
-
-  private isCurrentCycle(focus: RowFocus): boolean {
-    return this.cycles.current()?.id === focus.cycleId;
-  }
-
-  private focusRestoredRow(focus: RowFocus): void {
-    const trigger = this.rowActionTriggers().find(
-      (candidate) =>
-        candidate.closest<HTMLTableRowElement>('tr')?.dataset['dailyExpenseId'] === focus.expenseId,
-    );
-    (trigger ?? this.ledgerFallback())?.focus();
-  }
-
-  private focusAdjacentRow(previousIndex: number): void {
-    const triggers = this.rowActionTriggers();
-    (triggers[Math.min(previousIndex, triggers.length - 1)] ?? this.ledgerFallback())?.focus();
-  }
-
-  private rowActionTriggers(): HTMLButtonElement[] {
-    return [
-      ...this.host.nativeElement.querySelectorAll<HTMLButtonElement>(
-        '.daily-expense-ledger__menu-trigger',
-      ),
-    ];
-  }
-
-  private ledgerFallback(): HTMLElement | null {
-    return this.host.nativeElement.querySelector<HTMLElement>('.daily-expense-ledger');
   }
 }
