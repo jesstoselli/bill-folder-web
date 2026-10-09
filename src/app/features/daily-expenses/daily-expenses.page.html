@@ -1,45 +1,33 @@
 <section class="daily-expenses-page">
-  <header class="daily-expenses-page__header">
-    <div>
-      <h1 class="bf-heading-page">Despesas avulsas</h1>
-      <p>Saídas do dia em ordem cronológica, sem misturar contas futuras.</p>
-    </div>
-    <div class="daily-expenses-page__actions">
-      <button type="button" appButton (click)="refresh()">Atualizar</button>
-      <button
-        type="button"
-        appButton
-        variant="primary"
-        [disabled]="cycles.current() === null"
-        (click)="openCreate()"
-      >
-        Nova despesa avulsa
-      </button>
-    </div>
-  </header>
+  <app-page-header
+    heading="Despesas avulsas"
+    subtitle="Saídas do dia em ordem cronológica, sem misturar contas futuras."
+  >
+    <button type="button" appButton (click)="refresh()">Atualizar</button>
+    <button
+      type="button"
+      appButton
+      variant="primary"
+      [disabled]="cycles.current() === null"
+      (click)="openCreate()"
+    >
+      Nova despesa avulsa
+    </button>
+  </app-page-header>
 
   @if (cycles.current(); as cycle) {
-    <div class="daily-expenses-page__cycle-row">
-      <app-cycle-navigator
-        [label]="cycle.label"
-        [startDate]="cycle.startDate"
-        [endDate]="cycle.endDate"
-        [previousEnabled]="cycles.previous() !== null && !refreshing()"
-        [nextEnabled]="cycles.next() !== null && !refreshing()"
-        (previous)="selectPreviousCycle()"
-        (next)="selectNextCycle()"
-      />
-      @if (refreshing()) {
-        <span class="daily-expenses-page__updating" role="status"
-          >Atualizando despesas avulsas…</span
-        >
-      }
-    </div>
+    <app-cycle-bar
+      [cycle]="cycle"
+      [hasPrevious]="cycles.previous() !== null"
+      [hasNext]="cycles.next() !== null"
+      [busy]="refreshing()"
+      busyLabel="Atualizando despesas avulsas…"
+      (previous)="selectPreviousCycle()"
+      (next)="selectNextCycle()"
+    />
   }
 
-  @if (actionError()) {
-    <p class="daily-expenses-page__action-error" role="alert">{{ actionError() }}</p>
-  }
+  <app-inline-alert [message]="actionError()" />
 
   @switch (pageState().kind) {
     @case ('loading') {

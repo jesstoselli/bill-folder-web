@@ -116,7 +116,7 @@ describe('IncomePage', () => {
     await Promise.resolve();
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('.income-page__error')).toBeNull();
+      expect(fixture.nativeElement.querySelector('app-inline-alert [role="alert"]')).toBeNull();
       expect(fixture.nativeElement.querySelector('[data-income-id="november"]')).not.toBeNull();
       expect(fixture.nativeElement.querySelector('[data-income-id="october"]')).toBeNull();
       expect(document.activeElement).toBe(refresh);

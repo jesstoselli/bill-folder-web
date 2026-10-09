@@ -3,40 +3,11 @@
   gap: 1.25rem;
 }
 
-.daily-expenses-page__header,
-.daily-expenses-page__cycle-row,
 .daily-ledger-summary {
   align-items: end;
   display: flex;
   gap: 1rem;
   justify-content: space-between;
-}
-
-.daily-expenses-page__header {
-  h1 {
-    margin: 0;
-  }
-
-  p {
-    color: var(--bf-muted);
-    margin: 0.45rem 0 0;
-  }
-}
-
-.daily-expenses-page__actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.daily-expenses-page__updating {
-  color: var(--bf-muted);
-}
-
-.daily-expenses-page__action-error {
-  border: 1px solid var(--bf-danger);
-  color: var(--bf-danger);
-  margin: 0;
-  padding: 0.75rem 1rem;
 }
 
 .daily-ledger-summary {
@@ -131,16 +102,6 @@
 }
 
 @media (max-width: 720px) {
-  .daily-expenses-page__header,
-  .daily-expenses-page__cycle-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .daily-expenses-page__actions {
-    justify-content: space-between;
-  }
-
   .daily-expense-ledger {
     overflow: visible;
 

@@ -1,7 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CycleStore } from '../../core/cycles/cycle.store';
-import { CycleNavigatorComponent } from '../../shared/components/cycle-navigator/cycle-navigator.component';
 import { PageStateComponent } from '../../shared/components/page-state/page-state.component';
 import { BalanceHeroComponent } from './components/balance-hero/balance-hero.component';
 import { CategoryBreakdownComponent } from './components/category-breakdown/category-breakdown.component';
@@ -12,13 +11,16 @@ import { HomeStore } from './home.store';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.component';
 
 @Component({
   selector: 'app-home-page',
   imports: [
+    PageHeaderComponent,
+    CycleBarComponent,
     ButtonComponent,
     RouterLink,
-    CycleNavigatorComponent,
     PageStateComponent,
     BalanceHeroComponent,
     CategoryBreakdownComponent,

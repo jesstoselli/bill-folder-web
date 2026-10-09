@@ -102,7 +102,7 @@ describe('AdjustmentsPage', () => {
     await Promise.resolve();
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('.adjustments-page__error')).toBeNull();
+      expect(fixture.nativeElement.querySelector('app-inline-alert [role="alert"]')).toBeNull();
       expect(fixture.nativeElement.querySelector('[data-adjustment-id="november"]')).not.toBeNull();
       expect(fixture.nativeElement.querySelector('[data-adjustment-id="october"]')).toBeNull();
       expect(document.activeElement).toBe(refresh);

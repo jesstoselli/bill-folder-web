@@ -111,7 +111,7 @@ describe('SavingsPage', () => {
     await expect(secondPending.promise).rejects.toMatchObject({ status: 409 });
     await Promise.resolve();
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.savings-page__error')).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-inline-alert [role="alert"]')).toBeNull();
     expect(document.activeElement).toBe(refresh);
   });
 });

@@ -1,23 +1,17 @@
 <section class="savings-page">
-  <header class="savings-page__header">
-    <div>
-      <h1 class="bf-heading-page">Poupança</h1>
-      <p>Acompanhe a reserva e os movimentos de cada ciclo.</p>
-    </div>
-    <div class="savings-page__actions">
-      <button type="button" appButton (click)="refresh()">Atualizar</button>
-      <button
-        type="button"
-        appButton
-        variant="primary"
-        data-page-action="create"
-        [disabled]="!store.selectedAccount() || !cycles.current()"
-        (click)="openCreate()"
-      >
-        Novo movimento
-      </button>
-    </div>
-  </header>
+  <app-page-header heading="Poupança" subtitle="Acompanhe a reserva e os movimentos de cada ciclo.">
+    <button type="button" appButton (click)="refresh()">Atualizar</button>
+    <button
+      type="button"
+      appButton
+      variant="primary"
+      data-page-action="create"
+      [disabled]="!store.selectedAccount() || !cycles.current()"
+      (click)="openCreate()"
+    >
+      Novo movimento
+    </button>
+  </app-page-header>
 
   @if (store.accounts().length) {
     <app-savings-selector
@@ -27,9 +21,7 @@
     />
   }
 
-  @if (actionError()) {
-    <p class="savings-page__error" role="alert">{{ actionError() }}</p>
-  }
+  <app-inline-alert [message]="actionError()" />
 
   @switch (pageState().kind) {
     @case ('loading') {
@@ -72,20 +64,15 @@
             [transactionCount]="store.transactions().length"
           />
 
-          <div class="savings-page__cycle-row">
-            <app-cycle-navigator
-              [label]="cycle.label"
-              [startDate]="cycle.startDate"
-              [endDate]="cycle.endDate"
-              [previousEnabled]="cycles.previous() !== null && !refreshing()"
-              [nextEnabled]="cycles.next() !== null && !refreshing()"
-              (previous)="selectPreviousCycle()"
-              (next)="selectNextCycle()"
-            />
-            @if (refreshing()) {
-              <span role="status">Atualizando reserva…</span>
-            }
-          </div>
+          <app-cycle-bar
+            [cycle]="cycle"
+            [hasPrevious]="cycles.previous() !== null"
+            [hasNext]="cycles.next() !== null"
+            [busy]="refreshing()"
+            busyLabel="Atualizando reserva…"
+            (previous)="selectPreviousCycle()"
+            (next)="selectNextCycle()"
+          />
 
           @if (store.transactions().length) {
             <div class="savings-ledger" tabindex="-1" aria-label="Movimentos da poupança no ciclo">

@@ -1,19 +1,9 @@
 <section class="home-page">
-  <header class="home-page__header">
-    <div>
-      <h1 class="bf-heading-page">Resumo do ciclo</h1>
-      <p>Acompanhe o que saiu e o que ainda vence.</p>
-    </div>
-    <button
-      class="home-page__refresh"
-      appButton
-      type="button"
-      [attr.aria-busy]="refreshing()"
-      (click)="refresh()"
-    >
+  <app-page-header heading="Resumo do ciclo" subtitle="Acompanhe o que saiu e o que ainda vence.">
+    <button appButton type="button" [attr.aria-busy]="refreshing()" (click)="refresh()">
       Atualizar
     </button>
-  </header>
+  </app-page-header>
 
   @switch (store.state().kind) {
     @case ('loading') {
@@ -30,20 +20,15 @@
     }
     @case ('content') {
       @if (content(); as data) {
-        <div class="home-page__cycle-row">
-          <app-cycle-navigator
-            [label]="data.cycle.label"
-            [startDate]="data.cycle.startDate"
-            [endDate]="data.cycle.endDate"
-            [previousEnabled]="cycles.previous() !== null && !refreshing()"
-            [nextEnabled]="cycles.next() !== null && !refreshing()"
-            (previous)="selectPreviousCycle()"
-            (next)="selectNextCycle()"
-          />
-          @if (refreshing()) {
-            <span class="home-page__updating" role="status">Atualizando dados…</span>
-          }
-        </div>
+        <app-cycle-bar
+          [cycle]="data.cycle"
+          [hasPrevious]="cycles.previous() !== null"
+          [hasNext]="cycles.next() !== null"
+          [busy]="refreshing()"
+          busyLabel="Atualizando dados…"
+          (previous)="selectPreviousCycle()"
+          (next)="selectNextCycle()"
+        />
         <app-refresh-status [state]="store.state()" (retry)="refresh()" />
 
         <div class="home-page__layout">

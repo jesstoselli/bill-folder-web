@@ -26,6 +26,8 @@ import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refr
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 import { LoadState } from '../../shared/states/load-state';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { InlineAlertComponent } from '../../shared/components/inline-alert/inline-alert.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 
 interface EntryFocusContext {
   readonly cardId: string;
@@ -49,6 +51,8 @@ type CardsViewState =
 @Component({
   selector: 'app-cards-page',
   imports: [
+    PageHeaderComponent,
+    InlineAlertComponent,
     ButtonComponent,
     MatDialogModule,
     PageStateComponent,

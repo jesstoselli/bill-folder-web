@@ -1,23 +1,20 @@
 <section class="cards-page">
-  <header class="cards-page__header">
-    <div>
-      <h1 class="bf-heading-page">Cartões e faturas</h1>
-      <p>Compras, assinaturas e pagamentos organizados pela fatura real de cada cartão.</p>
-    </div>
-    <div class="cards-page__header-actions">
-      <button type="button" appButton (click)="refresh()">Atualizar</button>
-      <button
-        type="button"
-        appButton
-        variant="primary"
-        data-page-action="create"
-        [disabled]="store.selectedCard() === null"
-        (click)="openCreate()"
-      >
-        Nova compra
-      </button>
-    </div>
-  </header>
+  <app-page-header
+    heading="Cartões e faturas"
+    subtitle="Compras, assinaturas e pagamentos organizados pela fatura real de cada cartão."
+  >
+    <button type="button" appButton (click)="refresh()">Atualizar</button>
+    <button
+      type="button"
+      appButton
+      variant="primary"
+      data-page-action="create"
+      [disabled]="store.selectedCard() === null"
+      (click)="openCreate()"
+    >
+      Nova compra
+    </button>
+  </app-page-header>
 
   @if (store.cardsState().kind === 'content' && store.cards().length) {
     <app-card-selector
@@ -27,9 +24,7 @@
     />
   }
 
-  @if (actionError()) {
-    <p class="cards-page__action-error" role="alert">{{ actionError() }}</p>
-  }
+  <app-inline-alert [message]="actionError()" />
 
   @if (store.selectedStatementId()) {
     <nav class="statement-navigation" aria-label="Navegação entre faturas">

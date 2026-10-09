@@ -11,7 +11,6 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { mapApiError } from '../../core/http/api-error';
-import { CycleNavigatorComponent } from '../../shared/components/cycle-navigator/cycle-navigator.component';
 import { PageStateComponent } from '../../shared/components/page-state/page-state.component';
 import { formatCivilDate } from '../../shared/formatters/civil-date';
 import { formatBrl } from '../../shared/formatters/money';
@@ -21,6 +20,9 @@ import { DailyExpensesStore } from './daily-expenses.store';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { InlineAlertComponent } from '../../shared/components/inline-alert/inline-alert.component';
+import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.component';
 
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: DailyExpenseResponse; readonly focus: RowFocus }
@@ -41,10 +43,12 @@ type DailyExpensesViewState =
 @Component({
   selector: 'app-daily-expenses-page',
   imports: [
+    PageHeaderComponent,
+    CycleBarComponent,
+    InlineAlertComponent,
     ButtonComponent,
     MatDialogModule,
     MatMenuModule,
-    CycleNavigatorComponent,
     PageStateComponent,
     RefreshStatusComponent,
   ],
