@@ -15,12 +15,19 @@ test('production build contains an installable Angular PWA shell', async () => {
 
   const index = await read('index.html');
   assert.match(index, /rel="manifest" href="manifest\.webmanifest"/);
+  assert.match(index, /rel="icon" type="image\/svg\+xml" href="\/brand\/billfolder-symbol\.svg"/);
+  assert.match(index, /rel="apple-touch-icon" href="\/icons\/icon-192x192\.png"/);
 
   const manifest = JSON.parse(await read('manifest.webmanifest'));
   assert.equal(manifest.name, 'BillFolder');
   assert.equal(manifest.short_name, 'BillFolder');
   assert.equal(manifest.display, 'standalone');
   assert.ok(manifest.icons.length >= 2);
+  await Promise.all([
+    access(new URL('brand/billfolder-symbol.svg', output)),
+    access(new URL('favicon.ico', output)),
+    ...manifest.icons.map((icon) => access(new URL(icon.src, output))),
+  ]);
 });
 
 test('built service worker has no API data cache', async () => {

@@ -66,6 +66,23 @@ describe('SidebarComponent', () => {
     expect(symbol?.getAttribute('aria-hidden')).toBe('true');
   });
 
+  it('uses the same Material Filled icons as the Android drawer', () => {
+    const fixture = TestBed.createComponent(SidebarComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('a'));
+
+    expect(links.map((link) => link.querySelector('app-icon')?.getAttribute('data-icon'))).toEqual([
+      'home',
+      'receiptLong',
+      'shoppingBag',
+      'attachMoney',
+      'creditCard',
+      'savings',
+      'tune',
+    ]);
+  });
+
   it('emits logout from a keyboard-operable button', () => {
     const fixture = TestBed.createComponent(SidebarComponent);
     let requested = false;

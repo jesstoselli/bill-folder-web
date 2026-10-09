@@ -26,9 +26,7 @@
           matTooltipPosition="right"
           (click)="navigationRequested.emit()"
         >
-          <svg class="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path [attr.d]="destination.iconPath" />
-          </svg>
+          <app-icon [name]="destination.icon" />
           <span class="sidebar__label" [class.u-visually-hidden]="mode() === 'rail'">
             {{ destination.label }}
           </span>
