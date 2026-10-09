@@ -4,13 +4,12 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { firstValueFrom, forkJoin } from 'rxjs';
 import { mapApiError } from '../../../../core/http/api-error';
 import {
   CategoryDto,
   CheckingAccountResponse,
-  ReferenceDataApi,
 } from '../../../../core/reference/reference-data.api';
+import { ReferenceDataStore } from '../../../../core/reference/reference-data.store';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { DailyExpensesStore } from '../../daily-expenses.store';
 import {
@@ -20,10 +19,6 @@ import {
   toUpdateDailyExpenseRequest,
 } from './daily-expense-form.models';
 import { nonBlank, validCivilDate } from '../../../../shared/forms/validators';
-import {
-  compareCategories,
-  compareCheckingAccounts,
-} from '../../../../core/reference/reference-ordering';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
@@ -42,7 +37,7 @@ import { MoneyInputDirective } from '../../../../shared/forms/money-input.direct
 })
 export class DailyExpenseFormComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly references = inject(ReferenceDataApi);
+  private readonly references = inject(ReferenceDataStore);
   private readonly store = inject(DailyExpensesStore);
   private readonly dialogRef = inject(MatDialogRef<DailyExpenseFormComponent>);
   private readonly writeLock = new WriteDialogLock(this.dialogRef);
@@ -95,14 +90,12 @@ export class DailyExpenseFormComponent implements OnInit {
 
   private async loadReferences(): Promise<void> {
     try {
-      const references = await firstValueFrom(
-        forkJoin({
-          categories: this.references.categories(),
-          accounts: this.references.checkingAccounts(),
-        }),
-      );
-      this.categories.set([...references.categories].sort(compareCategories));
-      this.accounts.set([...references.accounts].sort(compareCheckingAccounts));
+      const [categories, accounts] = await Promise.all([
+        this.references.categories(),
+        this.references.checkingAccounts(),
+      ]);
+      this.categories.set(categories);
+      this.accounts.set(accounts);
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {

@@ -4,19 +4,15 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { firstValueFrom } from 'rxjs';
 import { mapApiError } from '../../../../core/http/api-error';
-import {
-  CheckingAccountResponse,
-  ReferenceDataApi,
-} from '../../../../core/reference/reference-data.api';
+import { CheckingAccountResponse } from '../../../../core/reference/reference-data.api';
+import { ReferenceDataStore } from '../../../../core/reference/reference-data.store';
 import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { formatBrl } from '../../../../shared/formatters/money';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpenseResponse } from '../../expenses.models';
 import { ExpensesStore } from '../../expenses.store';
 import { validCivilDate } from '../../../../shared/forms/validators';
-import { compareCheckingAccounts } from '../../../../core/reference/reference-ordering';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
@@ -48,7 +44,7 @@ export interface PayOccurrenceDialogData {
 })
 export class PayOccurrenceDialogComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly references = inject(ReferenceDataApi);
+  private readonly references = inject(ReferenceDataStore);
   private readonly store = inject(ExpensesStore);
   private readonly dialogRef = inject(MatDialogRef<PayOccurrenceDialogComponent>);
   private readonly writeLock = new WriteDialogLock(this.dialogRef);
@@ -96,8 +92,8 @@ export class PayOccurrenceDialogComponent implements OnInit {
 
   private async loadAccounts(): Promise<void> {
     try {
-      const accounts = await firstValueFrom(this.references.checkingAccounts());
-      this.accounts.set([...accounts].sort(compareCheckingAccounts));
+      const accounts = await this.references.checkingAccounts();
+      this.accounts.set(accounts);
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {

@@ -4,8 +4,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { firstValueFrom } from 'rxjs';
-import { CategoryDto, ReferenceDataApi } from '../../../../core/reference/reference-data.api';
+import { CategoryDto } from '../../../../core/reference/reference-data.api';
+import { ReferenceDataStore } from '../../../../core/reference/reference-data.store';
 import { mapApiError } from '../../../../core/http/api-error';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpensesStore } from '../../expenses.store';
@@ -16,7 +16,6 @@ import {
   toUpdateExpenseRequest,
 } from './expense-form.models';
 import { nonBlank, validCivilDate } from '../../../../shared/forms/validators';
-import { compareCategories } from '../../../../core/reference/reference-ordering';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
@@ -35,7 +34,7 @@ import { MoneyInputDirective } from '../../../../shared/forms/money-input.direct
 })
 export class ExpenseFormComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly references = inject(ReferenceDataApi);
+  private readonly references = inject(ReferenceDataStore);
   private readonly store = inject(ExpensesStore);
   private readonly dialogRef = inject(MatDialogRef<ExpenseFormComponent>);
   private readonly writeLock = new WriteDialogLock(this.dialogRef);
@@ -90,8 +89,8 @@ export class ExpenseFormComponent implements OnInit {
 
   private async loadCategories(): Promise<void> {
     try {
-      const categories = await firstValueFrom(this.references.categories());
-      this.categories.set([...categories].sort(compareCategories));
+      const categories = await this.references.categories();
+      this.categories.set(categories);
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {
