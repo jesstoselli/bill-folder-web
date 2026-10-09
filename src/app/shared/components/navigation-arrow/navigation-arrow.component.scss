@@ -1,0 +1,39 @@
+@use '../../../../styles/focus' as focus;
+
+:host {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: var(--bf-primary);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 2.5rem;
+  justify-content: center;
+  padding: 0;
+  width: 2.5rem;
+}
+
+:host(:hover:not(:disabled)) {
+  background: var(--bf-surface-high);
+}
+
+:host(:focus-visible) {
+  @include focus.ring(1px);
+}
+
+:host(:disabled) {
+  color: var(--bf-outline);
+  cursor: default;
+}
+
+svg {
+  fill: none;
+  height: 1.25rem;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 1.25rem;
+}

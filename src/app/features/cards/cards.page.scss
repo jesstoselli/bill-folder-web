@@ -1,31 +1,8 @@
 @use '../../../styles/breakpoints' as bp;
-@use '../../../styles/focus' as focus;
 
 .cards-page {
   display: grid;
   gap: 1.5rem;
-}
-
-.statement-navigation__arrow {
-  align-items: center;
-  background: transparent;
-  border: 1px solid var(--bf-outline);
-  border-radius: 50%;
-  color: var(--bf-text);
-  cursor: pointer;
-  display: inline-flex;
-  height: 2.4rem;
-  justify-content: center;
-  width: 2.4rem;
-
-  &:focus-visible {
-    @include focus.ring;
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.42;
-  }
 }
 
 .statement-navigation {

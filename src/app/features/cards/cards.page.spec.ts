@@ -102,6 +102,8 @@ describe('CardsPage', () => {
 
     expect(previous.disabled).toBe(true);
     expect(next.disabled).toBe(false);
+    expect(previous.querySelector('path')?.getAttribute('d')).toBe('m15 5-7 7 7 7');
+    expect(next.querySelector('path')?.getAttribute('d')).toBe('m9 5 7 7-7 7');
     next.click();
 
     expect(store.selectNextStatement).toHaveBeenCalledTimes(1);

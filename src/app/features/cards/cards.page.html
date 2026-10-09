@@ -30,23 +30,21 @@
     <nav class="statement-navigation" aria-label="Navegação entre faturas">
       <button
         type="button"
-        class="statement-navigation__arrow"
+        appNavigationArrow
+        direction="previous"
         aria-label="Fatura anterior"
         [disabled]="store.navigation().previousId === null || refreshing()"
         (click)="previousStatement()"
-      >
-        <span aria-hidden="true">←</span>
-      </button>
+      ></button>
       <strong>{{ statementMonth() }}</strong>
       <button
         type="button"
-        class="statement-navigation__arrow"
+        appNavigationArrow
+        direction="next"
         aria-label="Próxima fatura"
         [disabled]="store.navigation().nextId === null || refreshing()"
         (click)="nextStatement()"
-      >
-        <span aria-hidden="true">→</span>
-      </button>
+      ></button>
       @if (refreshing()) {
         <span role="status">Atualizando fatura…</span>
       }

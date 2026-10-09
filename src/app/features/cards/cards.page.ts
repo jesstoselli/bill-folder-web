@@ -28,6 +28,7 @@ import { LoadState } from '../../shared/states/load-state';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { InlineAlertComponent } from '../../shared/components/inline-alert/inline-alert.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { NavigationArrowComponent } from '../../shared/components/navigation-arrow/navigation-arrow.component';
 
 interface EntryFocusContext {
   readonly cardId: string;
@@ -60,6 +61,7 @@ type CardsViewState =
     StatementSummaryComponent,
     InstallmentTableComponent,
     RefreshStatusComponent,
+    NavigationArrowComponent,
   ],
   templateUrl: './cards.page.html',
   styleUrl: './cards.page.scss',

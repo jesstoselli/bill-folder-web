@@ -1,8 +1,10 @@
 import { Component, input, output } from '@angular/core';
 import { formatCivilDate } from '../../formatters/civil-date';
+import { NavigationArrowComponent } from '../navigation-arrow/navigation-arrow.component';
 
 @Component({
   selector: 'app-cycle-navigator',
+  imports: [NavigationArrowComponent],
   templateUrl: './cycle-navigator.component.html',
   styleUrl: './cycle-navigator.component.scss',
 })
