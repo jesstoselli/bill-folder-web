@@ -9,7 +9,8 @@
 //     <td class="expense-ledger__amount bf-ledger__amount">
 //
 // Modifiers: __group (section header row), __empty (placeholder row),
-// __amount (right-aligned numbers), __actions (row buttons).
+// __amount (right-aligned numbers), __actions (row buttons), and
+// --embedded for a ledger that sits inside a card that already frames it.
 
 $mobile: bp.$md;
 $divider: color-mix(in srgb, var(--bf-outline) 72%, transparent);
@@ -74,6 +75,12 @@ $divider: color-mix(in srgb, var(--bf-outline) 72%, transparent);
 
   .bf-ledger__empty td {
     color: var(--bf-muted);
+  }
+
+  &--embedded {
+    background: none;
+    border: 0;
+    border-radius: 0;
   }
 
   // Below the breakpoint each row becomes a card: text cells stack on the

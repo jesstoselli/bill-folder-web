@@ -4,27 +4,13 @@
   display: block;
 }
 
+// Base look, row cards and action spacing come from the global .bf-ledger.
 .installment-table {
-  overflow-x: auto;
-
-  table {
-    border-collapse: collapse;
-    min-width: 52rem;
-    width: 100%;
-  }
-
-  th {
-    color: var(--bf-muted);
-    font-size: var(--bf-text-sm);
-    font-weight: 400;
-    padding: 0.8rem 1rem;
-    text-align: left;
-  }
-
-  td {
-    border-top: 1px solid color-mix(in srgb, var(--bf-outline) 72%, transparent);
-    padding: 0.9rem 1rem;
-    vertical-align: middle;
+  // Desktop only: on phones the global ledger turns rows into cards.
+  @media (min-width: #{bp.$md + 1px}) {
+    table {
+      min-width: 52rem;
+    }
   }
 
   td:first-child {
@@ -33,12 +19,6 @@
       display: block;
     }
   }
-
-  // Nested so they outrank `th { text-align: left }` without !important.
-  .installment-table__amount,
-  .installment-table__actions {
-    text-align: right;
-  }
 }
 
 .installment-table__subscription {
@@ -46,75 +26,15 @@
   font-size: var(--bf-text-xs);
 }
 
-.installment-table__amount {
-  white-space: nowrap;
-}
-
-.installment-table__actions {
-  white-space: nowrap;
-
-  button + button {
-    margin-left: 0.35rem;
-  }
-}
-
 .installment-table__empty td {
-  color: var(--bf-muted);
   text-align: center;
 }
 
+// On phones the installment number sits beside the purchase name, above the
+// amount, instead of stacking with the text cells.
 @media (max-width: bp.$md) {
-  .installment-table {
-    overflow: visible;
-
-    table,
-    tbody,
-    tr,
-    td {
-      display: block;
-      min-width: 0;
-      width: 100%;
-    }
-
-    thead {
-      display: none;
-    }
-
-    tr {
-      border-top: 1px solid var(--bf-outline);
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      padding: 0.8rem 1rem;
-    }
-
-    td {
-      border: 0;
-      padding: 0.15rem 0;
-    }
-
-    td[data-label='Compra'],
-    td[data-label='Categoria'],
-    td[data-label='Data da compra'] {
-      grid-column: 1;
-    }
-
-    td[data-label='Parcela'],
-    .installment-table__amount {
-      grid-column: 2;
-    }
-
-    td[data-label='Parcela'] {
-      grid-row: 1;
-      text-align: right;
-    }
-
-    .installment-table__amount {
-      grid-row: 2;
-    }
-
-    .installment-table__actions {
-      grid-column: 1 / -1;
-      text-align: right;
-    }
+  .installment-table td[data-label='Parcela'] {
+    grid-column: 2;
+    justify-self: end;
   }
 }

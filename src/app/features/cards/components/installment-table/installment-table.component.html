@@ -1,4 +1,4 @@
-<div class="installment-table">
+<div class="installment-table bf-ledger bf-ledger--embedded">
   <table>
     <caption class="u-visually-hidden">
       Parcelas lançadas nesta fatura
@@ -9,8 +9,8 @@
         <th scope="col">Parcela</th>
         <th scope="col">Categoria</th>
         <th scope="col">Data da compra</th>
-        <th scope="col" class="installment-table__amount">Valor</th>
-        <th scope="col" class="installment-table__actions">Ações</th>
+        <th scope="col" class="installment-table__amount bf-ledger__amount">Valor</th>
+        <th scope="col" class="installment-table__actions bf-ledger__actions">Ações</th>
       </tr>
     </thead>
     <tbody>
@@ -32,10 +32,10 @@
                 formatCivilDate(installment.purchaseDate)
               }}</time>
             </td>
-            <td data-label="Valor" class="installment-table__amount bf-tabular">
-              {{ formatBrl(installment.amount) }}
+            <td data-label="Valor" class="installment-table__amount bf-ledger__amount">
+              <app-money [value]="installment.amount" />
             </td>
-            <td class="installment-table__actions">
+            <td class="installment-table__actions bf-ledger__actions">
               @if (isSubscription(entry)) {
                 <button
                   appButton
@@ -84,7 +84,7 @@
           </tr>
         }
       } @empty {
-        <tr class="installment-table__empty">
+        <tr class="installment-table__empty bf-ledger__empty">
           <td colspan="6">Nenhuma parcela nesta fatura.</td>
         </tr>
       }
