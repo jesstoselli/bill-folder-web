@@ -1,6 +1,7 @@
 @use './styles/material-theme' as material-theme;
 @use './styles/tokens';
 @use './styles/typography' as typography;
+@use './styles/ledger';
 
 html {
   height: 100%;

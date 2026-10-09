@@ -1,32 +1,14 @@
 .savings-page {
   display: grid;
-  gap: 1.25rem;
-  max-width: 82rem;
+  gap: 1.5rem;
 }
 
 .savings-ledger {
-  background: var(--bf-surface);
-  border: 1px solid var(--bf-outline);
-  border-radius: 0.65rem;
-  overflow-x: auto;
-
-  table {
-    border-collapse: collapse;
-    min-width: 52rem;
-    width: 100%;
-  }
-
-  th {
-    color: var(--bf-muted);
-    font-size: 0.82rem;
-    font-weight: 400;
-    padding: 0.58rem 0.8rem;
-    text-align: left;
-  }
-
-  td {
-    border-top: 1px solid var(--bf-outline);
-    padding: 0.62rem 0.8rem;
+  // Desktop only: on phones the global ledger turns rows into cards.
+  @media (min-width: 721px) {
+    table {
+      min-width: 52rem;
+    }
   }
 
   td:first-child {
@@ -54,16 +36,8 @@
 
 .savings-ledger__amount {
   color: var(--bf-primary);
-  text-align: right !important;
-  white-space: nowrap;
 }
 
 .savings-ledger__amount--negative {
   color: var(--bf-danger);
-}
-
-.savings-ledger__actions {
-  display: flex;
-  gap: 0.35rem;
-  justify-content: flex-end;
 }

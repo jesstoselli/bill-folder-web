@@ -1,0 +1,137 @@
+// Shared look for the data tables ("ledgers"), emitted once globally. Pages
+// add these classes next to their own BEM block, which stays as the hook for
+// page-specific styles, focus handling and tests:
+//
+//   <div class="expense-ledger bf-ledger">
+//     <tr class="expense-ledger__group bf-ledger__group">
+//     <td class="expense-ledger__amount bf-ledger__amount">
+//
+// Modifiers: __group (section header row), __empty (placeholder row),
+// __amount (right-aligned numbers), __actions (row buttons).
+
+$mobile: 720px;
+$divider: color-mix(in srgb, var(--bf-outline) 72%, transparent);
+
+.bf-ledger {
+  background: var(--bf-surface);
+  border: 1px solid var(--bf-outline);
+  border-radius: var(--bf-radius-card);
+  overflow-x: auto;
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  thead th {
+    color: var(--bf-muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+    padding: 0.85rem 1rem;
+    text-align: left;
+  }
+
+  tbody tr:not(.bf-ledger__group) td {
+    border-top: 1px solid $divider;
+    padding: 0.9rem 1rem;
+    vertical-align: middle;
+  }
+
+  thead th.bf-ledger__amount,
+  thead th.bf-ledger__actions,
+  .bf-ledger__amount,
+  .bf-ledger__actions {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  // Spacing via margin: `display: flex` on the cell itself would stop it
+  // being a table cell and break the row divider.
+  .bf-ledger__actions > * + * {
+    margin-left: 0.35rem;
+  }
+
+  .bf-ledger__group th {
+    background: var(--bf-surface-high);
+    font-size: 1.2rem;
+    font-weight: 500;
+    padding: 0.8rem 1rem;
+    text-align: left;
+
+    span:last-child {
+      color: var(--bf-muted);
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+      margin-left: 0.5rem;
+    }
+  }
+
+  tbody + tbody .bf-ledger__group th {
+    border-top: 1px solid var(--bf-outline);
+  }
+
+  .bf-ledger__empty td {
+    color: var(--bf-muted);
+  }
+
+  // Below the breakpoint each row becomes a card: text cells stack on the
+  // left, amounts sit on the right and the actions form a footer.
+  @media (max-width: $mobile) {
+    overflow: visible;
+
+    table,
+    tbody,
+    tr,
+    td {
+      display: block;
+      min-width: 0;
+      width: 100%;
+    }
+
+    thead {
+      display: none;
+    }
+
+    .bf-ledger__group,
+    .bf-ledger__group th {
+      display: block;
+      width: 100%;
+    }
+
+    tbody tr:not(.bf-ledger__group):not(.bf-ledger__empty) {
+      border-top: 1px solid $divider;
+      column-gap: 1rem;
+      display: grid;
+      // Dense: amounts fill the top of the right column next to the title
+      // instead of starting below the text cells placed before them.
+      grid-auto-flow: row dense;
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: 0.8rem 1rem;
+
+      td {
+        border: 0;
+        grid-column: 1;
+        padding: 0.2rem 0;
+        width: auto;
+      }
+
+      .bf-ledger__amount {
+        grid-column: 2;
+        justify-self: end;
+      }
+
+      // Full-width footer: with dense packing it lands below every text cell,
+      // and several row actions never squeeze the text column.
+      .bf-ledger__actions {
+        display: flex;
+        gap: 0.35rem;
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+
+        > * + * {
+          margin-left: 0;
+        }
+      }
+    }
+  }
+}

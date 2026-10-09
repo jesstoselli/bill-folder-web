@@ -4,33 +4,11 @@
 }
 
 .expense-ledger {
-  background: var(--bf-surface);
-  border: 1px solid var(--bf-outline);
-  border-radius: var(--bf-radius-card);
-  overflow-x: auto;
-
-  table {
-    border-collapse: collapse;
-    min-width: 46rem;
-    width: 100%;
-  }
-
-  thead th {
-    color: var(--bf-muted);
-    font-size: 0.85rem;
-    font-weight: 400;
-    padding: 0.85rem 1rem;
-    text-align: left;
-  }
-
-  tbody + tbody .expense-ledger__group th {
-    border-top: 1px solid var(--bf-outline);
-  }
-
-  tbody tr:not(.expense-ledger__group) td {
-    border-top: 1px solid color-mix(in srgb, var(--bf-outline) 72%, transparent);
-    padding: 0.9rem 1rem;
-    vertical-align: middle;
+  // Desktop only: on phones the global ledger turns rows into cards.
+  @media (min-width: 721px) {
+    table {
+      min-width: 46rem;
+    }
   }
 
   td:first-child {
@@ -39,20 +17,12 @@
       display: block;
     }
   }
-}
 
-.expense-ledger__group th {
-  background: var(--bf-surface-high);
-  font-size: 1.2rem;
-  font-weight: 500;
-  padding: 0.8rem 1rem;
-  text-align: left;
-
-  span:last-child {
-    color: var(--bf-muted);
-    font-size: 0.85rem;
-    font-variant-numeric: tabular-nums;
-    margin-left: 0.5rem;
+  @media (max-width: 720px) {
+    td[data-label='Vencimento'],
+    td[data-label='Categoria'] {
+      color: var(--bf-muted);
+    }
   }
 }
 
@@ -67,18 +37,11 @@
   color: var(--bf-danger);
 }
 
-.expense-ledger__amount {
-  font-variant-numeric: tabular-nums lining-nums;
-  text-align: right !important;
-  white-space: nowrap;
-
-  span {
-    display: block;
-  }
+.expense-ledger__amount span {
+  display: block;
 }
 
 .expense-ledger__actions {
-  text-align: right !important;
   width: 4.5rem;
 }
 
@@ -100,69 +63,5 @@
   &:focus-visible {
     box-shadow: var(--bf-focus-ring);
     outline: 1px solid var(--bf-primary);
-  }
-}
-
-.expense-ledger__empty td {
-  color: var(--bf-muted);
-}
-
-@media (max-width: 720px) {
-  .expense-ledger {
-    overflow: visible;
-
-    table,
-    tbody,
-    tr,
-    td {
-      display: block;
-      min-width: 0;
-      width: 100%;
-    }
-
-    thead {
-      display: none;
-    }
-
-    tbody tr:not(.expense-ledger__group) {
-      border-top: 1px solid color-mix(in srgb, var(--bf-outline) 72%, transparent);
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      padding: 0.8rem 1rem;
-
-      td {
-        border: 0;
-        padding: 0.2rem 0;
-      }
-
-      td:first-child {
-        grid-column: 1;
-        width: auto;
-      }
-    }
-
-    .expense-ledger__group,
-    .expense-ledger__group th {
-      display: block;
-      width: 100%;
-    }
-
-    td[data-label='Vencimento'],
-    td[data-label='Categoria'] {
-      color: var(--bf-muted);
-      grid-column: 1;
-    }
-
-    .expense-ledger__amount {
-      align-self: start;
-      grid-column: 2;
-      grid-row: 1;
-    }
-
-    .expense-ledger__actions {
-      grid-column: 2;
-      grid-row: 2 / span 2;
-      justify-self: end;
-    }
   }
 }

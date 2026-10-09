@@ -1,6 +1,6 @@
 .income-page {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 .income-totals {
   align-items: end;
@@ -25,57 +25,24 @@
   }
 }
 .income-ledger {
-  background: var(--bf-surface);
-  border: 1px solid var(--bf-outline);
-  border-radius: var(--bf-radius-card);
-  overflow-x: auto;
-  table {
-    border-collapse: collapse;
-    min-width: 64rem;
-    width: 100%;
+  // Desktop only: on phones the global ledger turns rows into cards.
+  @media (min-width: 721px) {
+    table {
+      min-width: 64rem;
+    }
   }
-  th {
-    color: var(--bf-muted);
-    font-size: 0.85rem;
-    font-weight: 400;
-    padding: 0.7rem 0.85rem;
-    text-align: left;
-  }
-  td {
-    border-top: 1px solid color-mix(in srgb, var(--bf-outline) 72%, transparent);
-    padding: 0.72rem 0.85rem;
-    vertical-align: middle;
-  }
+
   td:first-child strong,
   td:first-child span {
     display: block;
   }
 }
-.income-ledger__group th {
-  background: color-mix(in srgb, var(--bf-surface-high) 55%, var(--bf-surface));
-  border-top: 1px solid var(--bf-outline);
-  color: var(--bf-text);
-  display: table-cell;
-  font-size: 0.92rem;
-  font-weight: 500;
-  span:last-child {
-    color: var(--bf-muted);
-    float: right;
-  }
-}
-.income-ledger__empty td,
 .income-ledger__notes {
   color: var(--bf-muted);
-}
-.income-ledger__notes {
   font-size: 0.82rem;
   max-width: 28ch;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.income-ledger__amount {
-  text-align: right !important;
   white-space: nowrap;
 }
 .income-ledger__status {
@@ -86,12 +53,6 @@
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
-}
-.income-ledger__row-actions {
-  display: flex;
-  gap: 0.35rem;
-  justify-content: flex-end;
-  white-space: nowrap;
 }
 @media (max-width: 720px) {
   .income-totals {

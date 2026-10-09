@@ -64,7 +64,11 @@
         >
       </div>
       @if (store.adjustments().length) {
-        <div class="adjustments-sheet" tabindex="-1" aria-label="Folha de reconciliação do ciclo">
+        <div
+          class="adjustments-sheet bf-ledger"
+          tabindex="-1"
+          aria-label="Folha de reconciliação do ciclo"
+        >
           <table>
             <caption class="u-visually-hidden">
               Ajustes do ciclo do mais recente para o mais antigo
@@ -74,8 +78,8 @@
                 <th scope="col">Data</th>
                 <th scope="col">Movimento</th>
                 <th scope="col">Descrição</th>
-                <th scope="col" class="adjustments-sheet__amount">Impacto</th>
-                <th scope="col">Ações</th>
+                <th scope="col" class="adjustments-sheet__amount bf-ledger__amount">Impacto</th>
+                <th scope="col" class="bf-ledger__actions">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -93,12 +97,12 @@
                     <strong>{{ adjustment.label }}</strong>
                   </td>
                   <td
-                    class="adjustments-sheet__amount bf-tabular"
+                    class="adjustments-sheet__amount bf-tabular bf-ledger__amount"
                     [class.adjustments-sheet__amount--negative]="adjustment.type === 'outflow'"
                   >
                     {{ signedAmount(adjustment) }}
                   </td>
-                  <td class="adjustments-sheet__actions">
+                  <td class="adjustments-sheet__actions bf-ledger__actions">
                     <button
                       appButton
                       variant="text"

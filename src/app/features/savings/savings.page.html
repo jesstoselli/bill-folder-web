@@ -75,7 +75,11 @@
           />
 
           @if (store.transactions().length) {
-            <div class="savings-ledger" tabindex="-1" aria-label="Movimentos da poupança no ciclo">
+            <div
+              class="savings-ledger bf-ledger"
+              tabindex="-1"
+              aria-label="Movimentos da poupança no ciclo"
+            >
               <table>
                 <caption class="u-visually-hidden">
                   Movimentos da poupança do mais recente para o mais antigo
@@ -85,8 +89,8 @@
                     <th scope="col">Data</th>
                     <th scope="col">Movimento</th>
                     <th scope="col">Descrição</th>
-                    <th scope="col" class="savings-ledger__amount">Valor</th>
-                    <th scope="col">Ações</th>
+                    <th scope="col" class="savings-ledger__amount bf-ledger__amount">Valor</th>
+                    <th scope="col" class="bf-ledger__actions">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -111,12 +115,12 @@
                         }
                       </td>
                       <td
-                        class="savings-ledger__amount bf-tabular"
+                        class="savings-ledger__amount bf-tabular bf-ledger__amount"
                         [class.savings-ledger__amount--negative]="isNegative(transaction)"
                       >
                         {{ signedAmount(transaction) }}
                       </td>
-                      <td class="savings-ledger__actions">
+                      <td class="savings-ledger__actions bf-ledger__actions">
                         <button
                           appButton
                           variant="text"

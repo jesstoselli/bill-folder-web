@@ -1,6 +1,6 @@
 .daily-expenses-page {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .daily-ledger-summary {
@@ -24,34 +24,23 @@
 }
 
 .daily-expense-ledger {
-  background: var(--bf-surface);
-  border: 1px solid var(--bf-outline);
-  border-radius: var(--bf-radius-card);
-  overflow-x: auto;
-
-  table {
-    border-collapse: collapse;
-    min-width: 50rem;
-    width: 100%;
-  }
-
-  th {
-    color: var(--bf-muted);
-    font-size: 0.85rem;
-    font-weight: 400;
-    padding: 0.75rem 0.9rem;
-    text-align: left;
-  }
-
-  td {
-    border-top: 1px solid color-mix(in srgb, var(--bf-outline) 72%, transparent);
-    padding: 0.72rem 0.9rem;
-    vertical-align: middle;
+  // Desktop only: on phones the global ledger turns rows into cards.
+  @media (min-width: 721px) {
+    table {
+      min-width: 50rem;
+    }
   }
 
   td:nth-child(2) strong,
   td:nth-child(2) span {
     display: block;
+  }
+
+  @media (max-width: 720px) {
+    td[data-label='Categoria'],
+    td[data-label='Conta'] {
+      color: var(--bf-muted);
+    }
   }
 }
 
@@ -70,14 +59,7 @@
   white-space: nowrap;
 }
 
-.daily-expense-ledger__amount {
-  font-variant-numeric: tabular-nums lining-nums;
-  text-align: right !important;
-  white-space: nowrap;
-}
-
 .daily-expense-ledger__actions {
-  text-align: right !important;
   width: 4.5rem;
 }
 
@@ -98,65 +80,5 @@
   &:focus-visible {
     box-shadow: var(--bf-focus-ring);
     outline: 1px solid var(--bf-primary);
-  }
-}
-
-@media (max-width: 720px) {
-  .daily-expense-ledger {
-    overflow: visible;
-
-    table,
-    tbody,
-    tr,
-    td {
-      display: block;
-      min-width: 0;
-      width: 100%;
-    }
-
-    thead {
-      display: none;
-    }
-
-    tr {
-      display: grid;
-      grid-template-columns: 5.5rem minmax(0, 1fr) auto;
-      padding: 0.75rem;
-    }
-
-    td {
-      border: 0;
-      padding: 0.14rem 0.35rem;
-    }
-
-    tr + tr {
-      border-top: 1px solid var(--bf-outline);
-    }
-
-    .daily-expense-ledger__date {
-      grid-column: 1;
-      grid-row: 1 / span 3;
-    }
-
-    td[data-label='Descrição'] {
-      grid-column: 2;
-    }
-
-    td[data-label='Categoria'],
-    td[data-label='Conta'] {
-      color: var(--bf-muted);
-      grid-column: 2;
-    }
-
-    .daily-expense-ledger__amount {
-      grid-column: 3;
-      grid-row: 1;
-    }
-
-    .daily-expense-ledger__actions {
-      grid-column: 3;
-      grid-row: 2 / span 2;
-      justify-self: end;
-    }
   }
 }

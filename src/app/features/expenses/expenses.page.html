@@ -62,7 +62,7 @@
     }
     @case ('content') {
       <app-refresh-status [state]="store.state()" (retry)="refresh()" />
-      <div class="expense-ledger" tabindex="-1" aria-label="Lista de despesas do ciclo">
+      <div class="expense-ledger bf-ledger" tabindex="-1" aria-label="Lista de despesas do ciclo">
         <table>
           <caption class="u-visually-hidden">
             Despesas do ciclo agrupadas em atrasadas, próximas e pagas
@@ -72,13 +72,15 @@
               <th scope="col">Despesa</th>
               <th scope="col">Vencimento</th>
               <th scope="col">Categoria</th>
-              <th scope="col" class="expense-ledger__amount">Valor</th>
-              <th scope="col" class="expense-ledger__actions"><span>Ações</span></th>
+              <th scope="col" class="expense-ledger__amount bf-ledger__amount">Valor</th>
+              <th scope="col" class="expense-ledger__actions bf-ledger__actions">
+                <span>Ações</span>
+              </th>
             </tr>
           </thead>
 
           <tbody aria-labelledby="expenses-overdue-title">
-            <tr class="expense-ledger__group">
+            <tr class="expense-ledger__group bf-ledger__group">
               <th id="expenses-overdue-title" scope="rowgroup" colspan="5">
                 <span>Atrasadas</span>
                 <span>{{ groups().overdue.length }}</span>
@@ -90,14 +92,14 @@
                 [ngTemplateOutletContext]="{ $implicit: expense }"
               />
             } @empty {
-              <tr class="expense-ledger__empty">
+              <tr class="expense-ledger__empty bf-ledger__empty">
                 <td colspan="5">Nenhuma despesa atrasada.</td>
               </tr>
             }
           </tbody>
 
           <tbody aria-labelledby="expenses-upcoming-title">
-            <tr class="expense-ledger__group">
+            <tr class="expense-ledger__group bf-ledger__group">
               <th id="expenses-upcoming-title" scope="rowgroup" colspan="5">
                 <span>Próximas</span>
                 <span>{{ groups().upcoming.length }}</span>
@@ -109,14 +111,14 @@
                 [ngTemplateOutletContext]="{ $implicit: expense }"
               />
             } @empty {
-              <tr class="expense-ledger__empty">
+              <tr class="expense-ledger__empty bf-ledger__empty">
                 <td colspan="5">Nenhuma despesa próxima.</td>
               </tr>
             }
           </tbody>
 
           <tbody aria-labelledby="expenses-paid-title">
-            <tr class="expense-ledger__group">
+            <tr class="expense-ledger__group bf-ledger__group">
               <th id="expenses-paid-title" scope="rowgroup" colspan="5">
                 <span>Pagas</span>
                 <span>{{ groups().paid.length }}</span>
@@ -128,7 +130,7 @@
                 [ngTemplateOutletContext]="{ $implicit: expense }"
               />
             } @empty {
-              <tr class="expense-ledger__empty">
+              <tr class="expense-ledger__empty bf-ledger__empty">
                 <td colspan="5">Nenhuma despesa paga.</td>
               </tr>
             }
@@ -159,13 +161,13 @@
       <time [attr.datetime]="expense.dueDate">{{ formatCivilDate(expense.dueDate) }}</time>
     </td>
     <td data-label="Categoria">{{ expense.categoryName }}</td>
-    <td data-label="Valor" class="expense-ledger__amount bf-tabular">
+    <td data-label="Valor" class="expense-ledger__amount bf-tabular bf-ledger__amount">
       {{ formatBrl(expense.displayAmount) }}
       @if (expense.isProvisioned) {
         <span>restante</span>
       }
     </td>
-    <td class="expense-ledger__actions">
+    <td class="expense-ledger__actions bf-ledger__actions">
       <button
         type="button"
         class="expense-ledger__menu-trigger"

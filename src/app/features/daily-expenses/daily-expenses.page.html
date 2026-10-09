@@ -60,7 +60,7 @@
         </div>
 
         <div
-          class="daily-expense-ledger"
+          class="daily-expense-ledger bf-ledger"
           tabindex="-1"
           aria-label="Histórico de despesas avulsas do ciclo"
         >
@@ -74,8 +74,10 @@
                 <th scope="col">Descrição</th>
                 <th scope="col">Categoria</th>
                 <th scope="col">Conta</th>
-                <th scope="col" class="daily-expense-ledger__amount">Valor</th>
-                <th scope="col" class="daily-expense-ledger__actions"><span>Ações</span></th>
+                <th scope="col" class="daily-expense-ledger__amount bf-ledger__amount">Valor</th>
+                <th scope="col" class="daily-expense-ledger__actions bf-ledger__actions">
+                  <span>Ações</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -92,10 +94,13 @@
                   </td>
                   <td data-label="Categoria">{{ expense.categoryName }}</td>
                   <td data-label="Conta">{{ expense.accountName }}</td>
-                  <td data-label="Valor" class="daily-expense-ledger__amount bf-tabular">
+                  <td
+                    data-label="Valor"
+                    class="daily-expense-ledger__amount bf-tabular bf-ledger__amount"
+                  >
                     {{ formatBrl(expense.amount) }}
                   </td>
-                  <td class="daily-expense-ledger__actions">
+                  <td class="daily-expense-ledger__actions bf-ledger__actions">
                     <button
                       type="button"
                       class="daily-expense-ledger__menu-trigger"

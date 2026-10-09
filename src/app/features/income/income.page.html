@@ -61,7 +61,11 @@
           ><strong class="bf-tabular">{{ formatBrl(receivedTotal()) }}</strong></span
         >
       </div>
-      <div class="income-ledger" tabindex="-1" aria-label="Recebimentos do ciclo por situação">
+      <div
+        class="income-ledger bf-ledger"
+        tabindex="-1"
+        aria-label="Recebimentos do ciclo por situação"
+      >
         <table>
           <caption class="u-visually-hidden">
             Recebimentos previstos, recebidos, atrasados e não realizados
@@ -70,14 +74,14 @@
             <tr>
               <th scope="col">Origem</th>
               <th scope="col">Data</th>
-              <th scope="col" class="income-ledger__amount">Esperado</th>
-              <th scope="col" class="income-ledger__amount">Recebido</th>
+              <th scope="col" class="income-ledger__amount bf-ledger__amount">Esperado</th>
+              <th scope="col" class="income-ledger__amount bf-ledger__amount">Recebido</th>
               <th scope="col">Situação</th>
-              <th scope="col">Ações</th>
+              <th scope="col" class="bf-ledger__actions">Ações</th>
             </tr>
           </thead>
           <tbody aria-labelledby="income-expected-title">
-            <tr class="income-ledger__group">
+            <tr class="income-ledger__group bf-ledger__group">
               <th id="income-expected-title" scope="rowgroup" colspan="6">
                 <span>Previstos</span><span>{{ store.groups().expected.length }}</span>
               </th>
@@ -88,13 +92,13 @@
                 [ngTemplateOutletContext]="{ $implicit: entry }"
               />
             } @empty {
-              <tr class="income-ledger__empty">
+              <tr class="income-ledger__empty bf-ledger__empty">
                 <td colspan="6">Nenhum recebimento previsto.</td>
               </tr>
             }
           </tbody>
           <tbody aria-labelledby="income-received-title">
-            <tr class="income-ledger__group">
+            <tr class="income-ledger__group bf-ledger__group">
               <th id="income-received-title" scope="rowgroup" colspan="6">
                 <span>Recebidos</span><span>{{ store.groups().received.length }}</span>
               </th>
@@ -105,13 +109,13 @@
                 [ngTemplateOutletContext]="{ $implicit: entry }"
               />
             } @empty {
-              <tr class="income-ledger__empty">
+              <tr class="income-ledger__empty bf-ledger__empty">
                 <td colspan="6">Nenhum recebimento confirmado.</td>
               </tr>
             }
           </tbody>
           <tbody aria-labelledby="income-late-title">
-            <tr class="income-ledger__group">
+            <tr class="income-ledger__group bf-ledger__group">
               <th id="income-late-title" scope="rowgroup" colspan="6">
                 <span>Atrasados</span><span>{{ store.groups().late.length }}</span>
               </th>
@@ -122,13 +126,13 @@
                 [ngTemplateOutletContext]="{ $implicit: entry }"
               />
             } @empty {
-              <tr class="income-ledger__empty">
+              <tr class="income-ledger__empty bf-ledger__empty">
                 <td colspan="6">Nenhum recebimento atrasado.</td>
               </tr>
             }
           </tbody>
           <tbody aria-labelledby="income-missed-title">
-            <tr class="income-ledger__group">
+            <tr class="income-ledger__group bf-ledger__group">
               <th id="income-missed-title" scope="rowgroup" colspan="6">
                 <span>Não realizados</span><span>{{ store.groups().notOccurred.length }}</span>
               </th>
@@ -139,14 +143,14 @@
                 [ngTemplateOutletContext]="{ $implicit: entry }"
               />
             } @empty {
-              <tr class="income-ledger__empty">
+              <tr class="income-ledger__empty bf-ledger__empty">
                 <td colspan="6">Nenhum recebimento marcado como não realizado.</td>
               </tr>
             }
           </tbody>
           @if (store.groups().other.length) {
             <tbody aria-labelledby="income-other-title">
-              <tr class="income-ledger__group">
+              <tr class="income-ledger__group bf-ledger__group">
                 <th id="income-other-title" scope="rowgroup" colspan="6">
                   <span>Outras situações</span><span>{{ store.groups().other.length }}</span>
                 </th>
@@ -176,10 +180,10 @@
     <td data-label="Data" class="bf-tabular">
       <time [attr.datetime]="entry.expectedDate">{{ formatCivilDate(entry.expectedDate) }}</time>
     </td>
-    <td data-label="Esperado" class="income-ledger__amount bf-tabular">
+    <td data-label="Esperado" class="income-ledger__amount bf-tabular bf-ledger__amount">
       {{ formatBrl(entry.expectedAmount) }}
     </td>
-    <td data-label="Recebido" class="income-ledger__amount bf-tabular">
+    <td data-label="Recebido" class="income-ledger__amount bf-tabular bf-ledger__amount">
       {{ entry.actualAmount === null ? '—' : formatBrl(entry.actualAmount) }}
     </td>
     <td data-label="Situação">
@@ -191,7 +195,7 @@
         >{{ statusLabel(entry.status) }}</span
       >
     </td>
-    <td class="income-ledger__row-actions">
+    <td class="income-ledger__row-actions bf-ledger__actions">
       @if (canConfirm(entry.status)) {
         <button
           appButton

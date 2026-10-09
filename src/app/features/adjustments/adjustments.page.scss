@@ -1,7 +1,6 @@
 .adjustments-page {
   display: grid;
-  gap: 1.25rem;
-  max-width: 76rem;
+  gap: 1.5rem;
 }
 .adjustments-summary {
   align-items: end;
@@ -23,26 +22,13 @@
   }
 }
 .adjustments-sheet {
-  background: var(--bf-surface);
-  border: 1px solid var(--bf-outline);
-  border-radius: 0.65rem;
-  overflow-x: auto;
-  table {
-    border-collapse: collapse;
-    min-width: 48rem;
-    width: 100%;
+  // Desktop only: on phones the global ledger turns rows into cards.
+  @media (min-width: 721px) {
+    table {
+      min-width: 48rem;
+    }
   }
-  th {
-    color: var(--bf-muted);
-    font-size: 0.84rem;
-    font-weight: 400;
-    padding: 0.65rem 0.8rem;
-    text-align: left;
-  }
-  td {
-    border-top: 1px solid var(--bf-outline);
-    padding: 0.7rem 0.8rem;
-  }
+
   td:first-child {
     color: var(--bf-muted);
     white-space: nowrap;
@@ -52,17 +38,8 @@
   border-left: 0.22rem solid var(--bf-brand);
   padding-left: 0.5rem;
 }
-.adjustments-sheet__amount {
-  text-align: right !important;
-  white-space: nowrap;
-}
 .adjustments-sheet__amount--negative {
   color: var(--bf-danger);
-}
-.adjustments-sheet__actions {
-  display: flex;
-  gap: 0.4rem;
-  justify-content: flex-end;
 }
 @media (max-width: 720px) {
   .adjustments-summary {
