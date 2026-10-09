@@ -1,4 +1,4 @@
-import { Injectable, Signal, computed, inject, signal } from '@angular/core';
+import { Injectable, InjectionToken, Signal, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   Observable,
@@ -9,21 +9,36 @@ import {
   finalize,
   map,
   of,
+  retry,
   shareReplay,
   take,
   tap,
   throwError,
+  timer,
 } from 'rxjs';
 import { AuthApi } from './auth.api';
 import { AuthCoordinationService } from './auth-coordination.service';
 import { AuthState, LoginRequest, SignupRequest, UserDto, WebAuthResponse } from './auth.models';
 import { SessionEndRedirect } from './session-end-redirect';
+import { isTransientFailure } from './auth-errors';
+
+export interface RestoreRetryPolicy {
+  readonly attempts: number;
+  readonly delayMs: number;
+}
+
+/** How hard app start tries to restore a session while the API is unreachable. */
+export const RESTORE_RETRY = new InjectionToken<RestoreRetryPolicy>('RESTORE_RETRY', {
+  providedIn: 'root',
+  factory: () => ({ attempts: 2, delayMs: 1500 }),
+});
 
 @Injectable({ providedIn: 'root' })
 export class AuthSessionService {
   private readonly api = inject(AuthApi);
   private readonly coordination = inject(AuthCoordinationService);
   private readonly redirect = inject(SessionEndRedirect);
+  private readonly restoreRetry = inject(RESTORE_RETRY);
   private readonly state = signal<AuthState>({ kind: 'restoring' });
   private refreshInFlight: Observable<void> | null = null;
   private logoutInFlight: Observable<void> | null = null;
@@ -55,7 +70,14 @@ export class AuthSessionService {
 
   restore(): Observable<void> {
     this.state.set({ kind: 'restoring' });
-    return this.refreshOnce().pipe(
+    // Opening the app during a deploy or on a flaky connection must not
+    // throw a valid session away; only a rejected cookie ends it at once.
+    return defer(() => this.refreshOnce()).pipe(
+      retry({
+        count: this.restoreRetry.attempts,
+        delay: (error: unknown) =>
+          isTransientFailure(error) ? timer(this.restoreRetry.delayMs) : throwError(() => error),
+      }),
       catchError(() => {
         this.clear();
         return of(void 0);

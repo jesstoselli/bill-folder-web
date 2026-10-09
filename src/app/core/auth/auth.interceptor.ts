@@ -11,6 +11,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 import { APP_ENVIRONMENT } from '../config/app-environment';
 import { safeInternalReturnUrl } from './auth.guard';
 import { AuthSessionService } from './auth-session.service';
+import { isSessionRejection } from './auth-errors';
 import { SessionEndRedirect } from './session-end-redirect';
 
 const AUTH_RETRY_ATTEMPTED = new HttpContextToken<boolean>(() => false);
@@ -105,13 +106,6 @@ function isPublicAuthRequest(request: URL, basePathname: string): boolean {
   const relativePathname =
     basePathname === '/' ? request.pathname : request.pathname.slice(basePathname.length);
   return PUBLIC_AUTH_PATHS.has(relativePathname.toLowerCase());
-}
-
-export function isSessionRejection(error: unknown): boolean {
-  return (
-    error instanceof HttpErrorResponse &&
-    (error.status === 400 || error.status === 401 || error.status === 403)
-  );
 }
 
 function expireSession(

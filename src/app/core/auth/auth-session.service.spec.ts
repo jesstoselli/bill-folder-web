@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { Observable, Subject, firstValueFrom } from 'rxjs';
 import { APP_ENVIRONMENT } from '../config/app-environment';
 import { AuthCoordinationService } from './auth-coordination.service';
-import { AuthSessionService } from './auth-session.service';
+import { AuthSessionService, RESTORE_RETRY } from './auth-session.service';
 import { SessionEndRedirect } from './session-end-redirect';
 
 const authResponse = {
@@ -25,6 +25,7 @@ describe('AuthSessionService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: APP_ENVIRONMENT, useValue: { apiBaseUrl: '/v1', production: false } },
+        { provide: RESTORE_RETRY, useValue: { attempts: 2, delayMs: 0 } },
       ],
     });
 
@@ -33,6 +34,8 @@ describe('AuthSessionService', () => {
   });
 
   afterEach(() => backend.verify());
+
+  const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
   it('keeps tokens in memory and restores through cookie refresh', async () => {
     const restored = firstValueFrom(session.restore());
@@ -59,23 +62,53 @@ describe('AuthSessionService', () => {
     expect(session.isAuthenticated()).toBe(false);
   });
 
-  it('treats a restore network failure as anonymous without rejecting bootstrap', async () => {
+  it('treats a restore network failure as anonymous after retrying', async () => {
     const restored = firstValueFrom(session.restore());
-    backend
-      .expectOne('/v1/auth/web/refresh')
-      .error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await nextTask();
+      backend
+        .expectOne('/v1/auth/web/refresh')
+        .error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    }
 
     await expect(restored).resolves.toBeUndefined();
     expect(session.isAuthenticated()).toBe(false);
   });
 
-  it('treats a restore 503 as anonymous without rejecting bootstrap', async () => {
+  it('treats a restore 503 as anonymous after retrying', async () => {
+    const restored = firstValueFrom(session.restore());
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await nextTask();
+      backend
+        .expectOne('/v1/auth/web/refresh')
+        .flush({ error: 'unavailable' }, { status: 503, statusText: 'Service Unavailable' });
+    }
+
+    await expect(restored).resolves.toBeUndefined();
+    expect(session.isAuthenticated()).toBe(false);
+  });
+
+  it('restores the session when the API comes back on a retry', async () => {
     const restored = firstValueFrom(session.restore());
     backend
       .expectOne('/v1/auth/web/refresh')
-      .flush({ error: 'unavailable' }, { status: 503, statusText: 'Service Unavailable' });
+      .error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    await nextTask();
+    backend.expectOne('/v1/auth/web/refresh').flush(authResponse);
+    await restored;
 
-    await expect(restored).resolves.toBeUndefined();
+    expect(session.isAuthenticated()).toBe(true);
+  });
+
+  it('does not retry when the refresh cookie is rejected', async () => {
+    const restored = firstValueFrom(session.restore());
+    backend
+      .expectOne('/v1/auth/web/refresh')
+      .flush({ error: 'invalid_refresh_token' }, { status: 401, statusText: 'Unauthorized' });
+    await restored;
+    await nextTask();
+
+    backend.expectNone('/v1/auth/web/refresh');
     expect(session.isAuthenticated()).toBe(false);
   });
 
