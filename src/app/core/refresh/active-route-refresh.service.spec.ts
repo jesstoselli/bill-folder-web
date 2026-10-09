@@ -28,7 +28,7 @@ describe('tab resume refresh', () => {
     const active = TestBed.inject(ActiveRouteRefreshService);
     TestBed.inject(TabResumeRefreshService);
     const refresh = vi.fn(() => Promise.resolve());
-    active.register(refresh);
+    active.register({ refresh });
 
     const hide = () => {
       visibility = 'hidden';
@@ -92,7 +92,7 @@ describe('tab resume refresh', () => {
       const { hide, show, advance } = setup();
       const service = TestBed.inject(ActiveRouteRefreshService);
       const slow = vi.fn(() => new Promise<void>(() => undefined));
-      service.register(slow);
+      service.register({ refresh: slow });
       return { hide, show, advance, slow, service };
     })();
 
@@ -111,5 +111,21 @@ describe('tab resume refresh', () => {
     show();
 
     expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe('active route visibility', () => {
+  it('treats only the registered store as visible, and every store when none is', () => {
+    const service = TestBed.inject(ActiveRouteRefreshService);
+    const shown = { refresh: () => undefined };
+    const hidden = { refresh: () => undefined };
+    expect(service.isVisible(hidden)).toBe(true);
+
+    const unregister = service.register(shown);
+    expect(service.isVisible(shown)).toBe(true);
+    expect(service.isVisible(hidden)).toBe(false);
+
+    unregister();
+    expect(service.isVisible(hidden)).toBe(true);
   });
 });

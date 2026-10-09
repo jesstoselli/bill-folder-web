@@ -102,7 +102,7 @@ export class DailyExpensesPage implements OnInit {
   protected readonly formatBrl = formatBrl;
 
   constructor() {
-    registerActiveRouteRefresh(() => this.store.refresh());
+    registerActiveRouteRefresh(this.store);
   }
 
   ngOnInit(): void {

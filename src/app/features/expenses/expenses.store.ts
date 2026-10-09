@@ -22,6 +22,7 @@ import {
 export class ExpensesStore {
   private readonly api = inject(ExpensesApi);
   private readonly list = new CycleListResource<ExpenseResponse>({
+    owner: this,
     fetch: (cycle) => this.api.list(cycle.startDate, cycle.endDate),
   });
 

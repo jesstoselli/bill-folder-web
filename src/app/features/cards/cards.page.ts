@@ -125,7 +125,7 @@ export class CardsPage implements OnInit {
   });
 
   constructor() {
-    registerActiveRouteRefresh(() => this.store.refresh());
+    registerActiveRouteRefresh(this.store);
   }
 
   ngOnInit(): void {

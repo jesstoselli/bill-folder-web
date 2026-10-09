@@ -1,25 +1,45 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal, untracked } from '@angular/core';
 import { CycleStore } from '../cycles/cycle.store';
 
 export const RESUME_FRESHNESS_MS = 5 * 60 * 1_000;
 
+/** What a page shows; its store, in practice. */
+export interface RefreshTarget {
+  refresh(): void | Promise<void>;
+}
+
+/**
+ * Knows which store the current page shows. Stores use it to reload after a
+ * write only while on screen; a hidden store stays stale until its page is
+ * shown again, so one write costs one request instead of one per visited page.
+ */
 @Injectable({ providedIn: 'root' })
 export class ActiveRouteRefreshService {
-  private callback: (() => void | Promise<void>) | null = null;
+  private readonly target = signal<RefreshTarget | null>(null);
   private inFlight: Promise<void> | null = null;
 
-  register(callback: () => void | Promise<void>): () => void {
-    this.callback = callback;
+  register(target: RefreshTarget): () => void {
+    this.target.set(target);
     return () => {
-      if (this.callback === callback) this.callback = null;
+      if (this.target() === target) this.target.set(null);
     };
   }
 
+  /**
+   * Reactive. With no page registered (sign-in screens, isolated tests) every
+   * store counts as visible, so nothing is left stale by accident.
+   */
+  isVisible(owner: object): boolean {
+    const target = this.target();
+    return target === null || target === owner;
+  }
+
   refresh(): Promise<void> {
-    if (!this.callback) return Promise.resolve();
+    const target = untracked(this.target);
+    if (!target) return Promise.resolve();
     if (this.inFlight) return this.inFlight;
-    this.inFlight = Promise.resolve(this.callback())
+    this.inFlight = Promise.resolve(target.refresh())
       .catch(() => undefined)
       .finally(() => {
         this.inFlight = null;
@@ -76,9 +96,10 @@ export class TabResumeRefreshService {
   }
 }
 
-export function registerActiveRouteRefresh(callback: () => void | Promise<void>): void {
+/** Call in a page constructor with the store the page shows. */
+export function registerActiveRouteRefresh(target: RefreshTarget): void {
   const activeRoute = inject(ActiveRouteRefreshService);
   const destroyRef = inject(DestroyRef);
-  const unregister = activeRoute.register(callback);
+  const unregister = activeRoute.register(target);
   destroyRef.onDestroy(unregister);
 }

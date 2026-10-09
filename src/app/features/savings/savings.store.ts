@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { CycleResponse } from '../../core/cycles/cycle.models';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { DataChangeService } from '../../core/data-change/data-change.service';
+import { ActiveRouteRefreshService } from '../../core/refresh/active-route-refresh.service';
 import { mapApiError } from '../../core/http/api-error';
 import { LoadState } from '../../shared/states/load-state';
 import { SavingsApi } from './savings.api';
@@ -20,6 +21,7 @@ export class SavingsStore {
   private readonly api = inject(SavingsApi);
   private readonly cycles = inject(CycleStore);
   private readonly changes = inject(DataChangeService);
+  private readonly activeRoute = inject(ActiveRouteRefreshService);
   private readonly accountsSource = signal<LoadState<readonly SavingsAccountResponse[]>>({
     kind: 'loading',
   });
@@ -95,6 +97,8 @@ export class SavingsStore {
       const version = this.changes.version();
       if (version === this.observedVersion) return;
       this.observedVersion = version;
+      // Hidden: the savings page reloads the accounts whenever it opens.
+      if (!this.activeRoute.isVisible(this)) return;
       untracked(() => void this.loadAccounts());
     });
   }

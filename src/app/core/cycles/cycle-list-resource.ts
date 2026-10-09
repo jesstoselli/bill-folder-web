@@ -3,30 +3,36 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { LoadState } from '../../shared/states/load-state';
 import { DataChangeService } from '../data-change/data-change.service';
 import { mapApiError } from '../http/api-error';
+import { ActiveRouteRefreshService } from '../refresh/active-route-refresh.service';
 import { CycleResponse } from './cycle.models';
 import { CycleStore } from './cycle.store';
 
 export interface CycleListResourceOptions<T> {
+  /** The store holding this list, as its page registers it for refresh. */
+  readonly owner: object;
   readonly fetch: (cycle: CycleResponse) => Observable<readonly T[]>;
   /** Display order; the API order is kept when omitted. */
   readonly compare?: (left: T, right: T) => number;
 }
 
 /**
- * One list of items for the selected cycle. It reloads when the cycle changes
- * or any write bumps DataChangeService, keeps showing the previous data while
- * a same-cycle reload runs, and hides rows being deleted until the API answers.
+ * One list of items for the selected cycle. It reloads when the cycle changes,
+ * and after any write (DataChangeService) once its page is on screen; it keeps
+ * showing the previous data while a same-cycle reload runs, and hides rows
+ * being deleted until the API answers.
  *
  * Must be created in an injection context (a store field initializer).
  */
 export class CycleListResource<T extends { readonly id: string }> {
   private readonly cycles = inject(CycleStore);
   private readonly changes = inject(DataChangeService);
+  private readonly activeRoute = inject(ActiveRouteRefreshService);
   private readonly sourceState = signal<LoadState<readonly T[]>>({ kind: 'loading' });
   private readonly stateCycleId = signal<string | null>(null);
   private readonly pendingDeletes = signal<ReadonlySet<string>>(new Set());
   private activeCycle: CycleResponse | null = null;
-  private observedKey: string | null = null;
+  private observedCycleId: string | null = null;
+  private observedVersion = 0;
   private loadGeneration = 0;
   private lastSuccessfulAt = 0;
 
@@ -55,10 +61,11 @@ export class CycleListResource<T extends { readonly id: string }> {
   constructor(private readonly options: CycleListResourceOptions<T>) {
     effect(() => {
       const cycle = this.cycles.current();
-      const key = cycle ? `${cycle.id}:${this.changes.version()}` : null;
+      const version = this.changes.version();
+      const visible = this.activeRoute.isVisible(this.options.owner);
       if (cycle === null) {
-        if (this.observedKey !== null || this.stateCycleId() !== null) {
-          this.observedKey = null;
+        if (this.observedCycleId !== null || this.stateCycleId() !== null) {
+          this.observedCycleId = null;
           this.activeCycle = null;
           this.stateCycleId.set(null);
           this.sourceState.set({ kind: 'loading' });
@@ -66,10 +73,12 @@ export class CycleListResource<T extends { readonly id: string }> {
         }
         return;
       }
-      if (key === this.observedKey) {
+      const cycleChanged = cycle.id !== this.observedCycleId;
+      if (!cycleChanged && (version === this.observedVersion || !visible)) {
         return;
       }
-      this.observedKey = key;
+      this.observedCycleId = cycle.id;
+      this.observedVersion = version;
       untracked(() => void this.load(cycle));
     });
   }

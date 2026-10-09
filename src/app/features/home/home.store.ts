@@ -2,6 +2,7 @@ import { effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { DataChangeService } from '../../core/data-change/data-change.service';
+import { ActiveRouteRefreshService } from '../../core/refresh/active-route-refresh.service';
 import { mapApiError } from '../../core/http/api-error';
 import { LoadState } from '../../shared/states/load-state';
 import { HomeApi } from './home.api';
@@ -13,6 +14,7 @@ export class HomeStore {
   private readonly api = inject(HomeApi);
   private readonly cycleStore = inject(CycleStore);
   private readonly changes = inject(DataChangeService);
+  private readonly activeRoute = inject(ActiveRouteRefreshService);
   private readonly stateValue = signal<LoadState<HomeResponse>>({ kind: 'loading' });
   private readonly recentValue = signal<readonly DailyExpenseResponse[]>([]);
   private readonly recentStateValue = signal<LoadState<readonly DailyExpenseResponse[]>>({
@@ -29,12 +31,17 @@ export class HomeStore {
   readonly recentState = this.recentStateValue.asReadonly();
 
   constructor() {
+    // After a write, reload only while the home is on screen. A hidden home
+    // just drops the change: its page loads everything again when opened.
     effect(() => {
       const version = this.changes.version();
       if (version === this.observedChangeVersion) {
         return;
       }
       this.observedChangeVersion = version;
+      if (!this.activeRoute.isVisible(this)) {
+        return;
+      }
       untracked(() => void this.refresh());
     });
   }

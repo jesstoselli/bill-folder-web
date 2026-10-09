@@ -16,6 +16,7 @@ import { compareText } from '../../shared/formatters/compare-text';
 export class IncomeStore {
   private readonly api = inject(IncomeApi);
   private readonly list = new CycleListResource<IncomeEntryResponse>({
+    owner: this,
     fetch: (cycle) => this.api.list(cycle.startDate, cycle.endDate),
     compare: compareIncome,
   });

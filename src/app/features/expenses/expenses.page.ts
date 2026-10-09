@@ -114,7 +114,7 @@ export class ExpensesPage implements OnInit {
   protected readonly formatBrl = formatBrl;
 
   constructor() {
-    registerActiveRouteRefresh(() => this.store.refresh());
+    registerActiveRouteRefresh(this.store);
     effect(() => {
       const link = this.deepLink();
       const cycle = this.cycles.current();

@@ -1,6 +1,7 @@
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DataChangeService } from '../../core/data-change/data-change.service';
+import { ActiveRouteRefreshService } from '../../core/refresh/active-route-refresh.service';
 import { mapApiError } from '../../core/http/api-error';
 import {
   ScopeChoice,
@@ -33,6 +34,7 @@ interface CardSnapshot {
 export class CardsStore {
   private readonly api = inject(CardsApi);
   private readonly changes = inject(DataChangeService);
+  private readonly activeRoute = inject(ActiveRouteRefreshService);
   private readonly cardsSource = signal<LoadState<readonly CreditCardAccountResponse[]>>({
     kind: 'loading',
   });
@@ -98,7 +100,7 @@ export class CardsStore {
     effect(() => {
       const version = this.changes.version();
       const cardId = this.selectedCardIdState();
-      if (version === this.observedVersion) {
+      if (version === this.observedVersion || !this.activeRoute.isVisible(this)) {
         return;
       }
       this.observedVersion = version;

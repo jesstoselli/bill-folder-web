@@ -94,7 +94,7 @@ export class SavingsPage implements OnInit {
   });
 
   constructor() {
-    registerActiveRouteRefresh(() => this.store.refresh());
+    registerActiveRouteRefresh(this.store);
   }
   protected readonly refreshing = computed(() => {
     const accountsState = this.store.accountsState();

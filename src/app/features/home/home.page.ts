@@ -84,7 +84,7 @@ export class HomePage implements OnInit {
   });
 
   constructor() {
-    registerActiveRouteRefresh(() => this.store.refresh());
+    registerActiveRouteRefresh(this.store);
   }
 
   ngOnInit(): void {

@@ -15,6 +15,7 @@ import { sumMoney } from '../../shared/formatters/money';
 export class AdjustmentsStore {
   private readonly api = inject(AdjustmentsApi);
   private readonly list = new CycleListResource<CycleAdjustmentResponse>({
+    owner: this,
     fetch: (cycle) => this.api.list(cycle.startDate, cycle.endDate),
     compare: compareAdjustments,
   });
