@@ -43,9 +43,10 @@
                   size="sm"
                   type="button"
                   data-action="reprice"
+                  aria-label="Reajustar assinatura"
                   (click)="reprice.emit(entry)"
                 >
-                  Reajustar assinatura
+                  Reajustar
                 </button>
               } @else {
                 <button
@@ -54,9 +55,10 @@
                   size="sm"
                   type="button"
                   data-action="edit"
+                  aria-label="Editar compra"
                   (click)="edit.emit(entry)"
                 >
-                  Editar compra
+                  Editar
                 </button>
               }
               <button
@@ -67,15 +69,16 @@
                 type="button"
                 data-action="delete"
                 [disabled]="deletePending(entry.id)"
-                (click)="delete.emit(entry)"
-              >
-                {{
+                [attr.aria-label]="
                   deletePending(entry.id)
-                    ? 'Excluindo…'
+                    ? null
                     : isSubscription(entry)
                       ? 'Excluir assinatura'
                       : 'Excluir compra'
-                }}
+                "
+                (click)="delete.emit(entry)"
+              >
+                {{ deletePending(entry.id) ? 'Excluindo…' : 'Excluir' }}
               </button>
             </td>
           </tr>
