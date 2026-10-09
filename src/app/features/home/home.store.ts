@@ -6,6 +6,7 @@ import { mapApiError } from '../../core/http/api-error';
 import { LoadState } from '../../shared/states/load-state';
 import { HomeApi } from './home.api';
 import { DailyExpenseResponse, HomeResponse } from './home.models';
+import { compareText } from '../../shared/formatters/compare-text';
 
 @Injectable({ providedIn: 'root' })
 export class HomeStore {
@@ -127,8 +128,4 @@ export class HomeStore {
       }
     }
   }
-}
-
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }

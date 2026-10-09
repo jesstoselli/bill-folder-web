@@ -1,11 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,11 +7,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { firstValueFrom } from 'rxjs';
 import { mapApiError } from '../../../../core/http/api-error';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
-import { parseCivilDate } from '../../../../shared/formatters/civil-date';
 import { IncomeApi } from '../../income.api';
 import { IncomeEntryResponse, IncomeSourceResponse } from '../../income.models';
 import { IncomeStore } from '../../income.store';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { normalizeOptional, validCivilDate } from '../../../../shared/forms/validators';
 
 export type IncomeEntryFormDialogData =
   { readonly mode: 'create' } | { readonly mode: 'edit'; readonly entry: IncomeEntryResponse };
@@ -105,20 +99,5 @@ export class IncomeEntryFormComponent implements OnInit {
     } finally {
       this.loadingSources.set(false);
     }
-  }
-}
-
-function normalizeOptional(value: string): string | null {
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : null;
-}
-
-function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {
-  if (!control.value) return null;
-  try {
-    parseCivilDate(control.value);
-    return null;
-  } catch {
-    return { civilDate: true };
   }
 }

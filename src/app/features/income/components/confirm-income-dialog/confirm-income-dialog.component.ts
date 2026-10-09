@@ -5,10 +5,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { mapApiError } from '../../../../core/http/api-error';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
-import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { IncomeEntryResponse } from '../../income.models';
 import { IncomeStore } from '../../income.store';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { validCivilDate } from '../../../../shared/forms/validators';
 
 @Component({
   selector: 'app-confirm-income-dialog',
@@ -59,19 +60,4 @@ export class ConfirmIncomeDialogComponent {
       this.writeLock.release();
     }
   }
-}
-
-function validCivilDate(control: { readonly value: string }): { civilDate: true } | null {
-  if (!control.value) return null;
-  try {
-    parseCivilDate(control.value);
-    return null;
-  } catch {
-    return { civilDate: true };
-  }
-}
-
-function todayCivilDate(): string {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 }

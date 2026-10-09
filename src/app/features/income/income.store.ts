@@ -13,6 +13,7 @@ import {
   IncomeGroups,
   UpdateIncomeEntryRequest,
 } from './income.models';
+import { compareText } from '../../shared/formatters/compare-text';
 
 @Injectable({ providedIn: 'root' })
 export class IncomeStore {
@@ -178,10 +179,6 @@ function compareIncome(left: IncomeEntryResponse, right: IncomeEntryResponse): n
     compareText(right.createdAt, left.createdAt) ||
     compareText(left.id, right.id)
   );
-}
-
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function deleteKey(cycleId: string | null, entryId: string): string {

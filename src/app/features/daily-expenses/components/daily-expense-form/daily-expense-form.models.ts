@@ -3,6 +3,7 @@ import {
   DailyExpenseResponse,
   UpdateDailyExpenseRequest,
 } from '../../daily-expenses.models';
+import { normalizeOptional } from '../../../../shared/forms/validators';
 
 export interface DailyExpenseFormValue {
   readonly date: string;
@@ -40,9 +41,4 @@ export function toUpdateDailyExpenseRequest(
     accountId: value.accountId,
     notes: value.notes.trim(),
   };
-}
-
-function normalizeOptional(value: string): string | null {
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : null;
 }

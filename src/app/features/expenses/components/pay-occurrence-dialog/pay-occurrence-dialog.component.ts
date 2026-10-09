@@ -10,12 +10,14 @@ import {
   CheckingAccountResponse,
   ReferenceDataApi,
 } from '../../../../core/reference/reference-data.api';
-import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { formatBrl } from '../../../../shared/formatters/money';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpenseResponse } from '../../expenses.models';
 import { ExpensesStore } from '../../expenses.store';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { validCivilDate } from '../../../../shared/forms/validators';
+import { compareCheckingAccounts } from '../../../../core/reference/reference-ordering';
 
 export interface PayOccurrenceDialogData {
   readonly expense: Pick<
@@ -94,37 +96,11 @@ export class PayOccurrenceDialogComponent implements OnInit {
   private async loadAccounts(): Promise<void> {
     try {
       const accounts = await firstValueFrom(this.references.checkingAccounts());
-      this.accounts.set(
-        [...accounts].sort(
-          (left, right) =>
-            Number(right.isPrimary) - Number(left.isPrimary) ||
-            left.bankName.localeCompare(right.bankName),
-        ),
-      );
+      this.accounts.set([...accounts].sort(compareCheckingAccounts));
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {
       this.loadingAccounts.set(false);
     }
   }
-}
-
-function validCivilDate(control: { readonly value: string }): { civilDate: true } | null {
-  if (!control.value) {
-    return null;
-  }
-  try {
-    parseCivilDate(control.value);
-    return null;
-  } catch {
-    return { civilDate: true };
-  }
-}
-
-function todayCivilDate(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }

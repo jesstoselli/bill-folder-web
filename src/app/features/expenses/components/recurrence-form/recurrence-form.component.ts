@@ -13,12 +13,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { firstValueFrom } from 'rxjs';
 import { mapApiError } from '../../../../core/http/api-error';
 import { CategoryDto, ReferenceDataApi } from '../../../../core/reference/reference-data.api';
-import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpensesStore } from '../../expenses.store';
 import { ExpenseRecurrenceFrequency } from '../../expenses.models';
 import { RecurrenceFormValue, toCreateExpenseRecurrenceRequest } from './recurrence-form.models';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { integer, nonBlank, validCivilDate } from '../../../../shared/forms/validators';
+import { compareCategories } from '../../../../core/reference/reference-ordering';
 
 @Component({
   selector: 'app-recurrence-form',
@@ -91,12 +93,7 @@ export class RecurrenceFormComponent implements OnInit {
   private async loadCategories(): Promise<void> {
     try {
       const categories = await firstValueFrom(this.references.categories());
-      this.categories.set(
-        [...categories].sort(
-          (left, right) =>
-            left.displayOrder - right.displayOrder || left.namePt.localeCompare(right.namePt),
-        ),
-      );
+      this.categories.set([...categories].sort(compareCategories));
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {
@@ -119,26 +116,6 @@ export class RecurrenceFormComponent implements OnInit {
   }
 }
 
-function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
-  return control.value.trim().length > 0 ? null : { blank: true };
-}
-
-function integer(control: AbstractControl<number>): ValidationErrors | null {
-  return Number.isInteger(control.value) ? null : { integer: true };
-}
-
-function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {
-  if (!control.value) {
-    return null;
-  }
-  try {
-    parseCivilDate(control.value);
-    return null;
-  } catch {
-    return { civilDate: true };
-  }
-}
-
 function validOptionalCivilDate(control: AbstractControl<string>): ValidationErrors | null {
   return control.value ? validCivilDate(control) : null;
 }
@@ -147,12 +124,4 @@ function validDateRange(control: AbstractControl): ValidationErrors | null {
   const startDate = control.get('startDate')?.value as string | undefined;
   const endDate = control.get('endDate')?.value as string | undefined;
   return startDate && endDate && endDate < startDate ? { dateRange: true } : null;
-}
-
-function todayCivilDate(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }

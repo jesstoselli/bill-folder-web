@@ -5,6 +5,14 @@ export interface StatementNavigation {
   readonly nextId: string | null;
 }
 
+/** Chronological by due date; id breaks ties so the order is deterministic. */
+export function compareStatements(
+  left: CardStatementResponse,
+  right: CardStatementResponse,
+): number {
+  return left.dueDate.localeCompare(right.dueDate) || left.id.localeCompare(right.id);
+}
+
 export function canPayStatement(status: CardStatementStatus): boolean {
   return status === 'closed';
 }
@@ -13,9 +21,7 @@ export function initialStatementId(
   statements: readonly CardStatementResponse[],
   today: string,
 ): string | null {
-  const ordered = [...statements].sort(
-    (left, right) => left.dueDate.localeCompare(right.dueDate) || left.id.localeCompare(right.id),
-  );
+  const ordered = [...statements].sort(compareStatements);
   const current = ordered.find(
     (statement) => statement.periodStart <= today && today <= statement.periodEnd,
   );
@@ -32,9 +38,7 @@ export function statementNavigationForCard(
 ): StatementNavigation {
   const cardStatements = statements
     .filter((statement) => statement.cardId === cardId)
-    .sort(
-      (left, right) => left.dueDate.localeCompare(right.dueDate) || left.id.localeCompare(right.id),
-    );
+    .sort(compareStatements);
   const selectedIndex = cardStatements.findIndex(
     (statement) => statement.id === selectedStatementId,
   );

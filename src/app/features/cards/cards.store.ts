@@ -8,7 +8,7 @@ import {
   scopeToRepriceBody,
 } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
 import { LoadState } from '../../shared/states/load-state';
-import { initialStatementId, statementNavigationForCard } from './card-cycle';
+import { compareStatements, initialStatementId, statementNavigationForCard } from './card-cycle';
 import { CardsApi } from './cards.api';
 import {
   CardEntryRecurrenceResponse,
@@ -21,6 +21,7 @@ import {
   PayCardStatementRequest,
   UpdateCardEntryRequest,
 } from './cards.models';
+import { todayCivilDate } from '../../shared/formatters/civil-date';
 
 interface CardSnapshot {
   readonly cardId: string;
@@ -237,10 +238,7 @@ export class CardsStore {
       const entries = entriesResponse.filter((entry) => entry.cardId === cardId);
       const statements = statementsResponse
         .filter((statement) => statement.cardId === cardId)
-        .sort(
-          (left, right) =>
-            left.dueDate.localeCompare(right.dueDate) || left.id.localeCompare(right.id),
-        );
+        .sort(compareStatements);
       const selectedStatementId = statements.some(
         (statement) => statement.id === previousStatementId,
       )
@@ -367,12 +365,4 @@ export class CardsStore {
     this.cardSource.set({ kind: 'loading' });
     this.statementSource.set({ kind: 'loading' });
   }
-}
-
-function todayCivilDate(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }

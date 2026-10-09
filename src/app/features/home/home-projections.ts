@@ -5,6 +5,7 @@ import {
   HomeCardStatementResponse,
   HomeUpcomingExpenseResponse,
 } from './home.models';
+import { compareText } from '../../shared/formatters/compare-text';
 
 export type HomeRowKind = 'expense' | 'provisionedExpense' | 'cardStatement';
 
@@ -153,8 +154,4 @@ function actionForExpense(
 
 function compareRows(left: HomeRowProjection, right: HomeRowProjection): number {
   return compareText(left.dueDate, right.dueDate) || compareText(left.id, right.id);
-}
-
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }

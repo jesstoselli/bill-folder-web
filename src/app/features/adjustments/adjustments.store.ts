@@ -11,6 +11,7 @@ import {
   CycleAdjustmentResponse,
   UpdateCycleAdjustmentRequest,
 } from './adjustments.models';
+import { compareText } from '../../shared/formatters/compare-text';
 
 @Injectable({ providedIn: 'root' })
 export class AdjustmentsStore {
@@ -140,9 +141,6 @@ function compareAdjustments(left: CycleAdjustmentResponse, right: CycleAdjustmen
     compareText(right.createdAt, left.createdAt) ||
     compareText(left.id, right.id)
   );
-}
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }
 function deleteKey(cycleId: string | null, id: string): string {
   return `${cycleId ?? 'no-cycle'}:${id}`;

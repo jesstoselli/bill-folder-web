@@ -4,6 +4,7 @@ import { LoadState } from '../../shared/states/load-state';
 import { mapApiError } from '../http/api-error';
 import { CycleResponse } from './cycle.models';
 import { CyclesApi } from './cycles.api';
+import { compareText } from '../../shared/formatters/compare-text';
 
 @Injectable({ providedIn: 'root' })
 export class CycleStore {
@@ -109,8 +110,4 @@ export class CycleStore {
 
 function compareCycles(left: CycleResponse, right: CycleResponse): number {
   return compareText(left.startDate, right.startDate) || compareText(left.id, right.id);
-}
-
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }

@@ -48,3 +48,10 @@ function isLeapYear(year: number): boolean {
 function padTwo(value: number): string {
   return value.toString().padStart(2, '0');
 }
+
+/** Local (not UTC) calendar date as `YYYY-MM-DD`, the API's DateOnly format. */
+export function todayCivilDate(now: Date = new Date()): string {
+  const month = padTwo(now.getMonth() + 1);
+  const day = padTwo(now.getDate());
+  return `${now.getFullYear()}-${month}-${day}`;
+}

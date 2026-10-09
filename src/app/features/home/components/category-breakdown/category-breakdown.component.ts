@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { MoneyComponent } from '../../../../shared/components/money/money.component';
 import { HomeCategoryBreakdownResponse } from '../../home.models';
+import { compareText } from '../../../../shared/formatters/compare-text';
 
 interface CategorySlice {
   readonly id: string;
@@ -49,8 +50,4 @@ export class CategoryBreakdownComponent {
       share: total > 0 ? (item.amount / total) * 100 : 0,
     }));
   }
-}
-
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }

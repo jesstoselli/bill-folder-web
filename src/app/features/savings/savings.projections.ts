@@ -4,6 +4,7 @@ import {
   SavingsTransactionResponse,
   SavingsTransactionType,
 } from './savings.models';
+import { compareText } from '../../shared/formatters/compare-text';
 
 export function savingsSummary(
   account: SavingsAccountResponse,
@@ -43,8 +44,4 @@ export function compareSavingsTransactions(
     compareText(right.createdAt, left.createdAt) ||
     compareText(right.id, left.id)
   );
-}
-
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }

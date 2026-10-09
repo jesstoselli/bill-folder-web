@@ -1,4 +1,4 @@
-import { formatCivilDate, parseCivilDate } from './civil-date';
+import { formatCivilDate, parseCivilDate, todayCivilDate } from './civil-date';
 
 describe('civil date formatters', () => {
   it('parses and formats a civil date without converting it to an instant', () => {
@@ -16,5 +16,11 @@ describe('civil date formatters', () => {
 
   it('accepts a leap day using calendar rules only', () => {
     expect(parseCivilDate('2024-02-29')).toEqual({ year: 2024, month: 2, day: 29 });
+  });
+});
+
+describe('todayCivilDate', () => {
+  it('uses the local calendar day, zero padded', () => {
+    expect(todayCivilDate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
   });
 });

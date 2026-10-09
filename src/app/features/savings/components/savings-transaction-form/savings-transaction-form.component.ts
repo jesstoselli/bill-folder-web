@@ -12,10 +12,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { mapApiError } from '../../../../core/http/api-error';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
-import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { SavingsTransactionResponse, SavingsTransactionType } from '../../savings.models';
 import { SavingsStore } from '../../savings.store';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { normalizeOptional, validCivilDate } from '../../../../shared/forms/validators';
 
 export type SavingsTransactionFormDialogData =
   | { readonly mode: 'create'; readonly accountId: string }
@@ -97,11 +98,6 @@ export class SavingsTransactionFormComponent {
   }
 }
 
-function normalizeOptional(value: string): string | null {
-  const normalized = value.trim();
-  return normalized || null;
-}
-
 const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function linkedTransactionValidator(
@@ -112,22 +108,4 @@ function linkedTransactionValidator(
     if (!value) return hasExistingLink ? { linkedRemovalUnsupported: true } : null;
     return guidPattern.test(value) ? null : { guid: true };
   };
-}
-
-function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {
-  if (!control.value) return null;
-  try {
-    parseCivilDate(control.value);
-    return null;
-  } catch {
-    return { civilDate: true };
-  }
-}
-
-function todayCivilDate(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }

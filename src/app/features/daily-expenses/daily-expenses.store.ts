@@ -11,6 +11,7 @@ import {
   DailyExpenseResponse,
   UpdateDailyExpenseRequest,
 } from './daily-expenses.models';
+import { compareText } from '../../shared/formatters/compare-text';
 
 @Injectable({ providedIn: 'root' })
 export class DailyExpensesStore {
@@ -164,10 +165,6 @@ export class DailyExpensesStore {
 
 function compareDailyExpenses(left: DailyExpenseResponse, right: DailyExpenseResponse): number {
   return compareText(right.date, left.date) || compareText(left.id, right.id);
-}
-
-function compareText(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function deleteKey(cycleId: string | null, expenseId: string): string {

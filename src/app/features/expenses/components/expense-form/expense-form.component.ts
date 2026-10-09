@@ -1,11 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,7 +7,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { firstValueFrom } from 'rxjs';
 import { CategoryDto, ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { mapApiError } from '../../../../core/http/api-error';
-import { parseCivilDate } from '../../../../shared/formatters/civil-date';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpensesStore } from '../../expenses.store';
 import {
@@ -23,6 +16,8 @@ import {
   toUpdateExpenseRequest,
 } from './expense-form.models';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { nonBlank, validCivilDate } from '../../../../shared/forms/validators';
+import { compareCategories } from '../../../../core/reference/reference-ordering';
 
 @Component({
   selector: 'app-expense-form',
@@ -95,32 +90,11 @@ export class ExpenseFormComponent implements OnInit {
   private async loadCategories(): Promise<void> {
     try {
       const categories = await firstValueFrom(this.references.categories());
-      this.categories.set(
-        [...categories].sort(
-          (left, right) =>
-            left.displayOrder - right.displayOrder || left.namePt.localeCompare(right.namePt),
-        ),
-      );
+      this.categories.set([...categories].sort(compareCategories));
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {
       this.loadingCategories.set(false);
     }
-  }
-}
-
-function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
-  return control.value.trim().length > 0 ? null : { blank: true };
-}
-
-function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {
-  if (!control.value) {
-    return null;
-  }
-  try {
-    parseCivilDate(control.value);
-    return null;
-  } catch {
-    return { civilDate: true };
   }
 }

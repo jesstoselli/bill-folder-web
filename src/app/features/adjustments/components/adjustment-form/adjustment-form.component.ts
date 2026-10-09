@@ -1,21 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { mapApiError } from '../../../../core/http/api-error';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
-import { parseCivilDate } from '../../../../shared/formatters/civil-date';
 import { CycleAdjustmentResponse, CycleAdjustmentType } from '../../adjustments.models';
 import { AdjustmentsStore } from '../../adjustments.store';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { nonBlank, validCivilDate } from '../../../../shared/forms/validators';
 
 export type AdjustmentFormDialogData =
   | { readonly mode: 'create' }
@@ -76,17 +70,5 @@ export class AdjustmentFormComponent {
   }
   private initial(): CycleAdjustmentResponse | null {
     return this.data.mode === 'edit' ? this.data.adjustment : null;
-  }
-}
-function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
-  return control.value.trim() ? null : { blank: true };
-}
-function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {
-  if (!control.value) return null;
-  try {
-    parseCivilDate(control.value);
-    return null;
-  } catch {
-    return { civilDate: true };
   }
 }

@@ -1,11 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,7 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import { mapApiError } from '../../../../core/http/api-error';
 import { CategoryDto, ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
-import { parseCivilDate } from '../../../../shared/formatters/civil-date';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { CardEntryResponse } from '../../cards.models';
 import { CardsStore } from '../../cards.store';
 import {
@@ -24,6 +18,8 @@ import {
   toUpdateCardEntryRequest,
 } from './card-entry-form.models';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { integer, nonBlank, validCivilDate } from '../../../../shared/forms/validators';
+import { compareCategories } from '../../../../core/reference/reference-ordering';
 
 export type CardEntryFormDialogData =
   | { readonly mode: 'create'; readonly card: { readonly id: string; readonly name: string } }
@@ -141,42 +137,11 @@ export class CardEntryFormComponent implements OnInit {
   private async loadCategories(): Promise<void> {
     try {
       const categories = await firstValueFrom(this.references.categories());
-      this.categories.set(
-        [...categories].sort(
-          (left, right) =>
-            left.displayOrder - right.displayOrder || left.namePt.localeCompare(right.namePt),
-        ),
-      );
+      this.categories.set([...categories].sort(compareCategories));
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {
       this.loadingCategories.set(false);
     }
   }
-}
-
-function nonBlank(control: AbstractControl<string>): ValidationErrors | null {
-  return control.value.trim() ? null : { blank: true };
-}
-
-function integer(control: AbstractControl<number>): ValidationErrors | null {
-  return Number.isInteger(control.value) ? null : { integer: true };
-}
-
-function validCivilDate(control: AbstractControl<string>): ValidationErrors | null {
-  if (!control.value) return null;
-  try {
-    parseCivilDate(control.value);
-    return null;
-  } catch {
-    return { civilDate: true };
-  }
-}
-
-function todayCivilDate(): string {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
