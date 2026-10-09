@@ -30,6 +30,17 @@ describe('SidebarComponent', () => {
     expect(root.querySelector<HTMLElement>('[aria-current="page"]')?.textContent).toContain('Home');
   });
 
+  it('uses the official BillFolder wordmark when expanded', () => {
+    const fixture = TestBed.createComponent(SidebarComponent);
+    fixture.detectChanges();
+    const logo = (fixture.nativeElement as HTMLElement).querySelector<HTMLImageElement>(
+      '.sidebar__brand-logo',
+    );
+
+    expect(logo?.getAttribute('src')).toBe('/brand/billfolder-wordmark.svg');
+    expect(logo?.getAttribute('alt')).toBe('BillFolder');
+  });
+
   it('keeps every destination programmatically named in rail mode', () => {
     const fixture = TestBed.createComponent(SidebarComponent);
     fixture.componentRef.setInput('mode', 'rail');
@@ -50,6 +61,9 @@ describe('SidebarComponent', () => {
     const logout = root.querySelector<HTMLButtonElement>('button[aria-label="Sair"]');
     expect(logout).not.toBeNull();
     expect(logout?.textContent?.trim()).toBe('Sair');
+    const symbol = root.querySelector<HTMLImageElement>('.sidebar__brand-symbol');
+    expect(symbol?.getAttribute('src')).toBe('/brand/billfolder-symbol.svg');
+    expect(symbol?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('emits logout from a keyboard-operable button', () => {

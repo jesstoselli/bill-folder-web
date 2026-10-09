@@ -1,6 +1,14 @@
 <div class="sidebar__brand" [class.sidebar__brand--compact]="mode() === 'rail'">
-  <span class="sidebar__mark" aria-hidden="true">BF</span>
-  <span class="sidebar__wordmark" [class.u-visually-hidden]="mode() === 'rail'">BillFolder</span>
+  @if (mode() === 'rail') {
+    <img
+      class="sidebar__brand-symbol"
+      src="/brand/billfolder-symbol.svg"
+      alt=""
+      aria-hidden="true"
+    />
+  } @else {
+    <img class="sidebar__brand-logo" src="/brand/billfolder-wordmark.svg" alt="BillFolder" />
+  }
 </div>
 
 <nav aria-label="Navegação principal">

@@ -19,25 +19,17 @@
   padding-inline: 0;
 }
 
-.sidebar__mark {
-  align-items: center;
-  background: var(--bf-brand);
-  border-radius: 0.75rem 0.75rem 0.25rem;
-  color: var(--bf-bg);
-  display: inline-flex;
-  font-size: 0.875rem;
-  font-weight: 500;
-  height: 2.25rem;
-  justify-content: center;
-  letter-spacing: -0.03em;
-  width: 2.25rem;
+.sidebar__brand-logo {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  width: 10rem;
 }
 
-.sidebar__wordmark {
-  color: var(--bf-text);
-  font-size: 1.35rem;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+.sidebar__brand-symbol {
+  display: block;
+  height: 2.5rem;
+  width: 2.5rem;
 }
 
 .sidebar__list {
