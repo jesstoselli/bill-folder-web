@@ -6,7 +6,8 @@ import { ActiveRouteRefreshService } from '../../core/refresh/active-route-refre
 import { mapApiError } from '../../core/http/api-error';
 import { LoadState } from '../../shared/states/load-state';
 import { HomeApi } from './home.api';
-import { DailyExpenseResponse, HomeResponse } from './home.models';
+import { DailyExpenseResponse } from '../daily-expenses/daily-expenses.models';
+import { HomeResponse } from './home.models';
 import { compareText } from '../../shared/formatters/compare-text';
 
 @Injectable({ providedIn: 'root' })

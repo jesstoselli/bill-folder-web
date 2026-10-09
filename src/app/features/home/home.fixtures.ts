@@ -1,5 +1,5 @@
+import { DailyExpenseResponse } from '../daily-expenses/daily-expenses.models';
 import {
-  DailyExpenseResponse,
   HomeCardStatementResponse,
   HomeResponse,
   HomeUpcomingExpenseResponse,

@@ -71,17 +71,3 @@ export interface HomeCategoryBreakdownResponse {
   readonly categoryName: string;
   readonly amount: number;
 }
-
-export interface DailyExpenseResponse {
-  readonly id: string;
-  readonly date: string;
-  readonly label: string;
-  readonly amount: number;
-  readonly categoryId: string;
-  readonly categoryName: string;
-  readonly accountId: string;
-  readonly accountName: string;
-  readonly notes: string | null;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}

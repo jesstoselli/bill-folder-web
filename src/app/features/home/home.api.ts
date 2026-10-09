@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { APP_ENVIRONMENT } from '../../core/config/app-environment';
 import { mapApiErrors } from '../../core/http/api-error';
 import { apiUrl } from '../../core/http/api-url';
-import { DailyExpenseResponse, HomeResponse } from './home.models';
+import { DailyExpenseResponse } from '../daily-expenses/daily-expenses.models';
+import { HomeResponse } from './home.models';
 
 @Injectable({ providedIn: 'root' })
 export class HomeApi {

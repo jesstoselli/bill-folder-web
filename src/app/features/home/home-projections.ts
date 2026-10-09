@@ -1,6 +1,6 @@
 import { formatBrl } from '../../shared/formatters/money';
+import { DailyExpenseResponse } from '../daily-expenses/daily-expenses.models';
 import {
-  DailyExpenseResponse,
   ExpenseStatus,
   HomeCardStatementResponse,
   HomeUpcomingExpenseResponse,
