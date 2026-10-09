@@ -20,10 +20,12 @@ import { MoneyInputDirective } from '../../../../shared/forms/money-input.direct
 export interface PayStatementDialogData {
   readonly statement: CardStatementDetailResponse;
 }
+import { MoneyComponent } from '../../../../shared/components/money/money.component';
 
 @Component({
   selector: 'app-pay-statement-dialog',
   imports: [
+    MoneyComponent,
     MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,

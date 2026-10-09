@@ -5,7 +5,6 @@ import { CycleStore } from '../../core/cycles/cycle.store';
 import { mapApiError } from '../../core/http/api-error';
 import { PageStateComponent } from '../../shared/components/page-state/page-state.component';
 import { formatCivilDate } from '../../shared/formatters/civil-date';
-import { formatBrl } from '../../shared/formatters/money';
 import { DailyExpenseFormComponent } from './components/daily-expense-form/daily-expense-form.component';
 import { DailyExpenseResponse } from './daily-expenses.models';
 import { DailyExpensesStore } from './daily-expenses.store';
@@ -34,10 +33,13 @@ type DailyExpensesViewState =
   | { readonly kind: 'error'; readonly source: 'cycles' | 'expenses'; readonly message: string }
   | { readonly kind: 'no-cycle' }
   | { readonly kind: 'content' };
+import { MoneyComponent } from '../../shared/components/money/money.component';
+import { sumMoney } from '../../shared/formatters/money';
 
 @Component({
   selector: 'app-daily-expenses-page',
   imports: [
+    MoneyComponent,
     PageHeaderComponent,
     CycleBarComponent,
     InlineAlertComponent,
@@ -81,7 +83,7 @@ export class DailyExpensesPage implements OnInit {
     return { kind: expenseState.kind };
   });
   protected readonly total = computed(() =>
-    this.store.expenses().reduce((sum, expense) => sum + expense.amount, 0),
+    sumMoney(this.store.expenses().map((expense) => expense.amount)),
   );
   protected readonly refreshing = computed(() => {
     const state = this.store.state();
@@ -99,7 +101,6 @@ export class DailyExpensesPage implements OnInit {
   });
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
-  protected readonly formatBrl = formatBrl;
 
   constructor() {
     registerActiveRouteRefresh(this.store);

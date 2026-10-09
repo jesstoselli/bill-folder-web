@@ -162,7 +162,7 @@
     </td>
     <td data-label="Categoria">{{ expense.categoryName }}</td>
     <td data-label="Valor" class="expense-ledger__amount bf-tabular bf-ledger__amount">
-      {{ formatBrl(expense.displayAmount) }}
+      <app-money [value]="expense.displayAmount" />
       @if (expense.isProvisioned) {
         <span>restante</span>
       }

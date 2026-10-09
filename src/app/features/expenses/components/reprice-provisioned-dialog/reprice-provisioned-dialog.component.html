@@ -20,7 +20,7 @@
 
     <section class="reprice-dialog__context" aria-live="polite">
       <span>Total recalculado neste ciclo</span>
-      <strong>{{ formatBrl(recalculatedTotal()) }}</strong>
+      <strong><app-money [value]="recalculatedTotal()" /></strong>
       <p>
         O total é calculado automaticamente para
         {{ data.expense.occurrencesTotal }} ocorrências. Você está alterando apenas o valor por

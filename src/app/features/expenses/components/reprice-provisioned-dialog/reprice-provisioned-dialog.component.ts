@@ -18,10 +18,12 @@ export interface RepriceProvisionedDialogData {
   >;
   readonly scope: ScopeChoice;
 }
+import { MoneyComponent } from '../../../../shared/components/money/money.component';
 
 @Component({
   selector: 'app-reprice-provisioned-dialog',
   imports: [
+    MoneyComponent,
     MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,

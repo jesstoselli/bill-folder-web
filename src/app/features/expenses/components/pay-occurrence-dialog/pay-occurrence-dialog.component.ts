@@ -28,10 +28,12 @@ export interface PayOccurrenceDialogData {
     | 'expectedAmount'
   >;
 }
+import { MoneyComponent } from '../../../../shared/components/money/money.component';
 
 @Component({
   selector: 'app-pay-occurrence-dialog',
   imports: [
+    MoneyComponent,
     MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,

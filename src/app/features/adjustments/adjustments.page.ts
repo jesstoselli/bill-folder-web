@@ -47,7 +47,6 @@ export class AdjustmentsPage implements OnInit {
   });
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
-  protected readonly formatBrl = formatBrl;
   protected readonly pageState = computed<AdjustmentsViewState>(() => {
     const cycleState = this.cycles.state();
     const cycle = this.cycles.current();

@@ -9,6 +9,7 @@ interface CategorySlice {
   readonly amount: number;
   readonly share: number;
 }
+import { sumMoney } from '../../../../shared/formatters/money';
 
 @Component({
   selector: 'app-category-breakdown',
@@ -19,9 +20,7 @@ interface CategorySlice {
 export class CategoryBreakdownComponent {
   readonly breakdown = input.required<readonly HomeCategoryBreakdownResponse[]>();
 
-  protected readonly total = computed(() =>
-    this.breakdown().reduce((sum, item) => sum + item.amount, 0),
-  );
+  protected readonly total = computed(() => sumMoney(this.breakdown().map((item) => item.amount)));
   protected readonly slices = computed(() => this.buildSlices(this.breakdown()));
 
   private buildSlices(items: readonly HomeCategoryBreakdownResponse[]): CategorySlice[] {
@@ -29,8 +28,8 @@ export class CategoryBreakdownComponent {
       (left, right) => right.amount - left.amount || compareText(left.categoryId, right.categoryId),
     );
     const visible = sorted.slice(0, 6);
-    const remainder = sorted.slice(6).reduce((sum, item) => sum + item.amount, 0);
-    const total = sorted.reduce((sum, item) => sum + item.amount, 0);
+    const remainder = sumMoney(sorted.slice(6).map((item) => item.amount));
+    const total = sumMoney(sorted.map((item) => item.amount));
     const grouped = remainder
       ? [
           ...visible,

@@ -7,7 +7,6 @@ import { CycleStore } from '../../core/cycles/cycle.store';
 import { mapApiError } from '../../core/http/api-error';
 import { PageStateComponent } from '../../shared/components/page-state/page-state.component';
 import { formatCivilDate } from '../../shared/formatters/civil-date';
-import { formatBrl } from '../../shared/formatters/money';
 import { ExpenseFormComponent } from './components/expense-form/expense-form.component';
 import { PayExpenseDialogComponent } from './components/pay-expense-dialog/pay-expense-dialog.component';
 import { PayOccurrenceDialogComponent } from './components/pay-occurrence-dialog/pay-occurrence-dialog.component';
@@ -43,10 +42,12 @@ type ExpensesViewState =
   | { readonly kind: 'error'; readonly source: 'cycles' | 'expenses'; readonly message: string }
   | { readonly kind: 'no-cycle' }
   | { readonly kind: 'content' };
+import { MoneyComponent } from '../../shared/components/money/money.component';
 
 @Component({
   selector: 'app-expenses-page',
   imports: [
+    MoneyComponent,
     PageHeaderComponent,
     CycleBarComponent,
     InlineAlertComponent,
@@ -111,7 +112,6 @@ export class ExpensesPage implements OnInit {
   });
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
-  protected readonly formatBrl = formatBrl;
 
   constructor() {
     registerActiveRouteRefresh(this.store);

@@ -54,12 +54,10 @@
       <app-refresh-status [state]="store.state()" (retry)="refresh()" />
       <div class="income-totals" aria-label="Resumo dos recebimentos">
         <span
-          ><small>Esperado</small
-          ><strong class="bf-tabular">{{ formatBrl(expectedTotal()) }}</strong></span
+          ><small>Esperado</small><strong><app-money [value]="expectedTotal()" /></strong></span
         ><span
-          ><small>Recebido</small
-          ><strong class="bf-tabular">{{ formatBrl(receivedTotal()) }}</strong></span
-        >
+          ><small>Recebido</small><strong><app-money [value]="receivedTotal()" /></strong
+        ></span>
       </div>
       <div
         class="income-ledger bf-ledger"
@@ -181,10 +179,14 @@
       <time [attr.datetime]="entry.expectedDate">{{ formatCivilDate(entry.expectedDate) }}</time>
     </td>
     <td data-label="Esperado" class="income-ledger__amount bf-tabular bf-ledger__amount">
-      {{ formatBrl(entry.expectedAmount) }}
+      <app-money [value]="entry.expectedAmount" />
     </td>
     <td data-label="Recebido" class="income-ledger__amount bf-tabular bf-ledger__amount">
-      {{ entry.actualAmount === null ? '—' : formatBrl(entry.actualAmount) }}
+      @if (entry.actualAmount === null) {
+        —
+      } @else {
+        <app-money [value]="entry.actualAmount" />
+      }
     </td>
     <td data-label="Situação">
       <span

@@ -5,7 +5,6 @@ import { CycleStore } from '../../core/cycles/cycle.store';
 import { mapApiError } from '../../core/http/api-error';
 import { PageStateComponent } from '../../shared/components/page-state/page-state.component';
 import { formatCivilDate } from '../../shared/formatters/civil-date';
-import { formatBrl } from '../../shared/formatters/money';
 import { ConfirmIncomeDialogComponent } from './components/confirm-income-dialog/confirm-income-dialog.component';
 import { IncomeEntryFormComponent } from './components/income-entry-form/income-entry-form.component';
 import { IncomeEntryResponse } from './income.models';
@@ -23,10 +22,13 @@ type IncomeViewState =
   | { readonly kind: 'error'; readonly source: 'cycles' | 'income'; readonly message: string }
   | { readonly kind: 'no-cycle' }
   | { readonly kind: 'content' };
+import { MoneyComponent } from '../../shared/components/money/money.component';
+import { sumMoney } from '../../shared/formatters/money';
 
 @Component({
   selector: 'app-income-page',
   imports: [
+    MoneyComponent,
     PageHeaderComponent,
     CycleBarComponent,
     InlineAlertComponent,
@@ -66,14 +68,13 @@ export class IncomePage implements OnInit {
     return state.kind === 'content' && state.refreshing;
   });
   protected readonly expectedTotal = computed(() =>
-    this.store.entries().reduce((sum, entry) => sum + entry.expectedAmount, 0),
+    sumMoney(this.store.entries().map((entry) => entry.expectedAmount)),
   );
   protected readonly receivedTotal = computed(() =>
-    this.store.entries().reduce((sum, entry) => sum + (entry.actualAmount ?? 0), 0),
+    sumMoney(this.store.entries().map((entry) => entry.actualAmount ?? 0)),
   );
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;
-  protected readonly formatBrl = formatBrl;
 
   constructor() {
     registerActiveRouteRefresh(this.store);

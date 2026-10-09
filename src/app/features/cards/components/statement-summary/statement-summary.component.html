@@ -1,7 +1,7 @@
 <section class="statement-summary" [attr.data-status]="statement().status">
   <div class="statement-summary__total">
     <span>Total da fatura</span>
-    <strong class="bf-tabular">{{ formatBrl(statement().totalAmount) }}</strong>
+    <strong><app-money [value]="statement().totalAmount" /></strong>
   </div>
 
   <dl>

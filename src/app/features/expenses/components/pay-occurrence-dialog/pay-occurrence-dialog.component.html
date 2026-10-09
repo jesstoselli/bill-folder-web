@@ -18,7 +18,7 @@
         <span>Progresso neste ciclo</span>
       </div>
       <div>
-        <strong>{{ formatBrl(remainingReserved()) }}</strong>
+        <strong><app-money [value]="remainingReserved()" /></strong>
         <span>restante reservado</span>
       </div>
     </section>

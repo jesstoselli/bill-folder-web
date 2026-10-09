@@ -15,10 +15,12 @@ export interface RepriceSubscriptionDialogData {
   readonly entry: Pick<CardEntryResponse, 'id' | 'label' | 'totalAmount'>;
   readonly scope: ScopeChoice;
 }
+import { MoneyComponent } from '../../../../shared/components/money/money.component';
 
 @Component({
   selector: 'app-reprice-subscription-dialog',
   imports: [
+    MoneyComponent,
     MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,

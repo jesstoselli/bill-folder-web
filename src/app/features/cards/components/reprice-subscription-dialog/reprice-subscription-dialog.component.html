@@ -10,7 +10,7 @@
   >
     <p dialogSubtitle id="reprice-subscription-description">{{ data.entry.label }}</p>
     <p class="reprice-subscription__current">
-      Valor atual <strong>{{ formatBrl(data.entry.totalAmount) }}</strong>
+      Valor atual <strong><app-money [value]="data.entry.totalAmount" /></strong>
     </p>
 
     <mat-form-field appearance="outline">

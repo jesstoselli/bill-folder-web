@@ -56,7 +56,7 @@
       @if (store.expenses().length > 0) {
         <div class="daily-ledger-summary" aria-label="Resumo das despesas avulsas do ciclo">
           <span>{{ countLabel(store.expenses().length) }} no ciclo</span>
-          <strong class="bf-tabular">{{ formatBrl(total()) }}</strong>
+          <strong><app-money [value]="total()" /></strong>
         </div>
 
         <div
@@ -98,7 +98,7 @@
                     data-label="Valor"
                     class="daily-expense-ledger__amount bf-tabular bf-ledger__amount"
                   >
-                    {{ formatBrl(expense.amount) }}
+                    <app-money [value]="expense.amount" />
                   </td>
                   <td class="daily-expense-ledger__actions bf-ledger__actions">
                     <button

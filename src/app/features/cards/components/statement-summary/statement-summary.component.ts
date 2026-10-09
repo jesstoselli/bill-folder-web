@@ -4,10 +4,11 @@ import { CardStatementDetailResponse, CardStatementStatus } from '../../cards.mo
 import { formatCivilDate } from '../../../../shared/formatters/civil-date';
 import { formatBrl } from '../../../../shared/formatters/money';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { MoneyComponent } from '../../../../shared/components/money/money.component';
 
 @Component({
   selector: 'app-statement-summary',
-  imports: [ButtonComponent],
+  imports: [MoneyComponent, ButtonComponent],
   templateUrl: './statement-summary.component.html',
   styleUrl: './statement-summary.component.scss',
 })
@@ -15,7 +16,6 @@ export class StatementSummaryComponent {
   readonly statement = input.required<CardStatementDetailResponse>();
   readonly pay = output<void>();
   protected readonly formatCivilDate = formatCivilDate;
-  protected readonly formatBrl = formatBrl;
   protected readonly canPayStatement = canPayStatement;
 
   protected statusLabel(status: CardStatementStatus): string {

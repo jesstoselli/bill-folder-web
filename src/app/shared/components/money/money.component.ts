@@ -1,5 +1,7 @@
 import { Component, computed, input } from '@angular/core';
+import { formatBrl } from '../../formatters/money';
 
+/** A BRL amount: tabular digits, never wrapped, machine-readable value. */
 @Component({
   selector: 'app-money',
   host: { class: 'bf-tabular' },
@@ -17,14 +19,6 @@ import { Component, computed, input } from '@angular/core';
 })
 export class MoneyComponent {
   readonly value = input.required<number>();
-  readonly currency = input('BRL');
 
-  protected readonly formattedValue = computed(() =>
-    new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: this.currency(),
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(this.value()),
-  );
+  protected readonly formattedValue = computed(() => formatBrl(this.value()));
 }

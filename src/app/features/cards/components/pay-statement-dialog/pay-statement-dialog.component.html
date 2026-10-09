@@ -10,7 +10,7 @@
     [submitDisabled]="loadingAccounts()"
   >
     <p dialogSubtitle id="pay-statement-description">
-      {{ data.statement.cardName }} · {{ formatBrl(data.statement.totalAmount) }}
+      {{ data.statement.cardName }} · <app-money [value]="data.statement.totalAmount" />
     </p>
     <div class="pay-statement__fields">
       <mat-form-field appearance="outline">
