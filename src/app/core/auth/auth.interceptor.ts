@@ -11,6 +11,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 import { APP_ENVIRONMENT } from '../config/app-environment';
 import { safeInternalReturnUrl } from './auth.guard';
 import { AuthSessionService } from './auth-session.service';
+import { SessionEndRedirect } from './session-end-redirect';
 
 const AUTH_RETRY_ATTEMPTED = new HttpContextToken<boolean>(() => false);
 const PUBLIC_AUTH_PATHS = new Set([
@@ -31,6 +32,7 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 
   const session = inject(AuthSessionService);
   const router = inject(Router);
+  const redirect = inject(SessionEndRedirect);
   const authenticatedRequest = withBearer(request, session.accessToken());
 
   return next(authenticatedRequest).pipe(
@@ -40,13 +42,13 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
       }
 
       if (request.context.get(AUTH_RETRY_ATTEMPTED)) {
-        expireSession(session, router);
+        expireSession(session, router, redirect);
         return throwError(() => error);
       }
 
       return session.refreshOnce().pipe(
         catchError((refreshError: unknown) => {
-          expireSession(session, router);
+          expireSession(session, router, redirect);
           return throwError(() => refreshError);
         }),
         switchMap(() => {
@@ -57,7 +59,7 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
           return next(retry).pipe(
             catchError((retryError: unknown) => {
               if (retryError instanceof HttpErrorResponse && retryError.status === 401) {
-                expireSession(session, router);
+                expireSession(session, router, redirect);
               }
               return throwError(() => retryError);
             }),
@@ -101,10 +103,12 @@ function isPublicAuthRequest(request: URL, basePathname: string): boolean {
   return PUBLIC_AUTH_PATHS.has(relativePathname.toLowerCase());
 }
 
-function expireSession(session: AuthSessionService, router: Router): void {
+function expireSession(
+  session: AuthSessionService,
+  router: Router,
+  redirect: SessionEndRedirect,
+): void {
   const returnUrl = safeInternalReturnUrl(router.url);
   session.clear();
-  void router.navigate(['/login'], {
-    queryParams: returnUrl && !returnUrl.startsWith('/login') ? { returnUrl } : undefined,
-  });
+  redirect.toLogin(returnUrl);
 }

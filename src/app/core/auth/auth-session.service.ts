@@ -17,11 +17,13 @@ import {
 import { AuthApi } from './auth.api';
 import { AuthCoordinationService } from './auth-coordination.service';
 import { AuthState, LoginRequest, SignupRequest, UserDto, WebAuthResponse } from './auth.models';
+import { SessionEndRedirect } from './session-end-redirect';
 
 @Injectable({ providedIn: 'root' })
 export class AuthSessionService {
   private readonly api = inject(AuthApi);
   private readonly coordination = inject(AuthCoordinationService);
+  private readonly redirect = inject(SessionEndRedirect);
   private readonly state = signal<AuthState>({ kind: 'restoring' });
   private refreshInFlight: Observable<void> | null = null;
   private logoutInFlight: Observable<void> | null = null;
@@ -40,7 +42,15 @@ export class AuthSessionService {
   });
 
   constructor() {
-    this.coordination.logoutEvents.pipe(takeUntilDestroyed()).subscribe(() => this.clear());
+    this.coordination.logoutEvents.pipe(takeUntilDestroyed()).subscribe(() => {
+      const wasAuthenticated = this.isAuthenticated();
+      this.clear();
+      if (wasAuthenticated) {
+        // Let this tab's in-flight cookie mutation settle first: unloading
+        // mid-refresh would break the cross-tab ordering logout relies on.
+        this.cookieMutationTail.pipe(take(1)).subscribe(() => this.redirect.toLogin());
+      }
+    });
   }
 
   restore(): Observable<void> {

@@ -148,6 +148,11 @@ test('a delayed refresh cannot restore the session after logout', async ({
   );
   expect(await logoutResponse.headerValue('access-control-allow-credentials')).toBe('true');
   await expect(page).toHaveURL(/\/login$/);
+  // Once logout settles the app reloads itself to drop the previous user's data;
+  // that fresh load tries to restore and is rejected.
+  await expect
+    .poll(() => api.events.filter((event) => event === 'refresh:rejected'))
+    .toHaveLength(1);
   expect(
     (await context.cookies('http://127.0.0.1:4301/v1/auth/web/refresh')).some(
       (cookie) => cookie.name === 'bf_refresh',
@@ -165,6 +170,7 @@ test('a delayed refresh cannot restore the session after logout', async ({
     '/v1/home/:stale-token-rejected',
     'logout:requested',
     'logout:accepted',
+    'refresh:rejected',
     'refresh:rejected',
   ]);
 });

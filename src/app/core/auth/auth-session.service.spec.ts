@@ -1,9 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom } from 'rxjs';
+import { Observable, Subject, firstValueFrom } from 'rxjs';
 import { APP_ENVIRONMENT } from '../config/app-environment';
+import { AuthCoordinationService } from './auth-coordination.service';
 import { AuthSessionService } from './auth-session.service';
+import { SessionEndRedirect } from './session-end-redirect';
 
 const authResponse = {
   accessToken: 'access-token-only-in-memory',
@@ -272,5 +274,77 @@ describe('AuthSessionService', () => {
     await signup;
 
     expect(session.isAuthenticated()).toBe(true);
+  });
+});
+
+describe('AuthSessionService cross-tab logout', () => {
+  const logoutEvents = new Subject<void>();
+  let session: AuthSessionService;
+  let backend: HttpTestingController;
+  let redirect: { toLogin: ReturnType<typeof vi.fn> };
+
+  beforeEach(() => {
+    redirect = { toLogin: vi.fn() };
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: APP_ENVIRONMENT, useValue: { apiBaseUrl: '/v1', production: false } },
+        { provide: SessionEndRedirect, useValue: redirect },
+        {
+          provide: AuthCoordinationService,
+          useValue: {
+            logoutEvents: logoutEvents.asObservable(),
+            broadcastLogout: () => undefined,
+            runExclusive: <T>(operation: () => Observable<T>) => operation(),
+          },
+        },
+      ],
+    });
+    session = TestBed.inject(AuthSessionService);
+    backend = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => backend.verify());
+
+  it('reloads into login so the other tab drops the previous user data', async () => {
+    const login = firstValueFrom(
+      session.login({ email: 'jess@example.com', password: 'senha-segura' }),
+    );
+    backend.expectOne('/v1/auth/web/login').flush(authResponse);
+    await login;
+
+    logoutEvents.next();
+
+    expect(session.isAuthenticated()).toBe(false);
+    expect(redirect.toLogin).toHaveBeenCalledOnce();
+  });
+
+  it('waits for an in-flight cookie refresh before reloading', async () => {
+    const login = firstValueFrom(
+      session.login({ email: 'jess@example.com', password: 'senha-segura' }),
+    );
+    backend.expectOne('/v1/auth/web/login').flush(authResponse);
+    await login;
+    const refresh = firstValueFrom(session.refreshOnce());
+    const pendingRefresh = backend.expectOne('/v1/auth/web/refresh');
+
+    logoutEvents.next();
+
+    expect(session.isAuthenticated()).toBe(false);
+    expect(redirect.toLogin).not.toHaveBeenCalled();
+
+    pendingRefresh.flush(authResponse);
+    await refresh;
+
+    expect(session.isAuthenticated()).toBe(false);
+    expect(redirect.toLogin).toHaveBeenCalledOnce();
+  });
+
+  it('does not reload a tab that was never signed in', () => {
+    logoutEvents.next();
+
+    expect(session.isAuthenticated()).toBe(false);
+    expect(redirect.toLogin).not.toHaveBeenCalled();
   });
 });

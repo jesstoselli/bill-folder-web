@@ -6,6 +6,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { AuthSessionService } from '../auth/auth-session.service';
+import { SessionEndRedirect } from '../auth/session-end-redirect';
 import { APP_ENVIRONMENT } from '../config/app-environment';
 import { AppShellComponent } from './app-shell.component';
 import { ShellStore } from './shell.store';
@@ -14,7 +15,10 @@ import { ShellStore } from './shell.store';
 class RouteStub {}
 
 describe('AppShellComponent', () => {
+  let redirect: { toLogin: ReturnType<typeof vi.fn> };
+
   beforeEach(async () => {
+    redirect = { toLogin: vi.fn() };
     await TestBed.configureTestingModule({
       imports: [AppShellComponent],
       providers: [
@@ -25,6 +29,7 @@ describe('AppShellComponent', () => {
           { path: 'login', component: RouteStub },
         ]),
         { provide: APP_ENVIRONMENT, useValue: { apiBaseUrl: '/v1', production: false } },
+        { provide: SessionEndRedirect, useValue: redirect },
         {
           provide: BreakpointObserver,
           useValue: {
@@ -70,7 +75,7 @@ describe('AppShellComponent', () => {
     expect(menuButton?.getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('closes the drawer, clears the session and routes to login when remote logout fails', async () => {
+  it('closes the drawer, clears the session and reloads into login once remote logout settles', async () => {
     const session = TestBed.inject(AuthSessionService);
     const backend = TestBed.inject(HttpTestingController);
     const login = firstValueFrom(
@@ -100,6 +105,7 @@ describe('AppShellComponent', () => {
 
     expect(router.url).toBe('/login');
     expect(session.isAuthenticated()).toBe(false);
+    expect(redirect.toLogin).not.toHaveBeenCalled();
 
     logoutRequest.flush({ message: 'offline' }, { status: 503, statusText: 'Unavailable' });
     await fixture.whenStable();
@@ -107,5 +113,6 @@ describe('AppShellComponent', () => {
     expect(session.isAuthenticated()).toBe(false);
     expect(store.drawerOpen()).toBe(false);
     expect(router.url).toBe('/login');
+    expect(redirect.toLogin).toHaveBeenCalledOnce();
   });
 });

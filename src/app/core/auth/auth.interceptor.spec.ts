@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { NavigationEnd, provideRouter, Router } from '@angular/router';
-import { filter, firstValueFrom, take } from 'rxjs';
+import { provideRouter, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { APP_ENVIRONMENT } from '../config/app-environment';
 import { AuthSessionService } from './auth-session.service';
 import { authInterceptor } from './auth.interceptor';
+import { SessionEndRedirect } from './session-end-redirect';
 
 @Component({ template: '' })
 class RouteStub {}
@@ -23,8 +24,10 @@ describe('authInterceptor', () => {
   let backend: HttpTestingController;
   let session: AuthSessionService;
   let router: Router;
+  let redirect: { toLogin: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    redirect = { toLogin: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
@@ -34,6 +37,7 @@ describe('authInterceptor', () => {
           { path: 'login', component: RouteStub },
         ]),
         { provide: APP_ENVIRONMENT, useValue: { apiBaseUrl: '/v1', production: false } },
+        { provide: SessionEndRedirect, useValue: redirect },
       ],
     });
 
@@ -83,39 +87,38 @@ describe('authInterceptor', () => {
     const result = firstValueFrom(http.get('/v1/private'));
     backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
     backend.expectOne('/v1/auth/web/refresh').flush(authResponse);
-    const redirected = firstValueFrom(
-      router.events.pipe(
-        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-        take(1),
-      ),
-    );
     backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
 
     await expect(result).rejects.toMatchObject({ status: 401 });
-    await redirected;
     backend.expectNone('/v1/auth/web/refresh');
     expect(session.isAuthenticated()).toBe(false);
-    expect(router.url).toBe('/login?returnUrl=%2Fhome');
+    expect(redirect.toLogin).toHaveBeenCalledWith('/home');
+  });
+
+  it('ends the session with a reload when the refresh cookie is rejected', async () => {
+    await router.navigateByUrl('/home');
+    const result = firstValueFrom(http.get('/v1/private'));
+    backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
+    backend
+      .expectOne('/v1/auth/web/refresh')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    expect(session.isAuthenticated()).toBe(false);
+    expect(redirect.toLogin).toHaveBeenCalledWith('/home');
   });
 
   it('clears the session when refresh fails', async () => {
     await router.navigateByUrl('/home');
     const result = firstValueFrom(http.get('/v1/private'));
     backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
-    const redirected = firstValueFrom(
-      router.events.pipe(
-        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-        take(1),
-      ),
-    );
     backend
       .expectOne('/v1/auth/web/refresh')
       .flush(null, { status: 503, statusText: 'Service Unavailable' });
 
     await expect(result).rejects.toMatchObject({ status: 503 });
-    await redirected;
     expect(session.isAuthenticated()).toBe(false);
-    expect(router.url).toBe('/login?returnUrl=%2Fhome');
+    expect(redirect.toLogin).toHaveBeenCalledWith('/home');
   });
 
   it('propagates a non-401 retry failure without clearing the session or route', async () => {
