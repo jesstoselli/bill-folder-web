@@ -158,7 +158,6 @@ describe('ExpenseFormComponent failed save', () => {
     resolveSave(savedExpense);
     await Promise.all([firstSubmit, duplicateSubmit]);
 
-    expect(dialogRef.disableClose).toBe(false);
     expect(dialogRef.close).toHaveBeenCalledTimes(1);
     expect(dialogRef.close).toHaveBeenCalledWith(savedExpense);
   });

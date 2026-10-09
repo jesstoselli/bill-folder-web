@@ -53,7 +53,7 @@ export class PayOccurrenceDialogComponent implements OnInit {
   readonly accounts = signal<readonly CheckingAccountResponse[]>([]);
   readonly loadingAccounts = signal(true);
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly remainingReserved = computed(() =>
     Math.max(this.data.expense.expectedAmount - this.data.expense.paidToDate, 0),
   );
@@ -74,20 +74,10 @@ export class PayOccurrenceDialogComponent implements OnInit {
     void this.loadAccounts();
   }
 
-  async submit(): Promise<void> {
-    if (this.form.invalid || !this.writeLock.begin()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    this.serverError.set('');
-    try {
-      const result = await this.store.payOccurrence(this.data.expense.id, this.form.getRawValue());
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-      this.writeLock.release();
-    }
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () =>
+      this.store.payOccurrence(this.data.expense.id, this.form.getRawValue()),
+    );
   }
 
   private async loadAccounts(): Promise<void> {

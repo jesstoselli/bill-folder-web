@@ -1,9 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { mapApiError } from '../../../../core/http/api-error';
 import { formatBrl } from '../../../../shared/formatters/money';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ScopeChoice } from '../../../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
@@ -40,7 +39,7 @@ export class RepriceProvisionedDialogComponent {
   readonly data = inject<RepriceProvisionedDialogData>(MAT_DIALOG_DATA);
 
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly form = this.formBuilder.nonNullable.group({
     amount: [this.data.expense.occurrenceAmount ?? 0, [Validators.required, Validators.min(0.01)]],
   });
@@ -50,22 +49,12 @@ export class RepriceProvisionedDialogComponent {
     return this.form.controls.amount.value * (this.data.expense.occurrencesTotal ?? 0);
   }
 
-  async submit(): Promise<void> {
-    if (this.form.invalid || !this.writeLock.begin()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    this.serverError.set('');
-    try {
-      const result = await this.store.repriceProvisioned(this.data.expense.id, {
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () =>
+      this.store.repriceProvisioned(this.data.expense.id, {
         amount: this.form.controls.amount.value,
         scope: this.data.scope,
-      });
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-      this.writeLock.release();
-    }
+      }),
+    );
   }
 }

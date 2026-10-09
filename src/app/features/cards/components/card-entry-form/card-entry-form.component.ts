@@ -51,7 +51,7 @@ export class CardEntryFormComponent implements OnInit {
   readonly categories = signal<readonly CategoryDto[]>([]);
   readonly loadingCategories = signal(true);
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly form = this.formBuilder.nonNullable.group({
     cardId: [this.initialEntry?.cardId ?? this.createCard()?.id ?? '', Validators.required],
     purchaseDate: [
@@ -91,34 +91,17 @@ export class CardEntryFormComponent implements OnInit {
     return this.initialEntry?.cardName ?? this.createCard()?.name ?? '';
   }
 
-  async submit(): Promise<void> {
-    if (this.form.invalid || !this.writeLock.begin()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    this.serverError.set('');
-    const value = this.form.getRawValue() as CardEntryFormValue;
-    try {
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () => {
+      const value = this.form.getRawValue() as CardEntryFormValue;
       if (this.data.mode === 'edit') {
-        const result = await this.store.updateEntry(
-          this.data.entry.id,
-          toUpdateCardEntryRequest(value),
-        );
-        this.dialogRef.close(result);
-        return;
+        return this.store.updateEntry(this.data.entry.id, toUpdateCardEntryRequest(value));
       }
-
       const write = toCardEntryWrite(value);
-      const result =
-        write.kind === 'entry'
-          ? await this.store.createEntry(write.request)
-          : await this.store.createRecurrence(write.request);
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-      this.writeLock.release();
-    }
+      return write.kind === 'entry'
+        ? this.store.createEntry(write.request)
+        : this.store.createRecurrence(write.request);
+    });
   }
 
   private createCard(): { readonly id: string; readonly name: string } | null {

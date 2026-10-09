@@ -43,7 +43,7 @@ export class ExpenseFormComponent implements OnInit {
   readonly categories = signal<readonly CategoryDto[]>([]);
   readonly loadingCategories = signal(true);
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly form = this.formBuilder.nonNullable.group({
     dueDate: [this.initialExpense()?.dueDate ?? '', [Validators.required, validCivilDate]],
     label: [
@@ -62,25 +62,13 @@ export class ExpenseFormComponent implements OnInit {
     void this.loadCategories();
   }
 
-  async submit(): Promise<void> {
-    this.serverError.set('');
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    if (!this.writeLock.begin()) return;
-    const value = this.form.getRawValue() as ExpenseFormValue;
-    try {
-      const result =
-        this.data.mode === 'create'
-          ? await this.store.create(toCreateExpenseRequest(value))
-          : await this.store.update(this.data.expense.id, toUpdateExpenseRequest(value));
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-    } finally {
-      this.writeLock.release();
-    }
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () => {
+      const value = this.form.getRawValue() as ExpenseFormValue;
+      return this.data.mode === 'create'
+        ? this.store.create(toCreateExpenseRequest(value))
+        : this.store.update(this.data.expense.id, toUpdateExpenseRequest(value));
+    });
   }
 
   private initialExpense() {

@@ -1,10 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { mapApiError } from '../../../../core/http/api-error';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { CycleAdjustmentResponse, CycleAdjustmentType } from '../../adjustments.models';
 import { AdjustmentsStore } from '../../adjustments.store';
@@ -36,7 +35,7 @@ export class AdjustmentFormComponent {
   private readonly writeLock = new WriteDialogLock(this.dialogRef);
   readonly data = inject<AdjustmentFormDialogData>(MAT_DIALOG_DATA);
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly form = this.formBuilder.nonNullable.group({
     type: this.formBuilder.nonNullable.control<CycleAdjustmentType>(
       this.initial()?.type ?? 'inflow',
@@ -50,24 +49,14 @@ export class AdjustmentFormComponent {
     date: [this.initial()?.date ?? '', [Validators.required, validCivilDate]],
   });
 
-  async submit(): Promise<void> {
-    if (this.form.invalid || !this.writeLock.begin()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    this.serverError.set('');
-    const value = this.form.getRawValue();
-    const request = { ...value, label: value.label.trim(), sourceSavingsTransactionId: null };
-    try {
-      const result =
-        this.data.mode === 'create'
-          ? await this.store.create(request)
-          : await this.store.update(this.data.adjustment.id, request);
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-      this.writeLock.release();
-    }
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () => {
+      const value = this.form.getRawValue();
+      const request = { ...value, label: value.label.trim(), sourceSavingsTransactionId: null };
+      return this.data.mode === 'create'
+        ? this.store.create(request)
+        : this.store.update(this.data.adjustment.id, request);
+    });
   }
   private initial(): CycleAdjustmentResponse | null {
     return this.data.mode === 'edit' ? this.data.adjustment : null;

@@ -46,7 +46,7 @@ export class RecurrenceFormComponent implements OnInit {
   readonly categories = signal<readonly CategoryDto[]>([]);
   readonly loadingCategories = signal(true);
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly form = this.formBuilder.nonNullable.group(
     {
       defaultLabel: ['', [Validators.required, nonBlank, Validators.maxLength(200)]],
@@ -72,22 +72,12 @@ export class RecurrenceFormComponent implements OnInit {
     void this.loadCategories();
   }
 
-  async submit(): Promise<void> {
-    if (this.form.invalid || !this.writeLock.begin()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    this.serverError.set('');
-    try {
-      const result = await this.store.createRecurrence(
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () =>
+      this.store.createRecurrence(
         toCreateExpenseRecurrenceRequest(this.form.getRawValue() as RecurrenceFormValue),
-      );
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-      this.writeLock.release();
-    }
+      ),
+    );
   }
 
   private async loadCategories(): Promise<void> {

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -10,7 +10,6 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { mapApiError } from '../../../../core/http/api-error';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { SavingsTransactionResponse, SavingsTransactionType } from '../../savings.models';
@@ -47,7 +46,7 @@ export class SavingsTransactionFormComponent {
   private readonly writeLock = new WriteDialogLock(this.dialogRef);
   readonly data = inject<SavingsTransactionFormDialogData>(MAT_DIALOG_DATA);
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly hasExistingLink =
     this.data.mode === 'edit' && Boolean(this.data.transaction.linkedTransactionId?.trim());
   readonly form = this.formBuilder.nonNullable.group({
@@ -64,34 +63,21 @@ export class SavingsTransactionFormComponent {
     ],
   });
 
-  async submit(): Promise<void> {
-    if (this.form.invalid || !this.writeLock.begin()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    this.serverError.set('');
-    const value = this.form.getRawValue();
-    const normalizedLabel = value.label.trim();
-    const request = {
-      type: value.type,
-      amount: value.amount,
-      date: value.date,
-      label: this.data.mode === 'create' ? normalizedLabel || null : normalizedLabel,
-      linkedTransactionId: normalizeOptional(value.linkedTransactionId),
-    };
-    try {
-      const result =
-        this.data.mode === 'create'
-          ? await this.store.createTransaction({
-              savingsAccountId: this.data.accountId,
-              ...request,
-            })
-          : await this.store.updateTransaction(this.data.transaction.id, request);
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-      this.writeLock.release();
-    }
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () => {
+      const value = this.form.getRawValue();
+      const normalizedLabel = value.label.trim();
+      const request = {
+        type: value.type,
+        amount: value.amount,
+        date: value.date,
+        label: this.data.mode === 'create' ? normalizedLabel || null : normalizedLabel,
+        linkedTransactionId: normalizeOptional(value.linkedTransactionId),
+      };
+      return this.data.mode === 'create'
+        ? this.store.createTransaction({ savingsAccountId: this.data.accountId, ...request })
+        : this.store.updateTransaction(this.data.transaction.id, request);
+    });
   }
 
   private initial(): SavingsTransactionResponse | null {

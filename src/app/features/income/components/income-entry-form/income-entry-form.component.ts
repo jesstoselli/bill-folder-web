@@ -41,7 +41,7 @@ export class IncomeEntryFormComponent implements OnInit {
   readonly sources = signal<readonly IncomeSourceResponse[]>([]);
   readonly loadingSources = signal(true);
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly form = this.formBuilder.group({
     sourceId: this.formBuilder.control<string | null>(this.initialEntry()?.sourceId ?? null),
     expectedAmount: this.formBuilder.nonNullable.control(this.initialEntry()?.expectedAmount ?? 0, [
@@ -62,29 +62,19 @@ export class IncomeEntryFormComponent implements OnInit {
     void this.loadSources();
   }
 
-  async submit(): Promise<void> {
-    if (this.form.invalid || !this.writeLock.begin()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    this.serverError.set('');
-    const value = this.form.getRawValue();
-    const request = {
-      sourceId: value.sourceId,
-      expectedAmount: value.expectedAmount,
-      expectedDate: value.expectedDate,
-      notes: this.data.mode === 'create' ? normalizeOptional(value.notes) : value.notes.trim(),
-    };
-    try {
-      const result =
-        this.data.mode === 'create'
-          ? await this.store.create(request)
-          : await this.store.update(this.data.entry.id, request);
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-      this.writeLock.release();
-    }
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () => {
+      const value = this.form.getRawValue();
+      const request = {
+        sourceId: value.sourceId,
+        expectedAmount: value.expectedAmount,
+        expectedDate: value.expectedDate,
+        notes: this.data.mode === 'create' ? normalizeOptional(value.notes) : value.notes.trim(),
+      };
+      return this.data.mode === 'create'
+        ? this.store.create(request)
+        : this.store.update(this.data.entry.id, request);
+    });
   }
 
   private initialEntry(): IncomeEntryResponse | null {

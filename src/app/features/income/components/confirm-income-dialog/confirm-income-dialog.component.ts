@@ -1,9 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { mapApiError } from '../../../../core/http/api-error';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { IncomeEntryResponse } from '../../income.models';
@@ -31,7 +30,7 @@ export class ConfirmIncomeDialogComponent {
   private readonly writeLock = new WriteDialogLock(this.dialogRef);
   readonly data = inject<{ readonly entry: IncomeEntryResponse }>(MAT_DIALOG_DATA);
   readonly saving = this.writeLock.saving;
-  readonly serverError = signal('');
+  readonly serverError = this.writeLock.error;
   readonly form = this.formBuilder.nonNullable.group({
     actualAmount: [
       this.data.entry.actualAmount ?? this.data.entry.expectedAmount,
@@ -43,22 +42,12 @@ export class ConfirmIncomeDialogComponent {
     ],
   });
 
-  async submit(): Promise<void> {
-    if (this.form.invalid || !this.writeLock.begin()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    this.serverError.set('');
-    const value = this.form.getRawValue();
-    try {
-      const result = await this.store.confirmReceived(this.data.entry.id, {
+  submit(): Promise<void> {
+    return this.writeLock.run(this.form, () =>
+      this.store.confirmReceived(this.data.entry.id, {
         status: 'received',
-        ...value,
-      });
-      this.dialogRef.close(result);
-    } catch (error: unknown) {
-      this.serverError.set(mapApiError(error).message);
-      this.writeLock.release();
-    }
+        ...this.form.getRawValue(),
+      }),
+    );
   }
 }
