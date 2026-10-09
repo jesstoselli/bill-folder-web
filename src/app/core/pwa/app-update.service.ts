@@ -1,7 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, Injector, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter, fromEvent } from 'rxjs';
 
@@ -13,7 +12,7 @@ import { filter, fromEvent } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class AppUpdateService {
   private readonly updates = inject(SwUpdate);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private prompted = false;
@@ -28,7 +27,7 @@ export class AppUpdateService {
         filter((event): event is VersionReadyEvent => event.type === 'VERSION_READY'),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(() => this.offerReload());
+      .subscribe(() => void this.offerReload());
 
     this.updates.unrecoverable
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -42,15 +41,20 @@ export class AppUpdateService {
       .subscribe(() => void this.updates.checkForUpdate().catch(() => false));
   }
 
-  private offerReload(): void {
+  private async offerReload(): Promise<void> {
     if (this.prompted) {
       return;
     }
     this.prompted = true;
 
+    // Loaded on demand: the snack bar pulls the CDK overlay (~60 kB) into the
+    // initial bundle, and it is only needed once a new version exists.
+    const { MatSnackBar } = await import('@angular/material/snack-bar');
+
     // Asking instead of reloading on our own: a dialog with unsaved input
     // may be open.
-    this.snackBar
+    this.injector
+      .get(MatSnackBar)
       .open('Nova versão do BillFolder disponível.', 'Atualizar')
       .onAction()
       .subscribe(() => {

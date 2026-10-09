@@ -47,6 +47,7 @@ describe('AppUpdateService', () => {
     versionUpdates.next(ready);
     versionUpdates.next(ready);
 
+    await vi.waitFor(() => expect(snackBar.open).toHaveBeenCalled());
     expect(snackBar.open).toHaveBeenCalledOnce();
     expect(reload).not.toHaveBeenCalled();
 
@@ -58,10 +59,11 @@ describe('AppUpdateService', () => {
     expect(reload).toHaveBeenCalledOnce();
   });
 
-  it('ignores version events other than VERSION_READY', () => {
+  it('ignores version events other than VERSION_READY', async () => {
     const { versionUpdates, snackBar } = setup();
 
     versionUpdates.next({ type: 'VERSION_DETECTED', version: { hash: 'new' } } as VersionEvent);
+    await import('@angular/material/snack-bar');
 
     expect(snackBar.open).not.toHaveBeenCalled();
   });
