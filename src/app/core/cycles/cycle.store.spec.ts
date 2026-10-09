@@ -117,6 +117,16 @@ describe('CycleStore', () => {
     expect(store.state()).toMatchObject({ kind: 'content', refreshing: false });
   });
 
+  it('moves to the new current cycle on reload when the user was following current', async () => {
+    await store.load();
+    expect(store.current()).toEqual(october);
+
+    api.current.mockReturnValueOnce(of(november));
+    await store.load();
+
+    expect(store.current()).toEqual(november);
+  });
+
   it('treats an absent backend current cycle as valid empty selection', async () => {
     api.current.mockReturnValueOnce(of(null));
 

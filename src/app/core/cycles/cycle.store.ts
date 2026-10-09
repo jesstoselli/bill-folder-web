@@ -12,6 +12,8 @@ export class CycleStore {
   private readonly stateValue = signal<LoadState<CycleResponse[]>>({ kind: 'loading' });
   private readonly selectedId = signal<string | null>(null);
   private loadGeneration = 0;
+  /** The backend's current cycle at the last successful load. */
+  private backendCurrentId: string | null = null;
   private lastSuccessfulAt = 0;
 
   readonly state = this.stateValue.asReadonly();
@@ -48,13 +50,18 @@ export class CycleStore {
       }
 
       const cycles = [...result.cycles].sort(compareCycles);
-      const retainedSelection = cycles.some((cycle) => cycle.id === previousSelection)
-        ? previousSelection
-        : null;
+      // Someone looking at the current cycle keeps following "current" when
+      // the month turns; an explicitly browsed past cycle stays selected.
+      const followsCurrent = previousSelection === this.backendCurrentId;
+      const retainedSelection =
+        !followsCurrent && cycles.some((cycle) => cycle.id === previousSelection)
+          ? previousSelection
+          : null;
       const currentSelection = cycles.some((cycle) => cycle.id === result.current?.id)
         ? (result.current?.id ?? null)
         : null;
 
+      this.backendCurrentId = currentSelection;
       this.selectedId.set(retainedSelection ?? currentSelection);
       this.stateValue.set({ kind: 'content', data: cycles, refreshing: false });
       this.lastSuccessfulAt = Date.now();

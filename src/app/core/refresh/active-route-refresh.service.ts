@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Injectable, inject } from '@angular/core';
+import { CycleStore } from '../cycles/cycle.store';
 
 export const RESUME_FRESHNESS_MS = 5 * 60 * 1_000;
 
@@ -32,24 +33,46 @@ export class TabResumeRefreshService {
   private readonly document = inject(DOCUMENT);
   private readonly activeRoute = inject(ActiveRouteRefreshService);
   private readonly destroyRef = inject(DestroyRef);
-  private lastVisibleAt = Date.now();
+  private readonly cycles = inject(CycleStore);
+  /** When the tab went to the background; null while it is in use. */
+  private hiddenAt: number | null = null;
 
   constructor() {
-    const onResume = () => this.handleResume();
-    this.document.addEventListener('visibilitychange', onResume);
-    this.document.defaultView?.addEventListener('pageshow', onResume);
+    const onVisibility = () => this.handleVisibility();
+    const onHide = () => this.markHidden();
+    this.document.addEventListener('visibilitychange', onVisibility);
+    this.document.defaultView?.addEventListener('pageshow', onVisibility);
+    this.document.defaultView?.addEventListener('pagehide', onHide);
     this.destroyRef.onDestroy(() => {
-      this.document.removeEventListener('visibilitychange', onResume);
-      this.document.defaultView?.removeEventListener('pageshow', onResume);
+      this.document.removeEventListener('visibilitychange', onVisibility);
+      this.document.defaultView?.removeEventListener('pageshow', onVisibility);
+      this.document.defaultView?.removeEventListener('pagehide', onHide);
     });
   }
 
-  private handleResume(): void {
-    if (this.document.visibilityState !== 'visible') return;
-    const now = Date.now();
-    const stale = now - this.lastVisibleAt >= RESUME_FRESHNESS_MS;
-    this.lastVisibleAt = now;
-    if (stale) void this.activeRoute.refresh();
+  private markHidden(): void {
+    this.hiddenAt ??= Date.now();
+  }
+
+  // Staleness is time spent in the background, not time since the tab was
+  // last shown: a quick tab switch after a long session must not refetch.
+  private handleVisibility(): void {
+    if (this.document.visibilityState !== 'visible') {
+      this.markHidden();
+      return;
+    }
+    const hiddenAt = this.hiddenAt;
+    this.hiddenAt = null;
+    if (hiddenAt !== null && Date.now() - hiddenAt >= RESUME_FRESHNESS_MS) {
+      void this.resume();
+    }
+  }
+
+  // Cycles first: a long-open tab may have crossed into a new cycle, and the
+  // pages follow the cycle selection on their own.
+  private async resume(): Promise<void> {
+    await this.cycles.load();
+    await this.activeRoute.refresh();
   }
 }
 
