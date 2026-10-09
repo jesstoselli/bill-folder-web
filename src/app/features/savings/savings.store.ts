@@ -29,6 +29,8 @@ export class SavingsStore {
   private readonly selectedAccountIdState = signal<string | null>(null);
   private readonly pendingDeletes = signal<ReadonlySet<string>>(new Set());
   private accountsGeneration = 0;
+  /** Bumped on every explicit pick, even of the already-selected account. */
+  private selectionVersion = 0;
   private transactionGeneration = 0;
   private observedCycleId = this.cycles.current()?.id ?? null;
   private observedVersion = this.changes.version();
@@ -99,6 +101,7 @@ export class SavingsStore {
 
   async loadAccounts(preferredAccountId?: string): Promise<void> {
     const generation = ++this.accountsGeneration;
+    const selectionAtStart = this.selectionVersion;
     const previousState = this.accountsSource();
     this.accountsSource.set(
       previousState.kind === 'content'
@@ -117,6 +120,12 @@ export class SavingsStore {
       }
 
       const currentId = this.selectedAccountIdState();
+      // A pick made while this load was in flight wins over the preferred id,
+      // and selectAccount already loaded its transactions.
+      const userPickedMeanwhile =
+        this.selectionVersion !== selectionAtStart &&
+        accounts.some((account) => account.id === currentId);
+      if (userPickedMeanwhile) return;
       const selectedId =
         preferredAccountId === undefined
           ? accounts.some((account) => account.id === currentId)
@@ -144,11 +153,7 @@ export class SavingsStore {
 
   async selectAccount(accountId: string): Promise<void> {
     if (!this.accounts().some((account) => account.id === accountId)) return;
-    this.accountsGeneration += 1;
-    const accountsState = this.accountsSource();
-    if (accountsState.kind === 'content' && accountsState.refreshing) {
-      this.accountsSource.set({ ...accountsState, refreshing: false });
-    }
+    this.selectionVersion += 1;
     this.selectedAccountIdState.set(accountId);
     const cycle = this.cycles.current();
     if (cycle) await this.loadTransactions(accountId, cycle);

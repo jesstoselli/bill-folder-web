@@ -117,6 +117,27 @@ describe('SavingsStore', () => {
     expect(store.transactions().map((row) => row.id)).toEqual(['current']);
   });
 
+  it('applies a balance refresh that resolves after the user switched account', async () => {
+    const initial = store.loadAccounts();
+    backend.expectOne('/v1/savings-accounts/').flush([firstAccount, secondAccount]);
+    await nextMicrotask();
+    backend.expectOne(transactionUrl('savings-1', october)).flush([]);
+    await initial;
+
+    const refresh = store.loadAccounts();
+    const accountsRequest = backend.expectOne('/v1/savings-accounts/');
+    const selection = store.selectAccount('savings-2');
+    backend.expectOne(transactionUrl('savings-2', october)).flush([]);
+    await selection;
+
+    accountsRequest.flush([firstAccount, { ...secondAccount, currentBalance: 9999 }]);
+    await refresh;
+
+    expect(store.selectedAccountId()).toBe('savings-2');
+    expect(store.selectedAccount()?.currentBalance).toBe(9999);
+    backend.expectNone(transactionUrl('savings-1', october));
+  });
+
   it('ignores a stale cycle response and exposes only the selected account and cycle', async () => {
     await loadAccounts([firstAccount]);
     const octoberReload = store.loadTransactions(firstAccount.id, october);
