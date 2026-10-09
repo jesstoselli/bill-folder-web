@@ -1,28 +1,17 @@
 <form class="pay-statement" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <div>
-      <h2 id="pay-statement-title" mat-dialog-title>Pagar fatura</h2>
-      <p id="pay-statement-description">
-        {{ data.statement.cardName }} · {{ formatBrl(data.statement.totalAmount) }}
-      </p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar pagamento de fatura"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p class="pay-statement__error" role="alert">{{ serverError() }}</p>
-    }
-
+  <app-dialog-frame
+    titleId="pay-statement-title"
+    heading="Pagar fatura"
+    closeLabel="Fechar pagamento de fatura"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Confirmar pagamento"
+    savingLabel="Pagando…"
+    [submitDisabled]="loadingAccounts()"
+  >
+    <p dialogSubtitle id="pay-statement-description">
+      {{ data.statement.cardName }} · {{ formatBrl(data.statement.totalAmount) }}
+    </p>
     <div class="pay-statement__fields">
       <mat-form-field appearance="outline">
         <mat-label>Valor pago</mat-label>
@@ -58,14 +47,5 @@
         </mat-select>
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingAccounts()">
-      {{ saving() ? 'Pagando…' : 'Confirmar pagamento' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

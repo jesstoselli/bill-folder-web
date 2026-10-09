@@ -1,41 +1,6 @@
 :host {
   display: block;
 }
-.income-form {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  max-height: 100dvh;
-  min-width: min(32rem, calc(100vw - 2rem));
-}
-.income-form__header {
-  align-items: start;
-  border-bottom: 1px solid var(--bf-outline);
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem 1rem;
-  h2 {
-    font-size: 1.65rem;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    margin: 0;
-    padding: 0;
-  }
-  p {
-    color: var(--bf-muted);
-    margin: 0.3rem 0 0;
-  }
-}
-mat-dialog-content {
-  overflow-y: auto;
-  padding-top: 1.25rem;
-}
-.income-form__error {
-  border: 1px solid var(--bf-danger);
-  color: var(--bf-danger);
-  margin: 0 0 1rem;
-  padding: 0.75rem;
-}
 .income-form__fields {
   display: grid;
   gap: 0.25rem;
@@ -48,20 +13,7 @@ mat-dialog-content {
 mat-form-field {
   width: 100%;
 }
-mat-dialog-actions {
-  background: var(--bf-surface);
-  border-top: 1px solid var(--bf-outline);
-  bottom: 0;
-  position: sticky;
-  z-index: 1;
-}
 @media (max-width: 560px) {
-  .income-form {
-    min-width: 0;
-  }
-  .income-form__header {
-    padding-inline: 1rem;
-  }
   .income-form__split {
     grid-template-columns: 1fr;
   }

@@ -2,48 +2,8 @@
   display: block;
 }
 
-.pay-statement {
-  min-width: min(30rem, calc(100vw - 2rem));
-
-  header {
-    align-items: start;
-    border-bottom: 1px solid var(--bf-outline);
-    display: flex;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem 1rem;
-  }
-
-  h2 {
-    font-size: 1.65rem;
-    font-weight: 500;
-    margin: 0;
-    padding: 0;
-  }
-
-  header p {
-    color: var(--bf-muted);
-    margin: 0.3rem 0 0;
-  }
-}
-
 .pay-statement__fields {
   display: grid;
   gap: 0.25rem;
   padding-top: 0.75rem;
-}
-
-.pay-statement__error {
-  border: 1px solid var(--bf-danger);
-  color: var(--bf-danger);
-  padding: 0.75rem;
-}
-
-@media (max-width: 560px) {
-  .pay-statement {
-    min-width: 0;
-
-    header {
-      padding-inline: 1rem;
-    }
-  }
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -15,9 +15,9 @@ import { formatBrl } from '../../../../shared/formatters/money';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpenseResponse } from '../../expenses.models';
 import { ExpensesStore } from '../../expenses.store';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { validCivilDate } from '../../../../shared/forms/validators';
 import { compareCheckingAccounts } from '../../../../core/reference/reference-ordering';
+import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 
 export interface PayOccurrenceDialogData {
   readonly expense: Pick<
@@ -35,9 +35,8 @@ export interface PayOccurrenceDialogData {
 @Component({
   selector: 'app-pay-occurrence-dialog',
   imports: [
+    DialogFrameComponent,
     ReactiveFormsModule,
-    ButtonComponent,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,

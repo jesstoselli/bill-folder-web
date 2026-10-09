@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { mapApiError } from '../../../../core/http/api-error';
@@ -9,7 +9,7 @@ import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ScopeChoice } from '../../../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
 import { ExpenseResponse } from '../../expenses.models';
 import { ExpensesStore } from '../../expenses.store';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 
 export interface RepriceProvisionedDialogData {
   readonly expense: Pick<
@@ -21,13 +21,7 @@ export interface RepriceProvisionedDialogData {
 
 @Component({
   selector: 'app-reprice-provisioned-dialog',
-  imports: [
-    ReactiveFormsModule,
-    ButtonComponent,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [DialogFrameComponent, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
   templateUrl: './reprice-provisioned-dialog.component.html',
   styleUrl: './reprice-provisioned-dialog.component.scss',
 })

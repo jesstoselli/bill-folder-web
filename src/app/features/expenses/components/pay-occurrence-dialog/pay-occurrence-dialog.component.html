@@ -1,28 +1,15 @@
 <form class="occurrence-dialog" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <div>
-      <h2 id="pay-occurrence-title" mat-dialog-title>Registrar ocorrência</h2>
-      <p id="pay-occurrence-description">{{ data.expense.label }}</p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar pagamento da ocorrência"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p id="pay-occurrence-error" class="occurrence-dialog__error" role="alert">
-        {{ serverError() }}
-      </p>
-    }
-
+  <app-dialog-frame
+    titleId="pay-occurrence-title"
+    heading="Registrar ocorrência"
+    closeLabel="Fechar pagamento da ocorrência"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Registrar ocorrência"
+    savingLabel="Registrando…"
+    [submitDisabled]="loadingAccounts()"
+  >
+    <p dialogSubtitle id="pay-occurrence-description">{{ data.expense.label }}</p>
     <section class="occurrence-dialog__progress" aria-label="Progresso da recorrência">
       <div>
         <strong
@@ -76,14 +63,5 @@
         </mat-select>
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingAccounts()">
-      {{ saving() ? 'Registrando…' : 'Registrar ocorrência' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

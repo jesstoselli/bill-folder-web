@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { mapApiError } from '../../../../core/http/api-error';
@@ -8,18 +8,12 @@ import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 import { IncomeEntryResponse } from '../../income.models';
 import { IncomeStore } from '../../income.store';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { validCivilDate } from '../../../../shared/forms/validators';
+import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 
 @Component({
   selector: 'app-confirm-income-dialog',
-  imports: [
-    ReactiveFormsModule,
-    ButtonComponent,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [DialogFrameComponent, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
   templateUrl: './confirm-income-dialog.component.html',
   styleUrl: './confirm-income-dialog.component.scss',
 })

@@ -1,28 +1,15 @@
 <form class="card-entry-form" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <div>
-      <h2 id="card-entry-form-title" mat-dialog-title>
-        {{ data.mode === 'create' ? 'Nova compra' : 'Editar compra' }}
-      </h2>
-      <p>{{ cardName() }}</p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar formulário de compra"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p class="card-entry-form__error" role="alert">{{ serverError() }}</p>
-    }
-
+  <app-dialog-frame
+    titleId="card-entry-form-title"
+    [heading]="data.mode === 'create' ? 'Nova compra' : 'Editar compra'"
+    closeLabel="Fechar formulário de compra"
+    [saving]="saving()"
+    [error]="serverError()"
+    [submitLabel]="data.mode === 'create' ? 'Salvar compra' : 'Salvar alterações'"
+    savingLabel="Salvando…"
+    [submitDisabled]="loadingCategories()"
+  >
+    <p dialogSubtitle>{{ cardName() }}</p>
     <div class="card-entry-form__fields">
       <mat-form-field appearance="outline">
         <mat-label>Descrição</mat-label>
@@ -103,14 +90,5 @@
         <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingCategories()">
-      {{ saving() ? 'Salvando…' : data.mode === 'create' ? 'Salvar compra' : 'Salvar alterações' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

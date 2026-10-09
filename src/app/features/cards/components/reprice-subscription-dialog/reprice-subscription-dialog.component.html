@@ -1,26 +1,14 @@
 <form class="reprice-subscription" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <div>
-      <h2 id="reprice-subscription-title" mat-dialog-title>Reajustar assinatura</h2>
-      <p id="reprice-subscription-description">{{ data.entry.label }}</p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar reajuste de assinatura"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p class="reprice-subscription__error" role="alert">{{ serverError() }}</p>
-    }
-
+  <app-dialog-frame
+    titleId="reprice-subscription-title"
+    heading="Reajustar assinatura"
+    closeLabel="Fechar reajuste de assinatura"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar novo valor"
+    savingLabel="Reajustando…"
+  >
+    <p dialogSubtitle id="reprice-subscription-description">{{ data.entry.label }}</p>
     <p class="reprice-subscription__current">
       Valor atual <strong>{{ formatBrl(data.entry.totalAmount) }}</strong>
     </p>
@@ -40,14 +28,5 @@
         <mat-error>Informe um valor maior que zero.</mat-error>
       }
     </mat-form-field>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving()">
-      {{ saving() ? 'Reajustando…' : 'Salvar novo valor' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

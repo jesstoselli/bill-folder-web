@@ -1,34 +1,21 @@
 <form class="expense-form" [formGroup]="form" (ngSubmit)="submit()">
-  <header class="expense-form__header">
-    <div>
-      <h2 id="expense-form-title" mat-dialog-title>
-        {{ data.mode === 'create' ? 'Nova despesa' : 'Editar despesa' }}
-      </h2>
-      <p>
-        {{
-          data.mode === 'create'
-            ? 'Registre uma conta pontual neste ciclo.'
-            : 'Atualize os dados desta conta.'
-        }}
-      </p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      aria-label="Fechar formulário de despesa"
-      [disabled]="saving()"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p class="expense-form__server-error" role="alert">{{ serverError() }}</p>
-    }
-
+  <app-dialog-frame
+    titleId="expense-form-title"
+    [heading]="data.mode === 'create' ? 'Nova despesa' : 'Editar despesa'"
+    closeLabel="Fechar formulário de despesa"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar despesa"
+    savingLabel="Salvando…"
+    [submitDisabled]="loadingCategories()"
+  >
+    <p dialogSubtitle>
+      {{
+        data.mode === 'create'
+          ? 'Registre uma conta pontual neste ciclo.'
+          : 'Atualize os dados desta conta.'
+      }}
+    </p>
     <div class="expense-form__fields">
       <mat-form-field appearance="outline">
         <mat-label>Descrição</mat-label>
@@ -82,14 +69,5 @@
         <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingCategories()">
-      {{ saving() ? 'Salvando…' : 'Salvar despesa' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

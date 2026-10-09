@@ -1,28 +1,15 @@
 <form class="payment-dialog" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <div>
-      <h2 id="pay-expense-title" mat-dialog-title>Registrar pagamento</h2>
-      <p id="pay-expense-description">{{ data.expense.label }}</p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar pagamento"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p id="pay-expense-error" class="payment-dialog__error" role="alert">
-        {{ serverError() }}
-      </p>
-    }
-
+  <app-dialog-frame
+    titleId="pay-expense-title"
+    heading="Registrar pagamento"
+    closeLabel="Fechar pagamento"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Registrar pagamento"
+    savingLabel="Registrando…"
+    [submitDisabled]="loadingAccounts()"
+  >
+    <p dialogSubtitle id="pay-expense-description">{{ data.expense.label }}</p>
     <div class="payment-dialog__amount">
       <span>Valor pago</span>
       <mat-form-field appearance="outline">
@@ -63,14 +50,5 @@
         </mat-select>
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingAccounts()">
-      {{ saving() ? 'Registrando…' : 'Registrar pagamento' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

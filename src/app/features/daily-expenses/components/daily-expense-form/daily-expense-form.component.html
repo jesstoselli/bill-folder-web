@@ -1,34 +1,21 @@
 <form class="daily-expense-form" [formGroup]="form" (ngSubmit)="submit()">
-  <header class="daily-expense-form__header">
-    <div>
-      <h2 id="daily-expense-form-title" mat-dialog-title>
-        {{ data.mode === 'create' ? 'Nova despesa avulsa' : 'Editar despesa avulsa' }}
-      </h2>
-      <p>
-        {{
-          data.mode === 'create'
-            ? 'Registre uma saída do dia neste ciclo.'
-            : 'Atualize este lançamento do histórico.'
-        }}
-      </p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar formulário de despesa avulsa"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p class="daily-expense-form__error" role="alert">{{ serverError() }}</p>
-    }
-
+  <app-dialog-frame
+    titleId="daily-expense-form-title"
+    [heading]="data.mode === 'create' ? 'Nova despesa avulsa' : 'Editar despesa avulsa'"
+    closeLabel="Fechar formulário de despesa avulsa"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar despesa avulsa"
+    savingLabel="Salvando…"
+    [submitDisabled]="loadingReferences()"
+  >
+    <p dialogSubtitle>
+      {{
+        data.mode === 'create'
+          ? 'Registre uma saída do dia neste ciclo.'
+          : 'Atualize este lançamento do histórico.'
+      }}
+    </p>
     <div class="daily-expense-form__fields">
       <mat-form-field appearance="outline">
         <mat-label>Descrição</mat-label>
@@ -96,14 +83,5 @@
         <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingReferences()">
-      {{ saving() ? 'Salvando…' : 'Salvar despesa avulsa' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -19,19 +19,18 @@ import {
   toCreateDailyExpenseRequest,
   toUpdateDailyExpenseRequest,
 } from './daily-expense-form.models';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { nonBlank, validCivilDate } from '../../../../shared/forms/validators';
 import {
   compareCategories,
   compareCheckingAccounts,
 } from '../../../../core/reference/reference-ordering';
+import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 
 @Component({
   selector: 'app-daily-expense-form',
   imports: [
+    DialogFrameComponent,
     ReactiveFormsModule,
-    ButtonComponent,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,

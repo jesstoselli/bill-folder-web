@@ -1,26 +1,14 @@
 <form class="adjustment-form" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <div>
-      <h2 id="adjustment-form-title" mat-dialog-title>
-        {{ data.mode === 'create' ? 'Novo ajuste' : 'Editar ajuste' }}
-      </h2>
-      <p>Registre uma correção que aumenta ou reduz o resultado do ciclo.</p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar formulário de ajuste"
-    >
-      Fechar
-    </button>
-  </header>
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p class="adjustment-form__error" role="alert">{{ serverError() }}</p>
-    }
+  <app-dialog-frame
+    titleId="adjustment-form-title"
+    [heading]="data.mode === 'create' ? 'Novo ajuste' : 'Editar ajuste'"
+    closeLabel="Fechar formulário de ajuste"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar ajuste"
+    savingLabel="Salvando…"
+  >
+    <p dialogSubtitle>Registre uma correção que aumenta ou reduz o resultado do ciclo.</p>
     <div class="adjustment-form__fields">
       <mat-form-field appearance="outline"
         ><mat-label>Movimento</mat-label
@@ -59,12 +47,5 @@
         </mat-form-field>
       </div>
     </div>
-  </mat-dialog-content>
-  <mat-dialog-actions align="end"
-    ><button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar</button
-    ><button type="submit" appButton variant="primary" [disabled]="saving()">
-      {{ saving() ? 'Salvando…' : 'Salvar ajuste' }}
-    </button></mat-dialog-actions
-  >
+  </app-dialog-frame>
 </form>

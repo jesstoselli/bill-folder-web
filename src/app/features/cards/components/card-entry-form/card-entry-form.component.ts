@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,9 +17,9 @@ import {
   toCardEntryWrite,
   toUpdateCardEntryRequest,
 } from './card-entry-form.models';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { integer, nonBlank, validCivilDate } from '../../../../shared/forms/validators';
 import { compareCategories } from '../../../../core/reference/reference-ordering';
+import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 
 export type CardEntryFormDialogData =
   | { readonly mode: 'create'; readonly card: { readonly id: string; readonly name: string } }
@@ -28,10 +28,9 @@ export type CardEntryFormDialogData =
 @Component({
   selector: 'app-card-entry-form',
   imports: [
+    DialogFrameComponent,
     ReactiveFormsModule,
-    ButtonComponent,
     MatCheckboxModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,

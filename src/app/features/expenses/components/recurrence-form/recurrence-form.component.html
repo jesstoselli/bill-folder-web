@@ -1,28 +1,15 @@
 <form class="recurrence-form" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <div>
-      <h2 id="recurrence-form-title" mat-dialog-title>Nova recorrência</h2>
-      <p id="recurrence-form-description">Defina o valor e a cadência da despesa.</p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar nova recorrência"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p id="recurrence-form-error" class="recurrence-form__error" role="alert">
-        {{ serverError() }}
-      </p>
-    }
-
+  <app-dialog-frame
+    titleId="recurrence-form-title"
+    heading="Nova recorrência"
+    closeLabel="Fechar nova recorrência"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Criar recorrência"
+    savingLabel="Criando…"
+    [submitDisabled]="loadingCategories()"
+  >
+    <p dialogSubtitle id="recurrence-form-description">Defina o valor e a cadência da despesa.</p>
     <mat-form-field appearance="outline">
       <mat-label>Descrição</mat-label>
       <input matInput formControlName="defaultLabel" autocomplete="off" />
@@ -114,14 +101,5 @@
         }
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingCategories()">
-      {{ saving() ? 'Criando…' : 'Criar recorrência' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

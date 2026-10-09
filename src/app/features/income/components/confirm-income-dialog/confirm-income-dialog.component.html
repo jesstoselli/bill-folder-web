@@ -1,24 +1,16 @@
 <form class="confirm-income" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <h2 id="confirm-income-title" mat-dialog-title>Confirmar recebimento</h2>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar confirmação de recebimento"
-    >
-      Fechar
-    </button>
-  </header>
-  <mat-dialog-content>
+  <app-dialog-frame
+    titleId="confirm-income-title"
+    heading="Confirmar recebimento"
+    closeLabel="Fechar confirmação de recebimento"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Confirmar recebimento"
+    savingLabel="Confirmando…"
+  >
     <p id="confirm-income-description">
       Registre quanto e quando {{ data.entry.sourceOrigin ?? 'este recebimento avulso' }} entrou.
     </p>
-    @if (serverError()) {
-      <p class="confirm-income__error" role="alert">{{ serverError() }}</p>
-    }
     <div class="confirm-income__fields">
       <mat-form-field appearance="outline">
         <mat-label>Valor recebido</mat-label><span matTextPrefix>R$&nbsp;</span>
@@ -42,13 +34,5 @@
         }
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving()">
-      {{ saving() ? 'Confirmando…' : 'Confirmar recebimento' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

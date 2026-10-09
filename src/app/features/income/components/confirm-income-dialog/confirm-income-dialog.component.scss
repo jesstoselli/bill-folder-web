@@ -1,40 +1,12 @@
 :host {
   display: block;
 }
-.confirm-income {
-  min-width: min(31rem, calc(100vw - 2rem));
-}
-header {
-  align-items: start;
-  border-bottom: 1px solid var(--bf-outline);
-  display: flex;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem 1rem;
-  h2 {
-    font-size: 1.55rem;
-    font-weight: 500;
-    margin: 0;
-    padding: 0;
-  }
-}
-mat-dialog-content > p:first-child {
-  color: var(--bf-muted);
-  margin-top: 0;
-}
-.confirm-income__error {
-  border: 1px solid var(--bf-danger);
-  color: var(--bf-danger);
-  padding: 0.75rem;
-}
 .confirm-income__fields {
   display: grid;
   gap: 0.75rem;
   grid-template-columns: 1fr 1fr;
 }
 @media (max-width: 560px) {
-  .confirm-income {
-    min-width: 0;
-  }
   .confirm-income__fields {
     grid-template-columns: 1fr;
   }

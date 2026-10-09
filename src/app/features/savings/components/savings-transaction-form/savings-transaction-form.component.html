@@ -1,28 +1,14 @@
 <form class="savings-transaction-form" [formGroup]="form" (ngSubmit)="submit()">
-  <header>
-    <div>
-      <h2 id="savings-transaction-form-title" mat-dialog-title>
-        {{ data.mode === 'create' ? 'Novo movimento' : 'Editar movimento' }}
-      </h2>
-      <p>Registre o que entrou ou saiu da reserva.</p>
-    </div>
-    <button
-      type="button"
-      appButton
-      variant="text"
-      mat-dialog-close
-      [disabled]="saving()"
-      aria-label="Fechar formulário de movimento"
-    >
-      Fechar
-    </button>
-  </header>
-
-  <mat-dialog-content>
-    @if (serverError()) {
-      <p class="savings-transaction-form__error" role="alert">{{ serverError() }}</p>
-    }
-
+  <app-dialog-frame
+    titleId="savings-transaction-form-title"
+    [heading]="data.mode === 'create' ? 'Novo movimento' : 'Editar movimento'"
+    closeLabel="Fechar formulário de movimento"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar movimento"
+    savingLabel="Salvando…"
+  >
+    <p dialogSubtitle>Registre o que entrou ou saiu da reserva.</p>
     <div class="savings-transaction-form__fields">
       <mat-form-field appearance="outline">
         <mat-label>Movimento</mat-label>
@@ -84,14 +70,5 @@
         }
       </mat-form-field>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
-      Cancelar
-    </button>
-    <button type="submit" appButton variant="primary" [disabled]="saving()">
-      {{ saving() ? 'Salvando…' : 'Salvar movimento' }}
-    </button>
-  </mat-dialog-actions>
+  </app-dialog-frame>
 </form>

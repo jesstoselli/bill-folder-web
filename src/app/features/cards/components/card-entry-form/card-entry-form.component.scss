@@ -2,30 +2,6 @@
   display: block;
 }
 
-.card-entry-form {
-  min-width: min(34rem, calc(100vw - 2rem));
-
-  header {
-    align-items: start;
-    border-bottom: 1px solid var(--bf-outline);
-    display: flex;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem 1rem;
-  }
-
-  h2 {
-    font-size: 1.65rem;
-    font-weight: 500;
-    margin: 0;
-    padding: 0;
-  }
-
-  header p {
-    color: var(--bf-muted);
-    margin: 0.3rem 0 0;
-  }
-}
-
 .card-entry-form__fields {
   display: grid;
   gap: 0.25rem;
@@ -38,12 +14,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.card-entry-form__error {
-  border: 1px solid var(--bf-danger);
-  color: var(--bf-danger);
-  padding: 0.75rem;
-}
-
 .card-entry-form__recurrence-note {
   background: var(--bf-surface-high);
   border-left: 3px solid var(--bf-primary);
@@ -53,14 +23,6 @@
 }
 
 @media (max-width: 560px) {
-  .card-entry-form {
-    min-width: 0;
-
-    header {
-      padding-inline: 1rem;
-    }
-  }
-
   .card-entry-form__split {
     grid-template-columns: 1fr;
   }
