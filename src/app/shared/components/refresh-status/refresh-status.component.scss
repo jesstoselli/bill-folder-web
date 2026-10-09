@@ -2,6 +2,12 @@
   display: block;
 }
 
+// Without a failure the host is empty but would still take a grid gap in the
+// page layouts.
+:host:empty {
+  display: none;
+}
+
 .refresh-status {
   align-items: center;
   background: color-mix(in srgb, var(--bf-danger) 8%, transparent);

@@ -31,7 +31,6 @@
     }
     @case ('content') {
       @if (content(); as data) {
-        <app-refresh-status [state]="store.state()" (retry)="refresh()" />
         <div class="home-page__cycle-row">
           <app-cycle-navigator
             [label]="data.cycle.label"
@@ -46,6 +45,7 @@
             <span class="home-page__updating" role="status">Atualizando dados…</span>
           }
         </div>
+        <app-refresh-status [state]="store.state()" (retry)="refresh()" />
 
         <div class="home-page__layout">
           <div class="home-page__primary">
