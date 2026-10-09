@@ -68,7 +68,7 @@
         </mat-form-field>
       } @else {
         <p class="card-entry-form__recurrence-note">
-          A assinatura gera uma cobrança por ciclo. Ela não cria parcelas.
+          A assinatura gera uma cobrança por ciclo. Ela não cria parcelas nem guarda observações.
         </p>
       }
 
@@ -84,11 +84,13 @@
         }
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Observações</mat-label>
-        <textarea matInput rows="3" formControlName="notes"></textarea>
-        <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
-      </mat-form-field>
+      @if (!form.controls.repeatMonthly.value) {
+        <mat-form-field appearance="outline" data-field="notes">
+          <mat-label>Observações</mat-label>
+          <textarea matInput rows="3" formControlName="notes"></textarea>
+          <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
+        </mat-form-field>
+      }
     </div>
   </app-dialog-frame>
 </form>

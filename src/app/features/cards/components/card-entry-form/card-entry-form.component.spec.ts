@@ -74,6 +74,9 @@ describe('CardEntryFormComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('[data-field="installments"]')).toBeNull();
+    // The recurrence API has no notes field, so the form must not offer one.
+    expect(fixture.nativeElement.querySelector('[data-field="notes"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('nem guarda observações');
     await component.submit();
 
     expect(createEntry).not.toHaveBeenCalled();
