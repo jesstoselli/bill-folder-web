@@ -1,19 +1,19 @@
 import { Component, DestroyRef, ElementRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, EMPTY, finalize, from, of, switchMap, tap } from 'rxjs';
 import { AuthApi } from '../../../core/auth/auth.api';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 
 const SEND_ERROR = 'Não foi possível enviar o código. Tente novamente.';
 const NAVIGATION_ERROR = 'Não foi possível abrir a próxima etapa. Tente novamente.';
 
 @Component({
   selector: 'app-forgot-password-page',
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, MatFormFieldModule, MatInputModule],
   templateUrl: './forgot-password.page.html',
   styleUrl: './forgot-password.page.scss',
 })

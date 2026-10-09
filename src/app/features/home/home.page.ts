@@ -11,10 +11,12 @@ import { collectHomeRows, projectRecent } from './home-projections';
 import { HomeStore } from './home.store';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-home-page',
   imports: [
+    ButtonComponent,
     RouterLink,
     CycleNavigatorComponent,
     PageStateComponent,

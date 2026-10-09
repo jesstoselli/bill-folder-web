@@ -55,7 +55,13 @@
           <p class="auth-form__status" role="alert">{{ errorMessage() }}</p>
         }
 
-        <button class="auth-form__submit" mat-flat-button type="submit" [disabled]="submitting()">
+        <button
+          class="auth-form__submit"
+          appButton
+          variant="primary"
+          type="submit"
+          [disabled]="submitting()"
+        >
           {{ submitting() ? 'Entrando…' : 'Entrar' }}
         </button>
       </form>

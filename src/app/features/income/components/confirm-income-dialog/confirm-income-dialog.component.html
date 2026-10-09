@@ -3,7 +3,8 @@
     <h2 id="confirm-income-title" mat-dialog-title>Confirmar recebimento</h2>
     <button
       type="button"
-      mat-button
+      appButton
+      variant="text"
       mat-dialog-close
       [disabled]="saving()"
       aria-label="Fechar confirmação de recebimento"
@@ -43,8 +44,10 @@
     </div>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
-    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
-    <button type="submit" mat-flat-button [disabled]="saving()">
+    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
+      Cancelar
+    </button>
+    <button type="submit" appButton variant="primary" [disabled]="saving()">
       {{ saving() ? 'Confirmando…' : 'Confirmar recebimento' }}
     </button>
   </mat-dialog-actions>

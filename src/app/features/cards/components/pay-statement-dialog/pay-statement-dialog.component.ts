@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,6 +16,7 @@ import { formatBrl } from '../../../../shared/formatters/money';
 import { canPayStatement } from '../../card-cycle';
 import { CardStatementDetailResponse } from '../../cards.models';
 import { CardsStore } from '../../cards.store';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 export interface PayStatementDialogData {
   readonly statement: CardStatementDetailResponse;
@@ -26,7 +26,7 @@ export interface PayStatementDialogData {
   selector: 'app-pay-statement-dialog',
   imports: [
     ReactiveFormsModule,
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,

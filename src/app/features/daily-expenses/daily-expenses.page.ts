@@ -7,7 +7,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { CycleStore } from '../../core/cycles/cycle.store';
@@ -21,6 +20,7 @@ import { DailyExpenseResponse } from './daily-expenses.models';
 import { DailyExpensesStore } from './daily-expenses.store';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: DailyExpenseResponse; readonly focus: RowFocus }
@@ -41,7 +41,7 @@ type DailyExpensesViewState =
 @Component({
   selector: 'app-daily-expenses-page',
   imports: [
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     MatMenuModule,
     CycleNavigatorComponent,

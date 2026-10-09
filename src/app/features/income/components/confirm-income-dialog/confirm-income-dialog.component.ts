@@ -1,6 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,12 +8,13 @@ import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { parseCivilDate } from '../../../../shared/formatters/civil-date';
 import { IncomeEntryResponse } from '../../income.models';
 import { IncomeStore } from '../../income.store';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-confirm-income-dialog',
   imports: [
     ReactiveFormsModule,
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,

@@ -24,23 +24,6 @@
   display: flex;
   gap: 0.75rem;
 }
-.adjustments-page__refresh,
-.adjustments-page__state button {
-  background: transparent;
-  border: 1px solid var(--bf-outline);
-  border-radius: 999px;
-  color: var(--bf-text);
-  cursor: pointer;
-  min-height: 2.75rem;
-  padding: 0.55rem 1rem;
-  &:hover {
-    border-color: var(--bf-primary);
-  }
-  &:focus-visible {
-    box-shadow: var(--bf-focus-ring);
-    outline: 1px solid var(--bf-primary);
-  }
-}
 .adjustments-page__error {
   border: 1px solid var(--bf-danger);
   color: var(--bf-danger);
@@ -101,23 +84,6 @@
   display: flex;
   gap: 0.4rem;
   justify-content: flex-end;
-  button {
-    background: transparent;
-    border: 0;
-    color: var(--bf-primary);
-    cursor: pointer;
-    min-height: 2.25rem;
-    padding: 0.35rem 0.5rem;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-  button:last-child {
-    color: var(--bf-danger);
-  }
-  button:focus-visible {
-    box-shadow: var(--bf-focus-ring);
-    outline: 1px solid var(--bf-primary);
-  }
 }
 @media (max-width: 720px) {
   .adjustments-page__header,

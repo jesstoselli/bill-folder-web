@@ -6,7 +6,6 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -24,6 +23,7 @@ import {
   toCardEntryWrite,
   toUpdateCardEntryRequest,
 } from './card-entry-form.models';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 export type CardEntryFormDialogData =
   | { readonly mode: 'create'; readonly card: { readonly id: string; readonly name: string } }
@@ -33,7 +33,7 @@ export type CardEntryFormDialogData =
   selector: 'app-card-entry-form',
   imports: [
     ReactiveFormsModule,
-    MatButtonModule,
+    ButtonComponent,
     MatCheckboxModule,
     MatDialogModule,
     MatFormFieldModule,

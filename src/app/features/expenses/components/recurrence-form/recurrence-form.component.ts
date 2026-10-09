@@ -6,7 +6,6 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,12 +18,13 @@ import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { ExpensesStore } from '../../expenses.store';
 import { ExpenseRecurrenceFrequency } from '../../expenses.models';
 import { RecurrenceFormValue, toCreateExpenseRecurrenceRequest } from './recurrence-form.models';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-recurrence-form',
   imports: [
     ReactiveFormsModule,
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,

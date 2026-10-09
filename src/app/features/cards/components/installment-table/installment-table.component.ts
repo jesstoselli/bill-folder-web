@@ -3,8 +3,10 @@ import { CardEntryResponse, StatementInstallmentDto } from '../../cards.models';
 import { formatCivilDate } from '../../../../shared/formatters/civil-date';
 import { formatBrl } from '../../../../shared/formatters/money';
 import { isSubscription } from '../card-entry-form/card-entry-form.models';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 @Component({
+  imports: [ButtonComponent],
   selector: 'app-installment-table',
   templateUrl: './installment-table.component.html',
   styleUrl: './installment-table.component.scss',

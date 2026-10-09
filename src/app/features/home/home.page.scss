@@ -23,28 +23,6 @@
   }
 }
 
-.home-page__refresh,
-.home-page__error button {
-  background: transparent;
-  border: 1px solid var(--bf-outline);
-  border-radius: 999px;
-  color: var(--bf-text);
-  cursor: pointer;
-  min-height: 2.75rem;
-  padding: 0.55rem 1rem;
-
-  &:hover {
-    border-color: var(--bf-primary);
-    color: var(--bf-primary);
-  }
-
-  &:focus-visible {
-    box-shadow: var(--bf-focus-ring);
-    outline: 1px solid var(--bf-primary);
-    outline-offset: 2px;
-  }
-}
-
 .home-page__cycle-row {
   align-items: center;
   display: flex;

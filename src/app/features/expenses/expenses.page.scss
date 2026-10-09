@@ -28,28 +28,6 @@
   gap: 0.75rem;
 }
 
-.expenses-page__refresh,
-.expenses-page__error button {
-  background: transparent;
-  border: 1px solid var(--bf-outline);
-  border-radius: 999px;
-  color: var(--bf-text);
-  cursor: pointer;
-  min-height: 2.75rem;
-  padding: 0.55rem 1rem;
-
-  &:hover {
-    border-color: var(--bf-primary);
-    color: var(--bf-primary);
-  }
-
-  &:focus-visible {
-    box-shadow: var(--bf-focus-ring);
-    outline: 1px solid var(--bf-primary);
-    outline-offset: 2px;
-  }
-}
-
 .expenses-page__updating {
   color: var(--bf-muted);
 }

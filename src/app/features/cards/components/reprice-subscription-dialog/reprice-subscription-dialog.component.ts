@@ -1,6 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -10,6 +9,7 @@ import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { formatBrl } from '../../../../shared/formatters/money';
 import { CardEntryResponse } from '../../cards.models';
 import { CardsStore } from '../../cards.store';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 export interface RepriceSubscriptionDialogData {
   readonly entry: Pick<CardEntryResponse, 'id' | 'label' | 'totalAmount'>;
@@ -20,7 +20,7 @@ export interface RepriceSubscriptionDialogData {
   selector: 'app-reprice-subscription-dialog',
   imports: [
     ReactiveFormsModule,
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,

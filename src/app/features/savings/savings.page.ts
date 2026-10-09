@@ -8,7 +8,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs';
@@ -27,6 +26,7 @@ import { savingsTypeSign } from './savings.projections';
 import { SavingsStore } from './savings.store';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 
 interface RowFocus {
   readonly accountId: string;
@@ -55,7 +55,7 @@ type SavingsViewState =
 @Component({
   selector: 'app-savings-page',
   imports: [
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     CycleNavigatorComponent,
     PageStateComponent,

@@ -1,7 +1,9 @@
 import { Component, input, output } from '@angular/core';
 import { LoadState } from '../../states/load-state';
+import { ButtonComponent } from '../button/button.component';
 
 @Component({
+  imports: [ButtonComponent],
   selector: 'app-refresh-status',
   templateUrl: './refresh-status.component.html',
   styleUrl: './refresh-status.component.scss',

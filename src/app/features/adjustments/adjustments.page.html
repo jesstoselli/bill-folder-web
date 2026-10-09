@@ -5,10 +5,11 @@
       <p>Correções pontuais que reconciliam o resultado sem virar uma despesa.</p>
     </div>
     <div class="adjustments-page__actions">
-      <button type="button" class="adjustments-page__refresh" (click)="refresh()">Atualizar</button
+      <button type="button" appButton (click)="refresh()">Atualizar</button
       ><button
         type="button"
-        mat-flat-button
+        appButton
+        variant="primary"
         class="adjustments-page__create"
         [disabled]="cycles.current() === null"
         (click)="openCreate()"
@@ -44,6 +45,7 @@
       <div class="adjustments-page__state">
         <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" /><button
           type="button"
+          appButton
           (click)="refresh()"
         >
           Tentar novamente
@@ -56,7 +58,7 @@
           state="empty"
           title="Nenhum ciclo disponível"
           message="Crie ou disponibilize um ciclo para registrar e consultar ajustes."
-        /><button type="button" (click)="refresh()">Buscar ciclos novamente</button>
+        /><button type="button" appButton (click)="refresh()">Buscar ciclos novamente</button>
       </div>
     }
     @case ('content') {
@@ -110,6 +112,9 @@
                   </td>
                   <td class="adjustments-sheet__actions">
                     <button
+                      appButton
+                      variant="text"
+                      size="sm"
                       type="button"
                       data-row-action
                       data-action="edit"
@@ -117,6 +122,10 @@
                     >
                       Editar</button
                     ><button
+                      appButton
+                      variant="text"
+                      size="sm"
+                      tone="danger"
                       type="button"
                       data-row-action
                       data-action="delete"

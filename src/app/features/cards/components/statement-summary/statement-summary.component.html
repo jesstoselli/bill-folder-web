@@ -34,7 +34,7 @@
   </dl>
 
   @if (canPayStatement(statement().status)) {
-    <button type="button" mat-flat-button (click)="pay.emit()">Pagar fatura</button>
+    <button type="button" appButton variant="primary" (click)="pay.emit()">Pagar fatura</button>
   }
 
   @if (statement().status === 'paid') {

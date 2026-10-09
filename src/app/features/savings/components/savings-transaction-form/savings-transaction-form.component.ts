@@ -6,7 +6,6 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,6 +15,7 @@ import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { parseCivilDate } from '../../../../shared/formatters/civil-date';
 import { SavingsTransactionResponse, SavingsTransactionType } from '../../savings.models';
 import { SavingsStore } from '../../savings.store';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 export type SavingsTransactionFormDialogData =
   | { readonly mode: 'create'; readonly accountId: string }
@@ -29,7 +29,7 @@ export type SavingsTransactionFormDialogData =
   selector: 'app-savings-transaction-form',
   imports: [
     ReactiveFormsModule,
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,

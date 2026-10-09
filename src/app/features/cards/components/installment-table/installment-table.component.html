@@ -37,15 +37,33 @@
             </td>
             <td class="installment-table__actions">
               @if (isSubscription(entry)) {
-                <button type="button" data-action="reprice" (click)="reprice.emit(entry)">
+                <button
+                  appButton
+                  variant="text"
+                  size="sm"
+                  type="button"
+                  data-action="reprice"
+                  (click)="reprice.emit(entry)"
+                >
                   Reajustar assinatura
                 </button>
               } @else {
-                <button type="button" data-action="edit" (click)="edit.emit(entry)">
+                <button
+                  appButton
+                  variant="text"
+                  size="sm"
+                  type="button"
+                  data-action="edit"
+                  (click)="edit.emit(entry)"
+                >
                   Editar compra
                 </button>
               }
               <button
+                appButton
+                variant="text"
+                size="sm"
+                tone="danger"
                 type="button"
                 data-action="delete"
                 [disabled]="deletePending(entry.id)"

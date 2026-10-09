@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { RecurrenceScopeDialogData, ScopeChoice } from './recurrence-scope.models';
+import { ButtonComponent } from '../../components/button/button.component';
 
 @Component({
   selector: 'app-recurrence-scope-dialog',
-  imports: [MatButtonModule, MatDialogModule],
+  imports: [ButtonComponent, MatDialogModule],
   templateUrl: './recurrence-scope-dialog.component.html',
   styleUrl: './recurrence-scope-dialog.component.scss',
 })

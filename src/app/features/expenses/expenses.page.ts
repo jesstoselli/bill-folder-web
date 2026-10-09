@@ -10,7 +10,6 @@ import {
   untracked,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -31,6 +30,7 @@ import { RecurrenceScopeDialogComponent } from '../../shared/dialogs/recurrence-
 import { ScopeChoice } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: ExpenseProjection }
@@ -60,7 +60,7 @@ type ExpensesViewState =
 @Component({
   selector: 'app-expenses-page',
   imports: [
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     MatMenuModule,
     NgTemplateOutlet,

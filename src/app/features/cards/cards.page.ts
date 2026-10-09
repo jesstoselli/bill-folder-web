@@ -7,7 +7,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { mapApiError } from '../../core/http/api-error';
@@ -26,6 +25,7 @@ import { StatementSummaryComponent } from './components/statement-summary/statem
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
 import { LoadState } from '../../shared/states/load-state';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 
 interface EntryFocusContext {
   readonly cardId: string;
@@ -49,7 +49,7 @@ type CardsViewState =
 @Component({
   selector: 'app-cards-page',
   imports: [
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     PageStateComponent,
     CardSelectorComponent,

@@ -35,6 +35,12 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+// Material only spaces its own buttons inside dialog actions; appButton needs
+// the gap set on the container.
+.mat-mdc-dialog-actions {
+  gap: 0.5rem;
+}
+
 ::selection {
   background: var(--bf-brand);
   color: var(--bf-bg);

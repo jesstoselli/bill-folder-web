@@ -6,6 +6,7 @@
     </div>
     <button
       class="home-page__refresh"
+      appButton
       type="button"
       [attr.aria-busy]="refreshing()"
       (click)="refresh()"
@@ -25,7 +26,7 @@
           title="Não foi possível carregar a Home"
           [message]="errorMessage()"
         />
-        <button type="button" (click)="refresh()">Tentar novamente</button>
+        <button type="button" appButton (click)="refresh()">Tentar novamente</button>
       </div>
     }
     @case ('content') {
@@ -77,7 +78,9 @@
                       title="Não foi possível carregar as despesas avulsas recentes"
                       [message]="recentErrorMessage()"
                     />
-                    <button type="button" (click)="store.refreshRecent()">Tentar novamente</button>
+                    <button type="button" appButton (click)="store.refreshRecent()">
+                      Tentar novamente
+                    </button>
                   </div>
                 } @else {
                   <app-projection-list

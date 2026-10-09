@@ -6,7 +6,6 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,6 +15,7 @@ import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { parseCivilDate } from '../../../../shared/formatters/civil-date';
 import { CycleAdjustmentResponse, CycleAdjustmentType } from '../../adjustments.models';
 import { AdjustmentsStore } from '../../adjustments.store';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 export type AdjustmentFormDialogData =
   | { readonly mode: 'create' }
@@ -25,7 +25,7 @@ export type AdjustmentFormDialogData =
   selector: 'app-adjustment-form',
   imports: [
     ReactiveFormsModule,
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,

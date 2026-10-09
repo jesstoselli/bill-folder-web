@@ -1,13 +1,13 @@
 import { Component, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { canPayStatement } from '../../card-cycle';
 import { CardStatementDetailResponse, CardStatementStatus } from '../../cards.models';
 import { formatCivilDate } from '../../../../shared/formatters/civil-date';
 import { formatBrl } from '../../../../shared/formatters/money';
+import { ButtonComponent } from '../../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-statement-summary',
-  imports: [MatButtonModule],
+  imports: [ButtonComponent],
   templateUrl: './statement-summary.component.html',
   styleUrl: './statement-summary.component.scss',
 })

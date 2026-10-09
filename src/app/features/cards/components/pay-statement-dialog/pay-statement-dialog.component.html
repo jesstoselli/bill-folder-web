@@ -8,7 +8,8 @@
     </div>
     <button
       type="button"
-      mat-button
+      appButton
+      variant="text"
       mat-dialog-close
       [disabled]="saving()"
       aria-label="Fechar pagamento de fatura"
@@ -60,8 +61,10 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
-    <button type="submit" mat-flat-button [disabled]="saving() || loadingAccounts()">
+    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
+      Cancelar
+    </button>
+    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingAccounts()">
       {{ saving() ? 'Pagando…' : 'Confirmar pagamento' }}
     </button>
   </mat-dialog-actions>

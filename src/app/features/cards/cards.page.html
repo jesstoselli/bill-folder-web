@@ -5,10 +5,11 @@
       <p>Compras, assinaturas e pagamentos organizados pela fatura real de cada cartão.</p>
     </div>
     <div class="cards-page__header-actions">
-      <button type="button" class="cards-page__quiet-action" (click)="refresh()">Atualizar</button>
+      <button type="button" appButton (click)="refresh()">Atualizar</button>
       <button
         type="button"
-        mat-flat-button
+        appButton
+        variant="primary"
         data-page-action="create"
         [disabled]="store.selectedCard() === null"
         (click)="openCreate()"
@@ -68,7 +69,7 @@
           title="Não foi possível carregar os cartões"
           [message]="loadError()"
         />
-        <button type="button" (click)="refresh()">Tentar novamente</button>
+        <button type="button" appButton (click)="refresh()">Tentar novamente</button>
       </div>
     }
     @case ('no-cards') {

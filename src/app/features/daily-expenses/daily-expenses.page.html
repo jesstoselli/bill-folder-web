@@ -5,12 +5,11 @@
       <p>Saídas do dia em ordem cronológica, sem misturar contas futuras.</p>
     </div>
     <div class="daily-expenses-page__actions">
-      <button type="button" class="daily-expenses-page__refresh" (click)="refresh()">
-        Atualizar
-      </button>
+      <button type="button" appButton (click)="refresh()">Atualizar</button>
       <button
         type="button"
-        mat-flat-button
+        appButton
+        variant="primary"
         [disabled]="cycles.current() === null"
         (click)="openCreate()"
       >
@@ -49,7 +48,7 @@
     @case ('error') {
       <div class="daily-expenses-page__state">
         <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" />
-        <button type="button" (click)="refresh()">Tentar novamente</button>
+        <button type="button" appButton (click)="refresh()">Tentar novamente</button>
       </div>
     }
     @case ('no-cycle') {
@@ -59,7 +58,7 @@
           title="Nenhum ciclo disponível"
           message="Crie ou disponibilize um ciclo para registrar e consultar despesas avulsas."
         />
-        <button type="button" (click)="refresh()">Buscar ciclos novamente</button>
+        <button type="button" appButton (click)="refresh()">Buscar ciclos novamente</button>
       </div>
     }
     @case ('content') {

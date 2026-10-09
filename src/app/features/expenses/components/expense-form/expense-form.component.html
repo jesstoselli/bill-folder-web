@@ -14,7 +14,8 @@
     </div>
     <button
       type="button"
-      mat-button
+      appButton
+      variant="text"
       mat-dialog-close
       aria-label="Fechar formulário de despesa"
       [disabled]="saving()"
@@ -84,8 +85,10 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
-    <button type="submit" mat-flat-button [disabled]="saving() || loadingCategories()">
+    <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
+      Cancelar
+    </button>
+    <button type="submit" appButton variant="primary" [disabled]="saving() || loadingCategories()">
       {{ saving() ? 'Salvando…' : 'Salvar despesa' }}
     </button>
   </mat-dialog-actions>

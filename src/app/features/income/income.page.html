@@ -5,10 +5,11 @@
       <p>Entradas previstas e recebidas, organizadas pela situação real.</p>
     </div>
     <div class="income-page__actions">
-      <button type="button" class="income-page__refresh" (click)="refresh()">Atualizar</button
+      <button type="button" appButton (click)="refresh()">Atualizar</button
       ><button
         type="button"
-        mat-flat-button
+        appButton
+        variant="primary"
         [disabled]="cycles.current() === null"
         (click)="openCreate()"
       >
@@ -45,6 +46,7 @@
       <div class="income-page__state">
         <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" /><button
           type="button"
+          appButton
           (click)="refresh()"
         >
           Tentar novamente
@@ -57,7 +59,7 @@
           state="empty"
           title="Nenhum ciclo disponível"
           message="Crie ou disponibilize um ciclo para registrar e consultar recebimentos."
-        /><button type="button" (click)="refresh()">Buscar ciclos novamente</button>
+        /><button type="button" appButton (click)="refresh()">Buscar ciclos novamente</button>
       </div>
     }
     @case ('content') {
@@ -203,14 +205,34 @@
     </td>
     <td class="income-ledger__row-actions">
       @if (canConfirm(entry.status)) {
-        <button type="button" data-row-action data-action="confirm" (click)="openConfirm(entry)">
+        <button
+          appButton
+          variant="text"
+          size="sm"
+          type="button"
+          data-row-action
+          data-action="confirm"
+          (click)="openConfirm(entry)"
+        >
           Confirmar
         </button>
       }
-      <button type="button" data-row-action data-action="edit" (click)="openEdit(entry)">
+      <button
+        appButton
+        variant="text"
+        size="sm"
+        type="button"
+        data-row-action
+        data-action="edit"
+        (click)="openEdit(entry)"
+      >
         Editar
       </button>
       <button
+        appButton
+        variant="text"
+        size="sm"
+        tone="danger"
         type="button"
         data-row-action
         data-action="delete"

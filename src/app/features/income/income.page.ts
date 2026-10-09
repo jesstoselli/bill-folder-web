@@ -8,7 +8,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { mapApiError } from '../../core/http/api-error';
@@ -22,6 +21,7 @@ import { IncomeEntryResponse } from './income.models';
 import { IncomeStore } from './income.store';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 
 type IncomeAction = 'confirm' | 'edit' | 'delete';
 interface RowFocus {
@@ -40,7 +40,7 @@ type IncomeViewState =
   selector: 'app-income-page',
   imports: [
     NgTemplateOutlet,
-    MatButtonModule,
+    ButtonComponent,
     MatDialogModule,
     CycleNavigatorComponent,
     PageStateComponent,

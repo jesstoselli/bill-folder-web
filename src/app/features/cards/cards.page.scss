@@ -25,8 +25,6 @@
   gap: 0.75rem;
 }
 
-.cards-page__quiet-action,
-.cards-page__state button,
 .statement-navigation__arrow {
   background: transparent;
   border: 1px solid var(--bf-outline);
@@ -37,18 +35,6 @@
     box-shadow: var(--bf-focus-ring);
     outline: 1px solid var(--bf-primary);
     outline-offset: 2px;
-  }
-}
-
-.cards-page__quiet-action,
-.cards-page__state button {
-  border-radius: 999px;
-  min-height: 2.75rem;
-  padding: 0.55rem 1rem;
-
-  &:hover {
-    border-color: var(--bf-primary);
-    color: var(--bf-primary);
   }
 }
 
