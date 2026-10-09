@@ -54,7 +54,7 @@
               <div class="home-page__section-header">
                 <div>
                   <h2 id="obligations-title">Movimento do ciclo</h2>
-                  <p>Contas, faturas e gastos diários em um só lugar.</p>
+                  <p>Contas, faturas e despesas avulsas em um só lugar.</p>
                 </div>
                 <app-home-tabs
                   [selected]="selectedTab()"
@@ -74,7 +74,7 @@
                   <div class="home-page__error">
                     <app-page-state
                       state="error"
-                      title="Não foi possível carregar os gastos recentes"
+                      title="Não foi possível carregar as despesas avulsas recentes"
                       [message]="recentErrorMessage()"
                     />
                     <button type="button" (click)="store.refreshRecent()">Tentar novamente</button>
@@ -102,13 +102,13 @@
             <nav class="home-page__shortcuts" aria-labelledby="shortcuts-title">
               <h2 id="shortcuts-title">Atalhos</h2>
               <a routerLink="/gastos-diarios">
-                <span>Gastos diários</span><span aria-hidden="true">Abrir</span>
+                <span>Despesas avulsas</span><span aria-hidden="true">Abrir</span>
               </a>
               <a routerLink="/despesas">
                 <span>Despesas</span><span aria-hidden="true">Abrir</span>
               </a>
               <a routerLink="/receitas">
-                <span>Receitas</span><span aria-hidden="true">Abrir</span>
+                <span>Recebimentos</span><span aria-hidden="true">Abrir</span>
               </a>
               <a routerLink="/cartoes">
                 <span>Cartões</span><span aria-hidden="true">Abrir</span>

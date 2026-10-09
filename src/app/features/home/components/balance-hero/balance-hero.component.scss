@@ -12,11 +12,11 @@
   border: 1px solid var(--bf-primary);
   border-radius: var(--bf-radius-hero);
   display: grid;
-  gap: 1.5rem;
-  grid-template-rows: auto minmax(5rem, 1fr) auto;
-  min-height: 19rem;
+  gap: 1.25rem;
+  grid-template-rows: auto minmax(4rem, 1fr) auto;
+  min-height: 16.25rem;
   overflow: hidden;
-  padding: clamp(1.5rem, 4vw, 3.25rem);
+  padding: clamp(1.35rem, 3vw, 2.5rem);
   position: relative;
 
   &::after {
@@ -51,7 +51,7 @@
 .balance-hero__amount {
   align-self: center;
   color: var(--bf-primary);
-  font-size: clamp(3.1rem, 7vw, 6rem);
+  font-size: clamp(2.9rem, 6vw, 5.25rem);
   font-weight: 500;
   justify-self: end;
   letter-spacing: -0.055em;
@@ -83,7 +83,7 @@
 
 @media (max-width: 700px) {
   .balance-hero {
-    gap: 1.5rem;
+    gap: 1.25rem;
     min-height: 0;
   }
 

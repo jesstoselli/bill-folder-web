@@ -166,13 +166,13 @@ export class IncomePage implements OnInit {
   protected statusLabel(status: string): string {
     switch (status) {
       case 'expected':
-        return 'Prevista';
+        return 'Previsto';
       case 'received':
-        return 'Recebida';
+        return 'Recebido';
       case 'late':
-        return 'Atrasada';
+        return 'Em atraso';
       case 'notOccurred':
-        return 'Não realizada';
+        return 'Não realizado';
       default:
         return status;
     }
@@ -188,7 +188,7 @@ export class IncomePage implements OnInit {
     const state = this.pageState();
     return state.kind === 'error' && state.source === 'cycles'
       ? 'Não foi possível carregar os ciclos'
-      : 'Não foi possível carregar as receitas';
+      : 'Não foi possível carregar os recebimentos';
   }
 
   private async performDelete(id: string, focus: RowFocus): Promise<void> {

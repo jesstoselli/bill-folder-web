@@ -22,12 +22,12 @@ const NAVIGATION_DESTINATIONS: readonly NavigationDestination[] = [
       'M5 3h14a1 1 0 0 1 1 1v16l-3-1.8-2.5 1.8-2.5-1.8L9.5 20 7 18.2 4 20V4a1 1 0 0 1 1-1zm3 5h8M8 12h8',
   },
   {
-    label: 'Gastos diários',
+    label: 'Despesas avulsas',
     path: '/gastos-diarios',
     iconPath: 'M4 7h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm3-4v4m10-4v4M4 10h16m-8 3v4m-2-2h4',
   },
   {
-    label: 'Receitas',
+    label: 'Recebimentos',
     path: '/receitas',
     iconPath: 'M12 21V5m-5 5 5-5 5 5M5 15v4h14v-4',
   },

@@ -36,7 +36,7 @@ describe('ProjectionListComponent', () => {
   it('labels a recent daily expense with its date instead of a due date', () => {
     const fixture = TestBed.createComponent(ProjectionListComponent);
     fixture.componentRef.setInput('rows', projectRecent([dailyExpense({ date: '2026-10-20' })]));
-    fixture.componentRef.setInput('emptyMessage', 'Nenhum gasto diário neste ciclo.');
+    fixture.componentRef.setInput('emptyMessage', 'Nenhuma despesa avulsa neste ciclo.');
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
 

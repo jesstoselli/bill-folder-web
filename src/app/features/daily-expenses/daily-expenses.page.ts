@@ -93,7 +93,7 @@ export class DailyExpensesPage implements OnInit {
     const state = this.pageState();
     return state.kind === 'error' && state.source === 'cycles'
       ? 'Não foi possível carregar os ciclos'
-      : 'Não foi possível carregar os gastos';
+      : 'Não foi possível carregar as despesas avulsas';
   });
   protected readonly actionError = signal('');
   protected readonly formatCivilDate = formatCivilDate;

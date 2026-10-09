@@ -73,7 +73,7 @@ export class HomePage implements OnInit {
       case 'upcoming':
         return 'Nenhuma conta a vencer neste ciclo.';
       case 'recent':
-        return 'Nenhum gasto diário neste ciclo.';
+        return 'Nenhuma despesa avulsa neste ciclo.';
       case 'overdue':
         return 'Nada atrasado neste ciclo.';
     }

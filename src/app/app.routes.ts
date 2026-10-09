@@ -53,13 +53,13 @@ export const routes: Routes = [
           import('./features/daily-expenses/daily-expenses.page').then(
             ({ DailyExpensesPage }) => DailyExpensesPage,
           ),
-        data: { title: 'Gastos diários' },
+        data: { title: 'Despesas avulsas' },
       },
       {
         path: 'receitas',
         loadComponent: () =>
           import('./features/income/income.page').then(({ IncomePage }) => IncomePage),
-        data: { title: 'Receitas' },
+        data: { title: 'Recebimentos' },
       },
       {
         path: 'cartoes',

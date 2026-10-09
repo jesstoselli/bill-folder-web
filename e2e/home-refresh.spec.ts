@@ -10,7 +10,7 @@ test('Home reflects a write without reloading the browser page', async ({ api, c
     return global.__billFolderE2EPageIdentity;
   });
 
-  await page.getByLabel('Despesas').click();
+  await page.getByLabel('Despesas', { exact: true }).click();
   await page.getByRole('button', { name: 'Nova despesa' }).click();
   await page.getByLabel('Descrição').fill('Internet E2E');
   await page.getByLabel('Vencimento').fill('2026-10-22');

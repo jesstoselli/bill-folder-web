@@ -98,4 +98,16 @@ describe('HomePage tabs', () => {
     expect(document.activeElement).toBe(recent);
     expect(panel?.getAttribute('aria-labelledby')).toBe(recent?.id);
   });
+
+  it('uses the same finance vocabulary as the mobile app', () => {
+    const fixture = TestBed.createComponent(HomePage);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const shortcuts = [...root.querySelectorAll('.home-page__shortcuts a')].map((link) =>
+      link.textContent?.replace('Abrir', '').trim(),
+    );
+
+    expect(root.textContent).toContain('Contas, faturas e despesas avulsas em um só lugar.');
+    expect(shortcuts).toEqual(['Despesas avulsas', 'Despesas', 'Recebimentos', 'Cartões']);
+  });
 });

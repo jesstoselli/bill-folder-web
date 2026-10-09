@@ -1,7 +1,7 @@
 <section class="income-page">
   <header class="income-page__header">
     <div>
-      <h1 class="bf-heading-page">Receitas do ciclo</h1>
+      <h1 class="bf-heading-page">Recebimentos</h1>
       <p>Entradas previstas e recebidas, organizadas pela situação real.</p>
     </div>
     <div class="income-page__actions">
@@ -12,7 +12,7 @@
         [disabled]="cycles.current() === null"
         (click)="openCreate()"
       >
-        Nova receita
+        Novo recebimento
       </button>
     </div>
   </header>
@@ -29,7 +29,7 @@
         (next)="selectNextCycle()"
       />
       @if (refreshing()) {
-        <span role="status">Atualizando receitas…</span>
+        <span role="status">Atualizando recebimentos…</span>
       }
     </div>
   }
@@ -56,13 +56,13 @@
         <app-page-state
           state="empty"
           title="Nenhum ciclo disponível"
-          message="Crie ou disponibilize um ciclo para registrar e consultar receitas."
+          message="Crie ou disponibilize um ciclo para registrar e consultar recebimentos."
         /><button type="button" (click)="refresh()">Buscar ciclos novamente</button>
       </div>
     }
     @case ('content') {
       <app-refresh-status [state]="store.state()" (retry)="refresh()" />
-      <div class="income-totals" aria-label="Resumo das receitas">
+      <div class="income-totals" aria-label="Resumo dos recebimentos">
         <span
           ><small>Esperado</small
           ><strong class="bf-tabular">{{ formatBrl(expectedTotal()) }}</strong></span
@@ -71,10 +71,10 @@
           ><strong class="bf-tabular">{{ formatBrl(receivedTotal()) }}</strong></span
         >
       </div>
-      <div class="income-ledger" tabindex="-1" aria-label="Receitas do ciclo por situação">
+      <div class="income-ledger" tabindex="-1" aria-label="Recebimentos do ciclo por situação">
         <table>
           <caption class="u-visually-hidden">
-            Receitas previstas, recebidas, atrasadas e não realizadas
+            Recebimentos previstos, recebidos, atrasados e não realizados
           </caption>
           <thead>
             <tr>
@@ -89,7 +89,7 @@
           <tbody aria-labelledby="income-expected-title">
             <tr class="income-ledger__group">
               <th id="income-expected-title" scope="rowgroup" colspan="6">
-                <span>Previstas</span><span>{{ store.groups().expected.length }}</span>
+                <span>Previstos</span><span>{{ store.groups().expected.length }}</span>
               </th>
             </tr>
             @for (entry of store.groups().expected; track entry.id) {
@@ -99,14 +99,14 @@
               />
             } @empty {
               <tr class="income-ledger__empty">
-                <td colspan="6">Nenhuma receita prevista.</td>
+                <td colspan="6">Nenhum recebimento previsto.</td>
               </tr>
             }
           </tbody>
           <tbody aria-labelledby="income-received-title">
             <tr class="income-ledger__group">
               <th id="income-received-title" scope="rowgroup" colspan="6">
-                <span>Recebidas</span><span>{{ store.groups().received.length }}</span>
+                <span>Recebidos</span><span>{{ store.groups().received.length }}</span>
               </th>
             </tr>
             @for (entry of store.groups().received; track entry.id) {
@@ -116,14 +116,14 @@
               />
             } @empty {
               <tr class="income-ledger__empty">
-                <td colspan="6">Nenhuma receita recebida.</td>
+                <td colspan="6">Nenhum recebimento confirmado.</td>
               </tr>
             }
           </tbody>
           <tbody aria-labelledby="income-late-title">
             <tr class="income-ledger__group">
               <th id="income-late-title" scope="rowgroup" colspan="6">
-                <span>Atrasadas</span><span>{{ store.groups().late.length }}</span>
+                <span>Atrasados</span><span>{{ store.groups().late.length }}</span>
               </th>
             </tr>
             @for (entry of store.groups().late; track entry.id) {
@@ -133,14 +133,14 @@
               />
             } @empty {
               <tr class="income-ledger__empty">
-                <td colspan="6">Nenhuma receita atrasada.</td>
+                <td colspan="6">Nenhum recebimento atrasado.</td>
               </tr>
             }
           </tbody>
           <tbody aria-labelledby="income-missed-title">
             <tr class="income-ledger__group">
               <th id="income-missed-title" scope="rowgroup" colspan="6">
-                <span>Não realizadas</span><span>{{ store.groups().notOccurred.length }}</span>
+                <span>Não realizados</span><span>{{ store.groups().notOccurred.length }}</span>
               </th>
             </tr>
             @for (entry of store.groups().notOccurred; track entry.id) {
@@ -150,7 +150,7 @@
               />
             } @empty {
               <tr class="income-ledger__empty">
-                <td colspan="6">Nenhuma receita marcada como não realizada.</td>
+                <td colspan="6">Nenhum recebimento marcado como não realizado.</td>
               </tr>
             }
           </tbody>
@@ -178,7 +178,7 @@
 <ng-template #incomeRow let-entry>
   <tr [attr.data-income-id]="entry.id">
     <td data-label="Origem">
-      <strong>{{ entry.sourceOrigin ?? 'Receita avulsa' }}</strong>
+      <strong>{{ entry.sourceOrigin ?? 'Recebimento avulso' }}</strong>
       @if (entry.notes) {
         <span class="income-ledger__notes">{{ entry.notes }}</span>
       }

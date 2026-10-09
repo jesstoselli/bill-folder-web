@@ -16,8 +16,8 @@ describe('application routes', () => {
     expect(destinations).toEqual([
       ['home', 'Home'],
       ['despesas', 'Despesas'],
-      ['gastos-diarios', 'Gastos diários'],
-      ['receitas', 'Receitas'],
+      ['gastos-diarios', 'Despesas avulsas'],
+      ['receitas', 'Recebimentos'],
       ['cartoes', 'Cartões'],
       ['poupanca', 'Poupança'],
       ['ajustes', 'Ajustes'],

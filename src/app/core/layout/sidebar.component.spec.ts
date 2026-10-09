@@ -21,8 +21,8 @@ describe('SidebarComponent', () => {
     expect(links.map((link) => link.textContent?.trim())).toEqual([
       'Home',
       'Despesas',
-      'Gastos diários',
-      'Receitas',
+      'Despesas avulsas',
+      'Recebimentos',
       'Cartões',
       'Poupança',
       'Ajustes',
@@ -41,8 +41,8 @@ describe('SidebarComponent', () => {
     expect(links.map((link) => link.getAttribute('aria-label'))).toEqual([
       'Home',
       'Despesas',
-      'Gastos diários',
-      'Receitas',
+      'Despesas avulsas',
+      'Recebimentos',
       'Cartões',
       'Poupança',
       'Ajustes',

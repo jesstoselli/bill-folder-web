@@ -12,6 +12,15 @@ import { DailyExpensesPage } from './daily-expenses.page';
 import { DailyExpensesStore } from './daily-expenses.store';
 
 describe('DailyExpensesPage', () => {
+  it('names the feature and its primary action as despesas avulsas', async () => {
+    const { fixture } = await createFixture([], () => Promise.resolve());
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.querySelector('h1')?.textContent?.trim()).toBe('Despesas avulsas');
+    expect(findButton(root, 'Nova despesa avulsa')).toBeTruthy();
+  });
+
   it('renders a chronological ledger and one calm cycle total', async () => {
     const rows = [
       dailyExpense({ id: 'newer', date: '2026-10-20', label: 'Almoço', amount: 52 }),
@@ -121,7 +130,7 @@ describe('DailyExpensesPage', () => {
     const { fixture } = await createFixture([dailyExpense()], () => Promise.resolve(), { update });
     fixture.detectChanges();
 
-    await chooseMenuAction(fixture, 'daily-1', 'Editar gasto');
+    await chooseMenuAction(fixture, 'daily-1', 'Editar despesa avulsa');
     const dialog = TestBed.inject(MatDialog).openDialogs.at(-1);
     const component = dialog?.componentInstance as DailyExpenseFormComponent;
     component.form.setValue({
@@ -141,7 +150,7 @@ describe('DailyExpensesPage', () => {
       );
     });
 
-    await chooseMenuAction(fixture, 'daily-1', 'Editar gasto');
+    await chooseMenuAction(fixture, 'daily-1', 'Editar despesa avulsa');
     const cancelledDialog = TestBed.inject(MatDialog).openDialogs.at(-1);
     cancelledDialog?.close();
 
@@ -207,7 +216,7 @@ async function chooseDelete(
   fixture: ReturnType<typeof TestBed.createComponent<DailyExpensesPage>>,
   id: string,
 ): Promise<void> {
-  await chooseMenuAction(fixture, id, 'Excluir gasto');
+  await chooseMenuAction(fixture, id, 'Excluir despesa avulsa');
 }
 
 async function chooseMenuAction(

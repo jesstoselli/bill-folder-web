@@ -11,6 +11,15 @@ import { IncomePage } from './income.page';
 import { IncomeStore } from './income.store';
 
 describe('IncomePage', () => {
+  it('names the feature and its primary action as recebimentos', async () => {
+    const { fixture } = await createFixture([]);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.querySelector('h1')?.textContent?.trim()).toBe('Recebimentos');
+    expect(findButton(root, 'Novo recebimento')).toBeTruthy();
+  });
+
   it('renders expected cashflow groups with textual status labels', async () => {
     const rows = [
       income({ id: 'expected', status: 'expected' }),
@@ -22,13 +31,14 @@ describe('IncomePage', () => {
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
 
-    expect(root.textContent).toContain('Previstas');
-    expect(root.textContent).toContain('Recebidas');
-    expect(root.textContent).toContain('Atrasadas');
-    expect(root.textContent).toContain('Não realizadas');
-    expect(root.querySelector('[data-income-id="received"]')?.textContent).toContain('Recebida');
-    expect(root.querySelector('[data-income-id="late"]')?.textContent).toContain('Atrasada');
-    expect(root.querySelector('[data-income-id="missed"]')?.textContent).toContain('Não realizada');
+    expect(root.textContent).toContain('Previstos');
+    expect(root.textContent).toContain('Recebidos');
+    expect(root.textContent).toContain('Atrasados');
+    expect(root.textContent).toContain('Não realizados');
+    expect(root.querySelector('[data-income-id="expected"]')?.textContent).toContain('Previsto');
+    expect(root.querySelector('[data-income-id="received"]')?.textContent).toContain('Recebido');
+    expect(root.querySelector('[data-income-id="late"]')?.textContent).toContain('Em atraso');
+    expect(root.querySelector('[data-income-id="missed"]')?.textContent).toContain('Não realizado');
   });
 
   it('does not invent confirmation behavior for an unknown backend status', async () => {

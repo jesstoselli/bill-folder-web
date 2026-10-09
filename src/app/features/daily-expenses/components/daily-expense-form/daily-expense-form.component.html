@@ -2,7 +2,7 @@
   <header class="daily-expense-form__header">
     <div>
       <h2 id="daily-expense-form-title" mat-dialog-title>
-        {{ data.mode === 'create' ? 'Novo gasto' : 'Editar gasto' }}
+        {{ data.mode === 'create' ? 'Nova despesa avulsa' : 'Editar despesa avulsa' }}
       </h2>
       <p>
         {{
@@ -17,7 +17,7 @@
       mat-button
       mat-dialog-close
       [disabled]="saving()"
-      aria-label="Fechar formulário de gasto"
+      aria-label="Fechar formulário de despesa avulsa"
     >
       Fechar
     </button>
@@ -100,7 +100,7 @@
   <mat-dialog-actions align="end">
     <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
     <button type="submit" mat-flat-button [disabled]="saving() || loadingReferences()">
-      {{ saving() ? 'Salvando…' : 'Salvar gasto' }}
+      {{ saving() ? 'Salvando…' : 'Salvar despesa avulsa' }}
     </button>
   </mat-dialog-actions>
 </form>

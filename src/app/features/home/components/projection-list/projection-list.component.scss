@@ -84,7 +84,8 @@
   color: var(--bf-primary);
   font-size: 0.875rem;
   font-weight: 600;
-  justify-self: end;
+  grid-column: 1 / -1;
+  justify-self: start;
   white-space: nowrap;
 }
 
@@ -113,10 +114,5 @@
     grid-column: 2;
     grid-row: 2;
     justify-self: end;
-  }
-
-  .projection-list__action {
-    grid-column: 1 / -1;
-    justify-self: start;
   }
 }

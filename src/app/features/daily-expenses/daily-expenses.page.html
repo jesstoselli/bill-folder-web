@@ -1,7 +1,7 @@
 <section class="daily-expenses-page">
   <header class="daily-expenses-page__header">
     <div>
-      <h1 class="bf-heading-page">Gastos diários</h1>
+      <h1 class="bf-heading-page">Despesas avulsas</h1>
       <p>Saídas do dia em ordem cronológica, sem misturar contas futuras.</p>
     </div>
     <div class="daily-expenses-page__actions">
@@ -14,7 +14,7 @@
         [disabled]="cycles.current() === null"
         (click)="openCreate()"
       >
-        Novo gasto
+        Nova despesa avulsa
       </button>
     </div>
   </header>
@@ -31,7 +31,9 @@
         (next)="selectNextCycle()"
       />
       @if (refreshing()) {
-        <span class="daily-expenses-page__updating" role="status">Atualizando gastos…</span>
+        <span class="daily-expenses-page__updating" role="status"
+          >Atualizando despesas avulsas…</span
+        >
       }
     </div>
   }
@@ -55,7 +57,7 @@
         <app-page-state
           state="empty"
           title="Nenhum ciclo disponível"
-          message="Crie ou disponibilize um ciclo para registrar e consultar gastos."
+          message="Crie ou disponibilize um ciclo para registrar e consultar despesas avulsas."
         />
         <button type="button" (click)="refresh()">Buscar ciclos novamente</button>
       </div>
@@ -63,15 +65,19 @@
     @case ('content') {
       <app-refresh-status [state]="store.state()" (retry)="refresh()" />
       @if (store.expenses().length > 0) {
-        <div class="daily-ledger-summary" aria-label="Resumo dos gastos do ciclo">
+        <div class="daily-ledger-summary" aria-label="Resumo das despesas avulsas do ciclo">
           <span>{{ countLabel(store.expenses().length) }} no ciclo</span>
           <strong class="bf-tabular">{{ formatBrl(total()) }}</strong>
         </div>
 
-        <div class="daily-expense-ledger" tabindex="-1" aria-label="Histórico de gastos do ciclo">
+        <div
+          class="daily-expense-ledger"
+          tabindex="-1"
+          aria-label="Histórico de despesas avulsas do ciclo"
+        >
           <table>
             <caption class="u-visually-hidden">
-              Gastos do ciclo do mais recente para o mais antigo
+              Despesas avulsas do ciclo da mais recente para a mais antiga
             </caption>
             <thead>
               <tr>
@@ -112,7 +118,7 @@
                     </button>
                     <mat-menu #rowMenu="matMenu" xPosition="before">
                       <button type="button" mat-menu-item (click)="queueEdit(expense)">
-                        Editar gasto
+                        Editar despesa avulsa
                       </button>
                       <button
                         type="button"
@@ -120,7 +126,7 @@
                         style="color: var(--bf-danger)"
                         (click)="queueDelete(expense)"
                       >
-                        Excluir gasto
+                        Excluir despesa avulsa
                       </button>
                     </mat-menu>
                   </td>
@@ -132,7 +138,7 @@
       } @else {
         <app-page-state
           state="empty"
-          title="Nenhum gasto neste ciclo"
+          title="Nenhuma despesa avulsa neste ciclo"
           message="Registre uma saída do dia para começar o histórico."
         />
       }

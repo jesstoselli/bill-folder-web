@@ -2,7 +2,7 @@
   <header class="income-form__header">
     <div>
       <h2 id="income-form-title" mat-dialog-title>
-        {{ data.mode === 'create' ? 'Nova receita' : 'Editar receita' }}
+        {{ data.mode === 'create' ? 'Novo recebimento' : 'Editar recebimento' }}
       </h2>
       <p>
         {{
@@ -17,7 +17,7 @@
       mat-button
       mat-dialog-close
       [disabled]="saving()"
-      aria-label="Fechar formulário de receita"
+      aria-label="Fechar formulário de recebimento"
     >
       Fechar
     </button>
@@ -32,7 +32,7 @@
         <mat-label>Fonte</mat-label>
         <mat-select formControlName="sourceId">
           @if (data.mode === 'create' || data.entry.sourceId === null) {
-            <mat-option [value]="null">Receita avulsa</mat-option>
+            <mat-option [value]="null">Recebimento avulso</mat-option>
           }
           @for (source of sources(); track source.id) {
             <mat-option [value]="source.id">{{ source.origin }}</mat-option>
@@ -77,7 +77,7 @@
   <mat-dialog-actions align="end">
     <button type="button" mat-button mat-dialog-close [disabled]="saving()">Cancelar</button>
     <button type="submit" mat-flat-button [disabled]="saving() || loadingSources()">
-      {{ saving() ? 'Salvando…' : 'Salvar receita' }}
+      {{ saving() ? 'Salvando…' : 'Salvar recebimento' }}
     </button>
   </mat-dialog-actions>
 </form>
