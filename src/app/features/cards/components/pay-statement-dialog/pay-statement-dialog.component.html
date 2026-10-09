@@ -16,14 +16,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Valor pago</mat-label>
         <span matTextPrefix>R$&nbsp;</span>
-        <input
-          matInput
-          type="number"
-          min="0.01"
-          step="0.01"
-          inputmode="decimal"
-          formControlName="actualAmount"
-        />
+        <input matInput appMoneyInput formControlName="actualAmount" />
         @if (form.controls.actualAmount.invalid) {
           <mat-error>Informe um valor maior que zero.</mat-error>
         }

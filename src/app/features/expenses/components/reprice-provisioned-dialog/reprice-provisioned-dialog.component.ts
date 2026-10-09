@@ -10,6 +10,7 @@ import { ScopeChoice } from '../../../../shared/dialogs/recurrence-scope-dialog/
 import { ExpenseResponse } from '../../expenses.models';
 import { ExpensesStore } from '../../expenses.store';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 export interface RepriceProvisionedDialogData {
   readonly expense: Pick<
@@ -21,7 +22,13 @@ export interface RepriceProvisionedDialogData {
 
 @Component({
   selector: 'app-reprice-provisioned-dialog',
-  imports: [DialogFrameComponent, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    MoneyInputDirective,
+    DialogFrameComponent,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
   templateUrl: './reprice-provisioned-dialog.component.html',
   styleUrl: './reprice-provisioned-dialog.component.scss',
 })

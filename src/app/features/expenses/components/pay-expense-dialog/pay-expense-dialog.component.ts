@@ -17,6 +17,7 @@ import { ExpensesStore } from '../../expenses.store';
 import { validCivilDate } from '../../../../shared/forms/validators';
 import { compareCheckingAccounts } from '../../../../core/reference/reference-ordering';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 export interface PayExpenseDialogData {
   readonly expense: Pick<ExpenseResponse, 'id' | 'label' | 'expectedAmount'>;
@@ -25,6 +26,7 @@ export interface PayExpenseDialogData {
 @Component({
   selector: 'app-pay-expense-dialog',
   imports: [
+    MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
     MatFormFieldModule,

@@ -17,6 +17,7 @@ import { SavingsTransactionResponse, SavingsTransactionType } from '../../saving
 import { SavingsStore } from '../../savings.store';
 import { normalizeOptional, validCivilDate } from '../../../../shared/forms/validators';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 export type SavingsTransactionFormDialogData =
   | { readonly mode: 'create'; readonly accountId: string }
@@ -29,6 +30,7 @@ export type SavingsTransactionFormDialogData =
 @Component({
   selector: 'app-savings-transaction-form',
   imports: [
+    MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
     MatFormFieldModule,

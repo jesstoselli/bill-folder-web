@@ -10,10 +10,17 @@ import { IncomeEntryResponse } from '../../income.models';
 import { IncomeStore } from '../../income.store';
 import { validCivilDate } from '../../../../shared/forms/validators';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 @Component({
   selector: 'app-confirm-income-dialog',
-  imports: [DialogFrameComponent, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    MoneyInputDirective,
+    DialogFrameComponent,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
   templateUrl: './confirm-income-dialog.component.html',
   styleUrl: './confirm-income-dialog.component.scss',
 })

@@ -10,6 +10,7 @@ import { formatBrl } from '../../../../shared/formatters/money';
 import { CardEntryResponse } from '../../cards.models';
 import { CardsStore } from '../../cards.store';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 export interface RepriceSubscriptionDialogData {
   readonly entry: Pick<CardEntryResponse, 'id' | 'label' | 'totalAmount'>;
@@ -18,7 +19,13 @@ export interface RepriceSubscriptionDialogData {
 
 @Component({
   selector: 'app-reprice-subscription-dialog',
-  imports: [DialogFrameComponent, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    MoneyInputDirective,
+    DialogFrameComponent,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
   templateUrl: './reprice-subscription-dialog.component.html',
   styleUrl: './reprice-subscription-dialog.component.scss',
 })

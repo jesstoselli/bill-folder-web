@@ -12,6 +12,7 @@ import { IncomeEntryResponse, IncomeSourceResponse } from '../../income.models';
 import { IncomeStore } from '../../income.store';
 import { normalizeOptional, validCivilDate } from '../../../../shared/forms/validators';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 export type IncomeEntryFormDialogData =
   { readonly mode: 'create' } | { readonly mode: 'edit'; readonly entry: IncomeEntryResponse };
@@ -19,6 +20,7 @@ export type IncomeEntryFormDialogData =
 @Component({
   selector: 'app-income-entry-form',
   imports: [
+    MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
     MatFormFieldModule,

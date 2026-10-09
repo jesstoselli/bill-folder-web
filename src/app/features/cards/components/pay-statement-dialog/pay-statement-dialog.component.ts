@@ -19,6 +19,7 @@ import { CardsStore } from '../../cards.store';
 import { validCivilDate } from '../../../../shared/forms/validators';
 import { compareCheckingAccounts } from '../../../../core/reference/reference-ordering';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 export interface PayStatementDialogData {
   readonly statement: CardStatementDetailResponse;
@@ -27,6 +28,7 @@ export interface PayStatementDialogData {
 @Component({
   selector: 'app-pay-statement-dialog',
   imports: [
+    MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
     MatFormFieldModule,

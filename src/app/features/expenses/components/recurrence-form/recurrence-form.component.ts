@@ -21,10 +21,12 @@ import { RecurrenceFormValue, toCreateExpenseRecurrenceRequest } from './recurre
 import { integer, nonBlank, validCivilDate } from '../../../../shared/forms/validators';
 import { compareCategories } from '../../../../core/reference/reference-ordering';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 @Component({
   selector: 'app-recurrence-form',
   imports: [
+    MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
     MatFormFieldModule,

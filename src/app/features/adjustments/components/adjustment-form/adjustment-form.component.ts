@@ -10,6 +10,7 @@ import { CycleAdjustmentResponse, CycleAdjustmentType } from '../../adjustments.
 import { AdjustmentsStore } from '../../adjustments.store';
 import { nonBlank, validCivilDate } from '../../../../shared/forms/validators';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 export type AdjustmentFormDialogData =
   | { readonly mode: 'create' }
@@ -18,6 +19,7 @@ export type AdjustmentFormDialogData =
 @Component({
   selector: 'app-adjustment-form',
   imports: [
+    MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
     MatFormFieldModule,

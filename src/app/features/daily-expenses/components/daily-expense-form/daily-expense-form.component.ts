@@ -25,10 +25,12 @@ import {
   compareCheckingAccounts,
 } from '../../../../core/reference/reference-ordering';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 @Component({
   selector: 'app-daily-expense-form',
   imports: [
+    MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
     MatFormFieldModule,

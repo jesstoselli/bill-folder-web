@@ -20,6 +20,7 @@ import {
 import { integer, nonBlank, validCivilDate } from '../../../../shared/forms/validators';
 import { compareCategories } from '../../../../core/reference/reference-ordering';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
+import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
 
 export type CardEntryFormDialogData =
   | { readonly mode: 'create'; readonly card: { readonly id: string; readonly name: string } }
@@ -28,6 +29,7 @@ export type CardEntryFormDialogData =
 @Component({
   selector: 'app-card-entry-form',
   imports: [
+    MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
     MatCheckboxModule,
