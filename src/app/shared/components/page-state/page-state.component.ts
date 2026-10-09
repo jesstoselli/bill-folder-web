@@ -48,7 +48,7 @@ export type PageState = 'loading' | 'empty' | 'error';
 
     .page-state__indicator {
       background: var(--bf-brand);
-      border-radius: 999px;
+      border-radius: var(--bf-radius-pill);
       display: block;
       height: 0.25rem;
       margin-bottom: 1.25rem;
@@ -79,7 +79,7 @@ export type PageState = 'loading' | 'empty' | 'error';
     .page-state__skeleton {
       animation: pulse 1.4s ease-in-out infinite;
       background: var(--bf-surface-high);
-      border-radius: 999px;
+      border-radius: var(--bf-radius-pill);
       height: 0.875rem;
       width: min(30rem, 88%);
     }

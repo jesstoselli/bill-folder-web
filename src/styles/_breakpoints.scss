@@ -1,0 +1,10 @@
+// Max-width layout breakpoints. Use as `@media (max-width: bp.$md)`.
+// $shell-drawer and $shell-rail must match ShellStore's BreakpointObserver
+// queries, which switch the navigation between drawer, rail and full.
+
+$xs: 420px; // narrowest phones: compact card selectors
+$sm: 560px; // dialogs: two-column field rows collapse
+$md: 720px; // pages: headers stack and ledgers turn into cards
+$shell-drawer: 767.98px;
+$wide: 859.98px; // auth split layout and statement summary
+$shell-rail: 1199.98px;

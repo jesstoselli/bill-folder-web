@@ -1,3 +1,5 @@
+@use '../../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -22,7 +24,7 @@
   padding: 0.75rem 1rem;
 }
 
-@media (max-width: 560px) {
+@media (max-width: bp.$sm) {
   .card-entry-form__split {
     grid-template-columns: 1fr;
   }

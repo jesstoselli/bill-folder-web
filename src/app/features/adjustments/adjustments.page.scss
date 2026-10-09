@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 .adjustments-page {
   display: grid;
   gap: 1.5rem;
@@ -23,7 +25,7 @@
 }
 .adjustments-sheet {
   // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: 721px) {
+  @media (min-width: #{bp.$md + 1px}) {
     table {
       min-width: 48rem;
     }
@@ -41,7 +43,7 @@
 .adjustments-sheet__amount--negative {
   color: var(--bf-danger);
 }
-@media (max-width: 720px) {
+@media (max-width: bp.$md) {
   .adjustments-summary {
     align-items: flex-start;
     flex-direction: column;

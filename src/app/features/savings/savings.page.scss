@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 .savings-page {
   display: grid;
   gap: 1.5rem;
@@ -5,7 +7,7 @@
 
 .savings-ledger {
   // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: 721px) {
+  @media (min-width: #{bp.$md + 1px}) {
     table {
       min-width: 52rem;
     }

@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 .expenses-page {
   display: grid;
   gap: 1.5rem;
@@ -5,7 +7,7 @@
 
 .expense-ledger {
   // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: 721px) {
+  @media (min-width: #{bp.$md + 1px}) {
     table {
       min-width: 46rem;
     }
@@ -18,7 +20,7 @@
     }
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: bp.$md) {
     td[data-label='Vencimento'],
     td[data-label='Categoria'] {
       color: var(--bf-muted);
@@ -48,7 +50,7 @@
 .expense-ledger__menu-trigger {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--bf-radius-pill);
   color: var(--bf-text);
   cursor: pointer;
   font-size: 1rem;

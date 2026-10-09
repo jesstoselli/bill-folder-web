@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 .income-page {
   display: grid;
   gap: 1.5rem;
@@ -26,7 +28,7 @@
 }
 .income-ledger {
   // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: 721px) {
+  @media (min-width: #{bp.$md + 1px}) {
     table {
       min-width: 64rem;
     }
@@ -54,7 +56,7 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
 }
-@media (max-width: 720px) {
+@media (max-width: bp.$md) {
   .income-totals {
     overflow-x: auto;
   }

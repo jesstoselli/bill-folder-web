@@ -1,3 +1,4 @@
+@use '../../../styles/focus' as focus;
 :host {
   display: flex;
   flex-direction: column;
@@ -43,7 +44,7 @@
 .sidebar__link {
   align-items: center;
   border: 1px solid transparent;
-  border-radius: 0.75rem;
+  border-radius: var(--bf-radius-md);
   color: var(--bf-muted);
   display: flex;
   gap: 0.875rem;
@@ -57,8 +58,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--bf-primary);
-    outline-offset: 2px;
+    @include focus.ring(2px);
   }
 }
 
@@ -101,7 +101,7 @@
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 0.75rem;
+  border-radius: var(--bf-radius-md);
   color: var(--bf-muted);
   cursor: pointer;
   display: flex;
@@ -116,7 +116,6 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--bf-primary);
-    outline-offset: 2px;
+    @include focus.ring(2px);
   }
 }

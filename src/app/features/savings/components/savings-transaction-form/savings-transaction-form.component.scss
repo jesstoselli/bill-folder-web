@@ -1,3 +1,5 @@
+@use '../../../../../styles/breakpoints' as bp;
+
 .savings-transaction-form {
 }
 
@@ -13,7 +15,7 @@
   grid-template-columns: 1fr 1fr;
 }
 
-@media (max-width: 560px) {
+@media (max-width: bp.$sm) {
   .savings-transaction-form__split {
     grid-template-columns: 1fr;
   }

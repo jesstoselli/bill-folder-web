@@ -1,3 +1,5 @@
+@use '../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -37,7 +39,7 @@ mat-dialog-content {
 .recurrence-scope__choice {
   background: var(--bf-surface-high);
   border: 1px solid var(--bf-outline);
-  border-radius: 0.75rem;
+  border-radius: var(--bf-radius-md);
   color: var(--bf-text);
   cursor: pointer;
   display: grid;
@@ -68,7 +70,7 @@ mat-dialog-content {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: bp.$sm) {
   .recurrence-scope {
     min-width: 0;
 

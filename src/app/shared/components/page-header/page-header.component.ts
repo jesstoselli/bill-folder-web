@@ -17,6 +17,8 @@ import { Component, input } from '@angular/core';
     </header>
   `,
   styles: `
+    @use '../../../../styles/breakpoints' as bp;
+
     :host {
       display: block;
     }
@@ -48,7 +50,7 @@ import { Component, input } from '@angular/core';
       display: none;
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: bp.$md) {
       .page-header {
         align-items: stretch;
         flex-direction: column;

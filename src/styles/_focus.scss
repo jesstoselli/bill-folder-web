@@ -1,0 +1,8 @@
+// The app's single keyboard-focus treatment: soft ring plus a thin outline
+// (the outline keeps focus visible in forced-colors mode, where box-shadow
+// is dropped).
+@mixin ring($offset: 2px) {
+  box-shadow: var(--bf-focus-ring);
+  outline: 1px solid var(--bf-primary);
+  outline-offset: $offset;
+}

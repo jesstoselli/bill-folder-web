@@ -1,3 +1,5 @@
+@use '../../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -68,7 +70,7 @@
 
 .projection-list__status {
   border: 1px solid var(--bf-outline);
-  border-radius: 999px;
+  border-radius: var(--bf-radius-pill);
   color: var(--bf-muted);
   font-size: 0.75rem;
   padding: 0.3rem 0.55rem;
@@ -83,7 +85,7 @@
 .projection-list__action {
   color: var(--bf-primary);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   grid-column: 1 / -1;
   justify-self: start;
   white-space: nowrap;
@@ -96,7 +98,7 @@
   text-align: center;
 }
 
-@media (max-width: 720px) {
+@media (max-width: bp.$md) {
   .projection-list li {
     grid-template-columns: minmax(0, 1fr) auto;
   }

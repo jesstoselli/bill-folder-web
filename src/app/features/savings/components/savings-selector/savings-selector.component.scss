@@ -1,3 +1,5 @@
+@use '../../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
   min-width: 0;
@@ -61,11 +63,7 @@ mat-button-toggle {
   display: none;
 }
 
-:host ::ng-deep .mat-button-toggle-button:focus-visible {
-  box-shadow: inset var(--bf-focus-ring);
-}
-
-@media (max-width: 600px) {
+@media (max-width: bp.$sm) {
   .savings-selector__heading {
     display: none;
   }

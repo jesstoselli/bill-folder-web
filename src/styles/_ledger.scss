@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 // Shared look for the data tables ("ledgers"), emitted once globally. Pages
 // add these classes next to their own BEM block, which stays as the hook for
 // page-specific styles, focus handling and tests:
@@ -9,7 +11,7 @@
 // Modifiers: __group (section header row), __empty (placeholder row),
 // __amount (right-aligned numbers), __actions (row buttons).
 
-$mobile: 720px;
+$mobile: bp.$md;
 $divider: color-mix(in srgb, var(--bf-outline) 72%, transparent);
 
 .bf-ledger {

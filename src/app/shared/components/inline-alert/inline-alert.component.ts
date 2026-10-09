@@ -21,7 +21,7 @@ import { Component, input } from '@angular/core';
     .inline-alert {
       background: color-mix(in srgb, var(--bf-danger) 8%, transparent);
       border: 1px solid color-mix(in srgb, var(--bf-danger) 45%, var(--bf-outline));
-      border-radius: 0.75rem;
+      border-radius: var(--bf-radius-md);
       color: var(--bf-danger);
       margin: 0;
       padding: 0.75rem 1rem;

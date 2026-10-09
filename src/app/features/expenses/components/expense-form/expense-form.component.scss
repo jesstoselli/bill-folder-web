@@ -1,3 +1,5 @@
+@use '../../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -17,7 +19,7 @@ mat-form-field {
   width: 100%;
 }
 
-@media (max-width: 560px) {
+@media (max-width: bp.$sm) {
   .expense-form__split {
     grid-template-columns: 1fr;
   }

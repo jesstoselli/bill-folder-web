@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
   min-height: 100dvh;
@@ -50,7 +52,7 @@
   align-items: center;
   background: var(--bf-surface);
   border: 1px solid var(--bf-outline);
-  border-radius: 0.75rem;
+  border-radius: var(--bf-radius-md);
   color: var(--bf-text);
   cursor: pointer;
   display: inline-flex;
@@ -88,7 +90,7 @@
   width: 0.5rem;
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: bp.$shell-drawer) {
   .shell__navigation {
     max-width: min(20rem, 88vw);
     width: 88vw;

@@ -25,7 +25,7 @@ import { map } from 'rxjs';
 
     .feature-placeholder__rule {
       background: var(--bf-brand);
-      border-radius: 999px;
+      border-radius: var(--bf-radius-pill);
       display: block;
       height: 0.3rem;
       margin-bottom: 1.5rem;

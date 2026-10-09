@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 .daily-expenses-page {
   display: grid;
   gap: 1.5rem;
@@ -25,7 +27,7 @@
 
 .daily-expense-ledger {
   // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: 721px) {
+  @media (min-width: #{bp.$md + 1px}) {
     table {
       min-width: 50rem;
     }
@@ -36,7 +38,7 @@
     display: block;
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: bp.$md) {
     td[data-label='Categoria'],
     td[data-label='Conta'] {
       color: var(--bf-muted);
@@ -66,7 +68,7 @@
 .daily-expense-ledger__menu-trigger {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--bf-radius-pill);
   color: var(--bf-text);
   cursor: pointer;
   letter-spacing: 0.12em;

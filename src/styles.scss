@@ -42,6 +42,12 @@ a {
   gap: 0.5rem;
 }
 
+// Material renders the toggle's real button internally, out of reach of the
+// card and savings selectors' encapsulated styles.
+.mat-button-toggle-button:focus-visible {
+  box-shadow: inset var(--bf-focus-ring);
+}
+
 // The subtitle is projected from each dialog's own template, so the frame's
 // encapsulated styles cannot reach it.
 app-dialog-frame [dialogSubtitle] {

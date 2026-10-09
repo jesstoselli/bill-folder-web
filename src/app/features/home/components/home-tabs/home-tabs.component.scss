@@ -14,7 +14,7 @@ button {
   align-items: center;
   background: transparent;
   border: 1px solid var(--bf-outline);
-  border-radius: 999px;
+  border-radius: var(--bf-radius-pill);
   color: var(--bf-muted);
   cursor: pointer;
   display: inline-flex;
@@ -44,7 +44,7 @@ button {
 .home-tabs__badge {
   align-items: center;
   background: var(--bf-danger);
-  border-radius: 999px;
+  border-radius: var(--bf-radius-pill);
   color: var(--bf-bg);
   display: inline-flex;
   font-size: 0.75rem;

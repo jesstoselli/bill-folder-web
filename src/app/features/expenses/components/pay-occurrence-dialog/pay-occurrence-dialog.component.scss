@@ -1,3 +1,5 @@
+@use '../../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -5,7 +7,7 @@
 .occurrence-dialog__progress {
   background: var(--bf-surface-high);
   border: 1px solid var(--bf-outline);
-  border-radius: 0.85rem;
+  border-radius: var(--bf-radius-md);
   display: grid;
   gap: 1rem;
   grid-template-columns: 1fr 1fr;
@@ -52,7 +54,7 @@ mat-form-field {
   width: 100%;
 }
 
-@media (max-width: 560px) {
+@media (max-width: bp.$sm) {
   .occurrence-dialog__details,
   .occurrence-dialog__progress {
     grid-template-columns: 1fr;

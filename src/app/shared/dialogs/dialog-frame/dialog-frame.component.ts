@@ -46,6 +46,8 @@ import { InlineAlertComponent } from '../../components/inline-alert/inline-alert
     </mat-dialog-actions>
   `,
   styles: `
+    @use '../../../../styles/breakpoints' as bp;
+
     :host {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
@@ -83,7 +85,7 @@ import { InlineAlertComponent } from '../../components/inline-alert/inline-alert
       border-top: 1px solid var(--bf-outline);
     }
 
-    @media (max-width: 560px) {
+    @media (max-width: bp.$sm) {
       .dialog-frame__header {
         padding-inline: 1rem;
       }

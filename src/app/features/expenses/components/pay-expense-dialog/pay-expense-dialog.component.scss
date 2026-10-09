@@ -1,3 +1,5 @@
+@use '../../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -5,7 +7,7 @@
 .payment-dialog__amount {
   background: var(--bf-surface-high);
   border: 1px solid var(--bf-outline);
-  border-radius: 0.85rem;
+  border-radius: var(--bf-radius-md);
   display: grid;
   gap: 0.35rem;
   padding: 1rem;
@@ -25,7 +27,7 @@ mat-form-field {
   width: 100%;
 }
 
-@media (max-width: 560px) {
+@media (max-width: bp.$sm) {
   .payment-dialog__details {
     grid-template-columns: 1fr;
   }

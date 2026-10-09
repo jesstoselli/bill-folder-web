@@ -1,3 +1,5 @@
+@use '../../../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -81,7 +83,7 @@
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: bp.$md) {
   .balance-hero {
     gap: 1.25rem;
     min-height: 0;
