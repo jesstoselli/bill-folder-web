@@ -1,10 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { APP_ENVIRONMENT } from '../../core/config/app-environment';
 import { DataChangeService } from '../../core/data-change/data-change.service';
 import { notifyingWrite } from '../../core/data-change/notifying-write';
-import { mapApiError } from '../../core/http/api-error';
+import { mapApiErrors } from '../../core/http/api-error';
 import { apiUrl } from '../../core/http/api-url';
 import {
   ConfirmIncomeReceivedRequest,
@@ -26,20 +26,20 @@ export class IncomeApi {
     const params = new HttpParams().set('from', from).set('to', to);
     return this.http
       .get<IncomeEntryResponse[]>(`${this.entriesUrl}/`, { params })
-      .pipe(this.mapErrors());
+      .pipe(mapApiErrors());
   }
 
   listSources(): Observable<IncomeSourceResponse[]> {
     const params = new HttpParams().set('activeOnly', true);
     return this.http
       .get<IncomeSourceResponse[]>(`${this.sourcesUrl}/`, { params })
-      .pipe(this.mapErrors());
+      .pipe(mapApiErrors());
   }
 
   create(request: CreateIncomeEntryRequest): Observable<IncomeEntryResponse> {
     return notifyingWrite(
       this.changes,
-      this.http.post<IncomeEntryResponse>(`${this.entriesUrl}/`, request).pipe(this.mapErrors()),
+      this.http.post<IncomeEntryResponse>(`${this.entriesUrl}/`, request).pipe(mapApiErrors()),
     );
   }
 
@@ -48,7 +48,7 @@ export class IncomeApi {
       this.changes,
       this.http
         .patch<IncomeEntryResponse>(`${this.entriesUrl}/${id}`, request)
-        .pipe(this.mapErrors()),
+        .pipe(mapApiErrors()),
     );
   }
 
@@ -62,12 +62,7 @@ export class IncomeApi {
   delete(id: string): Observable<null> {
     return notifyingWrite(
       this.changes,
-      this.http.delete<null>(`${this.entriesUrl}/${id}`).pipe(this.mapErrors()),
+      this.http.delete<null>(`${this.entriesUrl}/${id}`).pipe(mapApiErrors()),
     );
-  }
-
-  private mapErrors<T>(): (source: Observable<T>) => Observable<T> {
-    return (source) =>
-      source.pipe(catchError((error: unknown) => throwError(() => mapApiError(error))));
   }
 }

@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { catchError, Observable, of, throwError } from 'rxjs';
 import { APP_ENVIRONMENT } from '../config/app-environment';
-import { mapApiError } from '../http/api-error';
+import { mapApiError, mapApiErrors } from '../http/api-error';
 import { apiUrl } from '../http/api-url';
 import { CycleResponse } from './cycle.models';
 
@@ -12,7 +12,7 @@ export class CyclesApi {
   private readonly baseUrl = inject(APP_ENVIRONMENT).apiBaseUrl;
 
   list(): Observable<CycleResponse[]> {
-    return this.http.get<CycleResponse[]>(apiUrl(this.baseUrl, 'cycles')).pipe(this.mapErrors());
+    return this.http.get<CycleResponse[]>(apiUrl(this.baseUrl, 'cycles')).pipe(mapApiErrors());
   }
 
   current(): Observable<CycleResponse | null> {
@@ -24,11 +24,6 @@ export class CyclesApi {
         return throwError(() => mapApiError(error));
       }),
     );
-  }
-
-  private mapErrors<T>(): (source: Observable<T>) => Observable<T> {
-    return (source) =>
-      source.pipe(catchError((error: unknown) => throwError(() => mapApiError(error))));
   }
 }
 

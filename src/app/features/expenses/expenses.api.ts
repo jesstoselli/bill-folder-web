@@ -1,10 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { catchError, Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { APP_ENVIRONMENT } from '../../core/config/app-environment';
 import { DataChangeService } from '../../core/data-change/data-change.service';
 import { notifyingWrite } from '../../core/data-change/notifying-write';
-import { mapApiError } from '../../core/http/api-error';
+import { mapApiErrors } from '../../core/http/api-error';
 import { apiUrl } from '../../core/http/api-url';
 import {
   CreateExpenseRecurrenceRequest,
@@ -30,20 +30,20 @@ export class ExpensesApi {
     const params = new HttpParams().set('from', from).set('to', to);
     return this.http
       .get<ExpenseResponse[]>(`${this.expensesUrl}/`, { params })
-      .pipe(this.mapErrors());
+      .pipe(mapApiErrors());
   }
 
   create(request: CreateExpenseRequest): Observable<ExpenseResponse> {
     return notifyingWrite(
       this.changes,
-      this.http.post<ExpenseResponse>(`${this.expensesUrl}/`, request).pipe(this.mapErrors()),
+      this.http.post<ExpenseResponse>(`${this.expensesUrl}/`, request).pipe(mapApiErrors()),
     );
   }
 
   update(id: string, request: UpdateExpenseRequest): Observable<ExpenseResponse> {
     return notifyingWrite(
       this.changes,
-      this.http.patch<ExpenseResponse>(`${this.expensesUrl}/${id}`, request).pipe(this.mapErrors()),
+      this.http.patch<ExpenseResponse>(`${this.expensesUrl}/${id}`, request).pipe(mapApiErrors()),
     );
   }
 
@@ -56,7 +56,7 @@ export class ExpensesApi {
       this.changes,
       this.http
         .post<ExpenseResponse>(`${this.expensesUrl}/${id}/pay-occurrence`, request)
-        .pipe(this.mapErrors()),
+        .pipe(mapApiErrors()),
     );
   }
 
@@ -68,7 +68,7 @@ export class ExpensesApi {
       this.changes,
       this.http
         .post<ExpenseResponse>(`${this.expensesUrl}/${id}/update-amount`, request)
-        .pipe(this.mapErrors()),
+        .pipe(mapApiErrors()),
     );
   }
 
@@ -77,7 +77,7 @@ export class ExpensesApi {
       this.changes,
       this.http
         .post<ExpenseRecurrenceResponse>(`${this.recurrencesUrl}/`, request)
-        .pipe(this.mapErrors()),
+        .pipe(mapApiErrors()),
     );
   }
 
@@ -85,12 +85,7 @@ export class ExpensesApi {
     const params = new HttpParams().set('scope', scope);
     return notifyingWrite(
       this.changes,
-      this.http.delete<null>(`${this.expensesUrl}/${id}`, { params }).pipe(this.mapErrors()),
+      this.http.delete<null>(`${this.expensesUrl}/${id}`, { params }).pipe(mapApiErrors()),
     );
-  }
-
-  private mapErrors<T>(): (source: Observable<T>) => Observable<T> {
-    return (source) =>
-      source.pipe(catchError((error: unknown) => throwError(() => mapApiError(error))));
   }
 }

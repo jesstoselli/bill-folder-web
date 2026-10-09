@@ -1,10 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { APP_ENVIRONMENT } from '../../core/config/app-environment';
 import { DataChangeService } from '../../core/data-change/data-change.service';
 import { notifyingWrite } from '../../core/data-change/notifying-write';
-import { mapApiError } from '../../core/http/api-error';
+import { mapApiErrors } from '../../core/http/api-error';
 import { apiUrl } from '../../core/http/api-url';
 import {
   CreateSavingsTransactionRequest,
@@ -22,7 +22,7 @@ export class SavingsApi {
   private readonly transactionsUrl = apiUrl(this.baseUrl, 'savings-transactions');
 
   listAccounts(): Observable<SavingsAccountResponse[]> {
-    return this.http.get<SavingsAccountResponse[]>(`${this.accountsUrl}/`).pipe(this.mapErrors());
+    return this.http.get<SavingsAccountResponse[]>(`${this.accountsUrl}/`).pipe(mapApiErrors());
   }
 
   listTransactions(
@@ -36,7 +36,7 @@ export class SavingsApi {
       .set('to', to);
     return this.http
       .get<SavingsTransactionResponse[]>(`${this.transactionsUrl}/`, { params })
-      .pipe(this.mapErrors());
+      .pipe(mapApiErrors());
   }
 
   createTransaction(
@@ -46,7 +46,7 @@ export class SavingsApi {
       this.changes,
       this.http
         .post<SavingsTransactionResponse>(`${this.transactionsUrl}/`, request)
-        .pipe(this.mapErrors()),
+        .pipe(mapApiErrors()),
     );
   }
 
@@ -58,19 +58,14 @@ export class SavingsApi {
       this.changes,
       this.http
         .patch<SavingsTransactionResponse>(`${this.transactionsUrl}/${id}`, request)
-        .pipe(this.mapErrors()),
+        .pipe(mapApiErrors()),
     );
   }
 
   deleteTransaction(id: string): Observable<null> {
     return notifyingWrite(
       this.changes,
-      this.http.delete<null>(`${this.transactionsUrl}/${id}`).pipe(this.mapErrors()),
+      this.http.delete<null>(`${this.transactionsUrl}/${id}`).pipe(mapApiErrors()),
     );
-  }
-
-  private mapErrors<T>(): (source: Observable<T>) => Observable<T> {
-    return (source) =>
-      source.pipe(catchError((error: unknown) => throwError(() => mapApiError(error))));
   }
 }

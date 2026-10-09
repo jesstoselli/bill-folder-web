@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { catchError, Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { APP_ENVIRONMENT } from '../config/app-environment';
-import { mapApiError } from '../http/api-error';
+import { mapApiErrors } from '../http/api-error';
 import { apiUrl } from '../http/api-url';
 
 export interface CategoryDto {
@@ -69,8 +69,6 @@ export class ReferenceDataApi {
   }
 
   private get<T>(path: string): Observable<T[]> {
-    return this.http
-      .get<T[]>(apiUrl(this.baseUrl, path))
-      .pipe(catchError((error: unknown) => throwError(() => mapApiError(error))));
+    return this.http.get<T[]>(apiUrl(this.baseUrl, path)).pipe(mapApiErrors());
   }
 }

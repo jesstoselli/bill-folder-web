@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { MonoTypeOperatorFunction, catchError, throwError } from 'rxjs';
 
 export interface ApiError {
   readonly status: number;
@@ -58,4 +59,10 @@ function stringValue(value: unknown): string | null {
 
 function numberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+/** RxJS operator: errors leave the API layer already mapped to ApiError. */
+export function mapApiErrors<T>(): MonoTypeOperatorFunction<T> {
+  return (source) =>
+    source.pipe(catchError((error: unknown) => throwError(() => mapApiError(error))));
 }
