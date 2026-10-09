@@ -48,7 +48,11 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 
       return session.refreshOnce().pipe(
         catchError((refreshError: unknown) => {
-          expireSession(session, router, redirect);
+          // Only a rejected refresh cookie ends the session; an offline or
+          // restarting API must not log the user out.
+          if (isSessionRejection(refreshError)) {
+            expireSession(session, router, redirect);
+          }
           return throwError(() => refreshError);
         }),
         switchMap(() => {
@@ -101,6 +105,13 @@ function isPublicAuthRequest(request: URL, basePathname: string): boolean {
   const relativePathname =
     basePathname === '/' ? request.pathname : request.pathname.slice(basePathname.length);
   return PUBLIC_AUTH_PATHS.has(relativePathname.toLowerCase());
+}
+
+export function isSessionRejection(error: unknown): boolean {
+  return (
+    error instanceof HttpErrorResponse &&
+    (error.status === 400 || error.status === 401 || error.status === 403)
+  );
 }
 
 function expireSession(

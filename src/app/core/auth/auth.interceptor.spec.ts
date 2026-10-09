@@ -108,17 +108,25 @@ describe('authInterceptor', () => {
     expect(redirect.toLogin).toHaveBeenCalledWith('/home');
   });
 
-  it('clears the session when refresh fails', async () => {
+  it.each([
+    [0, 'Unknown Error'],
+    [503, 'Service Unavailable'],
+  ])('keeps the session when refresh fails transiently (%i)', async (status, statusText) => {
+    const login = firstValueFrom(
+      session.login({ email: 'jess@example.com', password: 'senha-segura' }),
+    );
+    backend.expectOne('/v1/auth/web/login').flush(authResponse);
+    await login;
     await router.navigateByUrl('/home');
+
     const result = firstValueFrom(http.get('/v1/private'));
     backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
-    backend
-      .expectOne('/v1/auth/web/refresh')
-      .flush(null, { status: 503, statusText: 'Service Unavailable' });
+    backend.expectOne('/v1/auth/web/refresh').flush(null, { status, statusText });
 
-    await expect(result).rejects.toMatchObject({ status: 503 });
-    expect(session.isAuthenticated()).toBe(false);
-    expect(redirect.toLogin).toHaveBeenCalledWith('/home');
+    await expect(result).rejects.toMatchObject({ status });
+    expect(session.isAuthenticated()).toBe(true);
+    expect(redirect.toLogin).not.toHaveBeenCalled();
+    expect(router.url).toBe('/home');
   });
 
   it('propagates a non-401 retry failure without clearing the session or route', async () => {
