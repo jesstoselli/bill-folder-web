@@ -38,6 +38,16 @@ describe('savings projections', () => {
       'older',
     ]);
   });
+
+  it('reports an exactly zero cycle movement when movements cancel out', () => {
+    const summary = savingsSummary(account({ currentBalance: 100 }), [
+      transaction({ type: 'deposit', amount: 10.1 }),
+      transaction({ type: 'withdrawal', amount: 10 }),
+      transaction({ type: 'withdrawal', amount: 0.1 }),
+    ]);
+
+    expect(summary.cycleNet).toBe(0);
+  });
 });
 
 function account(overrides: Partial<SavingsAccountResponse> = {}): SavingsAccountResponse {

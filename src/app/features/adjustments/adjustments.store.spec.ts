@@ -56,6 +56,20 @@ describe('AdjustmentsStore', () => {
     expect(store.netAmount()).toBe(75);
   });
 
+  it('nets offsetting adjustments to exactly zero', async () => {
+    const load = store.load(october);
+    backend
+      .expectOne('/v1/cycle-adjustments/?from=2026-10-01&to=2026-10-31')
+      .flush([
+        adjustment({ id: 'in', type: 'inflow', amount: 10.1 }),
+        adjustment({ id: 'out-a', type: 'outflow', amount: 10 }),
+        adjustment({ id: 'out-b', type: 'outflow', amount: 0.1 }),
+      ]);
+    await load;
+
+    expect(store.netAmount()).toBe(0);
+  });
+
   it('ignores a stale response from the previous cycle', async () => {
     const octoberLoad = store.load(october);
     const octoberRequest = backend.expectOne(

@@ -5,6 +5,7 @@ import {
   SavingsTransactionType,
 } from './savings.models';
 import { compareText } from '../../shared/formatters/compare-text';
+import { sumMoney } from '../../shared/formatters/money';
 
 export function savingsSummary(
   account: SavingsAccountResponse,
@@ -12,10 +13,7 @@ export function savingsSummary(
 ): SavingsSummary {
   return {
     currentBalance: account.currentBalance,
-    cycleNet: transactions.reduce(
-      (total, transaction) => total + signedSavingsAmount(transaction),
-      0,
-    ),
+    cycleNet: sumMoney(transactions.map(signedSavingsAmount)),
   };
 }
 

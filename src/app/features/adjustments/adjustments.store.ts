@@ -12,6 +12,7 @@ import {
   UpdateCycleAdjustmentRequest,
 } from './adjustments.models';
 import { compareText } from '../../shared/formatters/compare-text';
+import { sumMoney } from '../../shared/formatters/money';
 
 @Injectable({ providedIn: 'root' })
 export class AdjustmentsStore {
@@ -45,9 +46,8 @@ export class AdjustmentsStore {
     return state.kind === 'content' ? state.data : [];
   });
   readonly netAmount = computed(() =>
-    this.adjustments().reduce(
-      (sum, item) => sum + (item.type === 'inflow' ? item.amount : -item.amount),
-      0,
+    sumMoney(
+      this.adjustments().map((item) => (item.type === 'inflow' ? item.amount : -item.amount)),
     ),
   );
 
