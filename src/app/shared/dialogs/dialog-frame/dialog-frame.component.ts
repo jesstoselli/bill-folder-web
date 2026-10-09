@@ -64,7 +64,7 @@ import { InlineAlertComponent } from '../../components/inline-alert/inline-alert
     }
 
     h2 {
-      font-size: 1.65rem;
+      font-size: var(--bf-text-2xl);
       font-weight: 500;
       letter-spacing: -0.02em;
       margin: 0;

@@ -20,7 +20,7 @@
 
   span {
     color: var(--bf-muted);
-    font-size: 0.85rem;
+    font-size: var(--bf-text-sm);
   }
 
   strong {
@@ -42,7 +42,7 @@ dl {
 
   dt {
     color: var(--bf-muted);
-    font-size: 0.78rem;
+    font-size: var(--bf-text-xs);
   }
 
   dd {
@@ -89,7 +89,7 @@ dl {
 
   span {
     color: var(--bf-muted);
-    font-size: 0.85rem;
+    font-size: var(--bf-text-sm);
   }
 }
 

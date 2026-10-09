@@ -24,14 +24,14 @@
 
   strong {
     color: var(--bf-primary);
-    font-size: 1.2rem;
+    font-size: var(--bf-text-lg);
     font-variant-numeric: tabular-nums;
     font-weight: 500;
   }
 
   span {
     color: var(--bf-muted);
-    font-size: 0.85rem;
+    font-size: var(--bf-text-sm);
   }
 }
 

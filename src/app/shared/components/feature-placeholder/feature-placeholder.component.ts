@@ -44,7 +44,7 @@ import { map } from 'rxjs';
 
     p {
       color: var(--bf-muted);
-      font-size: 1.05rem;
+      font-size: var(--bf-text-md);
       margin: 1.5rem 0 0;
       max-width: 34ch;
     }

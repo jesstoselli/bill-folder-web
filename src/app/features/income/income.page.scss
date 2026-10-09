@@ -22,7 +22,7 @@
     color: var(--bf-muted);
   }
   strong {
-    font-size: 1.18rem;
+    font-size: var(--bf-text-lg);
     font-weight: 500;
   }
 }
@@ -41,7 +41,7 @@
 }
 .income-ledger__notes {
   color: var(--bf-muted);
-  font-size: 0.82rem;
+  font-size: var(--bf-text-sm);
   max-width: 28ch;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -20,7 +20,7 @@
 
   strong {
     color: var(--bf-text);
-    font-size: 1.15rem;
+    font-size: var(--bf-text-lg);
     font-weight: 500;
   }
 }
@@ -54,7 +54,7 @@
 
 .daily-expense-ledger__notes {
   color: var(--bf-muted);
-  font-size: 0.8rem;
+  font-size: var(--bf-text-sm);
   max-width: 34ch;
   overflow: hidden;
   text-overflow: ellipsis;

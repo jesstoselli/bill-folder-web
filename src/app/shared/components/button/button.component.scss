@@ -11,7 +11,7 @@
   cursor: pointer;
   display: inline-flex;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: var(--bf-text-md);
   font-weight: 500;
   gap: 0.5rem;
   justify-content: center;
@@ -78,5 +78,5 @@
   --bf-button-height: 2.25rem;
   --bf-button-padding-inline: 0.75rem;
 
-  font-size: 0.9375rem;
+  font-size: var(--bf-text-md);
 }

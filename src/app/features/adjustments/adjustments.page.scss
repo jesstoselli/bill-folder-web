@@ -16,7 +16,7 @@
   padding: 0.75rem 0.25rem;
   strong {
     color: var(--bf-text);
-    font-size: 1.18rem;
+    font-size: var(--bf-text-lg);
     font-weight: 500;
   }
   .adjustments-summary__net--negative {

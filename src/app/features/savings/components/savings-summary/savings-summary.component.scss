@@ -27,7 +27,7 @@
 
 .savings-summary__identity > p {
   color: var(--bf-muted);
-  font-size: 1rem;
+  font-size: var(--bf-text-md);
 }
 
 .savings-summary__balance {
@@ -47,14 +47,14 @@
   span {
     color: var(--bf-muted);
     display: block;
-    font-size: 0.86rem;
+    font-size: var(--bf-text-sm);
     margin-top: 0.25rem;
   }
 }
 
 .savings-summary__movement {
   color: var(--bf-primary);
-  font-size: 1.12rem;
+  font-size: var(--bf-text-lg);
   font-weight: 500;
 
   &.is-negative {

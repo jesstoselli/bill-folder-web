@@ -47,7 +47,7 @@ button {
   border-radius: var(--bf-radius-pill);
   color: var(--bf-bg);
   display: inline-flex;
-  font-size: 0.75rem;
+  font-size: var(--bf-text-xs);
   font-variant-numeric: tabular-nums;
   height: 1.3rem;
   justify-content: center;

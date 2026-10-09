@@ -56,7 +56,7 @@ export type PageState = 'loading' | 'empty' | 'error';
     }
 
     h2 {
-      font-size: 1.5rem;
+      font-size: var(--bf-text-xl);
       font-weight: 500;
       margin: 0;
     }

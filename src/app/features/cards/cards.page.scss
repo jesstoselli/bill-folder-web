@@ -35,7 +35,7 @@
   justify-content: center;
 
   strong {
-    font-size: 1.08rem;
+    font-size: var(--bf-text-lg);
     font-weight: 500;
     min-width: 11rem;
     text-align: center;
@@ -43,7 +43,7 @@
 
   [role='status'] {
     color: var(--bf-muted);
-    font-size: 0.85rem;
+    font-size: var(--bf-text-sm);
     margin-left: 0.25rem;
   }
 }

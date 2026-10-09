@@ -33,7 +33,7 @@
 
 .projection-list__identity {
   strong {
-    font-size: 1.05rem;
+    font-size: var(--bf-text-md);
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -42,14 +42,14 @@
 
   span {
     color: var(--bf-muted);
-    font-size: 0.875rem;
+    font-size: var(--bf-text-sm);
   }
 }
 
 .projection-list__date {
   span {
     color: var(--bf-muted);
-    font-size: 0.75rem;
+    font-size: var(--bf-text-xs);
   }
 }
 
@@ -58,13 +58,13 @@
   justify-items: end;
 
   app-money {
-    font-size: 1.05rem;
+    font-size: var(--bf-text-md);
     font-weight: 500;
   }
 
   span {
     color: var(--bf-muted);
-    font-size: 0.75rem;
+    font-size: var(--bf-text-xs);
   }
 }
 
@@ -72,7 +72,7 @@
   border: 1px solid var(--bf-outline);
   border-radius: var(--bf-radius-pill);
   color: var(--bf-muted);
-  font-size: 0.75rem;
+  font-size: var(--bf-text-xs);
   padding: 0.3rem 0.55rem;
   white-space: nowrap;
 }
@@ -84,7 +84,7 @@
 
 .projection-list__action {
   color: var(--bf-primary);
-  font-size: 0.875rem;
+  font-size: var(--bf-text-sm);
   font-weight: 500;
   grid-column: 1 / -1;
   justify-self: start;

@@ -61,13 +61,13 @@
 
 .cycle-navigator__label {
   color: var(--bf-text);
-  font-size: 0.95rem;
+  font-size: var(--bf-text-md);
   font-weight: 500;
 }
 
 .cycle-navigator__dates {
   color: var(--bf-muted);
   display: flex;
-  font-size: 0.75rem;
+  font-size: var(--bf-text-xs);
   gap: 0.3rem;
 }

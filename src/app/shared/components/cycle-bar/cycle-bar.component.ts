@@ -35,7 +35,7 @@ export interface CycleBarCycle {
 
     .cycle-bar__status {
       color: var(--bf-muted);
-      font-size: 0.875rem;
+      font-size: var(--bf-text-sm);
     }
   `,
 })

@@ -39,7 +39,7 @@
   padding-bottom: 1.25rem;
 
   h2 {
-    font-size: 1.5rem;
+    font-size: var(--bf-text-xl);
     font-weight: 500;
     letter-spacing: -0.015em;
     margin: 0;
@@ -67,7 +67,7 @@
   display: grid;
 
   h2 {
-    font-size: 1.25rem;
+    font-size: var(--bf-text-lg);
     font-weight: 500;
     margin: 1.25rem 0 0.5rem;
   }
@@ -83,7 +83,7 @@
 
     span:last-child {
       color: var(--bf-muted);
-      font-size: 0.8rem;
+      font-size: var(--bf-text-sm);
     }
 
     &:hover {

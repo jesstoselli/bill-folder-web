@@ -15,7 +15,7 @@
 
   th {
     color: var(--bf-muted);
-    font-size: 0.82rem;
+    font-size: var(--bf-text-sm);
     font-weight: 400;
     padding: 0.8rem 1rem;
     text-align: left;
@@ -43,7 +43,7 @@
 
 .installment-table__subscription {
   color: var(--bf-primary);
-  font-size: 0.78rem;
+  font-size: var(--bf-text-xs);
 }
 
 .installment-table__amount {

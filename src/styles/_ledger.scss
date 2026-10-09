@@ -27,7 +27,7 @@ $divider: color-mix(in srgb, var(--bf-outline) 72%, transparent);
 
   thead th {
     color: var(--bf-muted);
-    font-size: 0.85rem;
+    font-size: var(--bf-text-sm);
     font-weight: 400;
     padding: 0.85rem 1rem;
     text-align: left;
@@ -55,14 +55,14 @@ $divider: color-mix(in srgb, var(--bf-outline) 72%, transparent);
 
   .bf-ledger__group th {
     background: var(--bf-surface-high);
-    font-size: 1.2rem;
+    font-size: var(--bf-text-lg);
     font-weight: 500;
     padding: 0.8rem 1rem;
     text-align: left;
 
     span:last-child {
       color: var(--bf-muted);
-      font-size: 0.85rem;
+      font-size: var(--bf-text-sm);
       font-variant-numeric: tabular-nums;
       margin-left: 0.5rem;
     }

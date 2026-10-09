@@ -13,7 +13,7 @@
   }
 
   h2 {
-    font-size: 1.65rem;
+    font-size: var(--bf-text-2xl);
     font-weight: 500;
     letter-spacing: -0.02em;
     margin: 0;
@@ -51,7 +51,7 @@ mat-dialog-content {
 
   strong {
     color: var(--bf-primary);
-    font-size: 1.1rem;
+    font-size: var(--bf-text-lg);
     font-weight: 500;
   }
 

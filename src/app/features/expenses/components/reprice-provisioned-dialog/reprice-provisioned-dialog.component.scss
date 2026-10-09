@@ -15,7 +15,7 @@
 
   strong {
     color: var(--bf-primary);
-    font-size: 1.45rem;
+    font-size: var(--bf-text-xl);
     font-variant-numeric: tabular-nums;
     font-weight: 500;
   }

@@ -80,7 +80,7 @@
 }
 
 .sidebar__label {
-  font-size: 1rem;
+  font-size: var(--bf-text-md);
   font-weight: 500;
 }
 
@@ -91,7 +91,7 @@
 
   p {
     color: var(--bf-muted);
-    font-size: 0.8125rem;
+    font-size: var(--bf-text-sm);
     line-height: 1.35;
     margin: 0.65rem 0.75rem 0;
   }
