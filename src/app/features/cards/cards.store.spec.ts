@@ -121,6 +121,48 @@ describe('CardsStore', () => {
     expect(store.statement()?.id).toBe('statement-apr');
   });
 
+  it('keeps a statement chosen while a background card refresh is in flight', async () => {
+    const loading = store.load();
+    backend.expectOne('/v1/credit-card-accounts/').flush([card('card-a')]);
+    await nextMicrotask();
+    backend.expectOne('/v1/card-entries/?cardId=card-a').flush([]);
+    backend
+      .expectOne('/v1/card-statements/?cardId=card-a')
+      .flush([
+        statement('statement-jan', 'card-a', '2026-01-10'),
+        statement('statement-apr', 'card-a', '2026-04-10'),
+      ]);
+    await nextMicrotask();
+    backend
+      .expectOne('/v1/card-statements/statement-apr')
+      .flush(detail('statement-apr', 'card-a', '2026-04-10'));
+    await loading;
+
+    const refresh = store.refresh();
+    const entries = backend.expectOne('/v1/card-entries/?cardId=card-a');
+    const statements = backend.expectOne('/v1/card-statements/?cardId=card-a');
+    const choose = store.selectStatement('statement-jan');
+    backend
+      .expectOne('/v1/card-statements/statement-jan')
+      .flush(detail('statement-jan', 'card-a', '2026-01-10'));
+    await choose;
+
+    entries.flush([]);
+    statements.flush([
+      statement('statement-jan', 'card-a', '2026-01-10'),
+      statement('statement-apr', 'card-a', '2026-04-10'),
+    ]);
+    await nextMicrotask();
+    backend
+      .expectOne('/v1/card-statements/statement-jan')
+      .flush(detail('statement-jan', 'card-a', '2026-01-10'));
+    await refresh;
+
+    expect(store.selectedStatementId()).toBe('statement-jan');
+    expect(store.statement()?.id).toBe('statement-jan');
+    backend.expectNone('/v1/card-statements/statement-apr');
+  });
+
   it('uses the shared scope mappings for subscription delete and reprice', async () => {
     const deletion = store.deleteEntry('entry-1', 'thisAndFollowing');
     const deleteRequest = backend.expectOne('/v1/card-entries/entry-1?scope=this_and_following');

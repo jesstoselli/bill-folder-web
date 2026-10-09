@@ -239,10 +239,13 @@ export class CardsStore {
       const statements = statementsResponse
         .filter((statement) => statement.cardId === cardId)
         .sort(compareStatements);
+      // Read the selection after the await: the user may have moved to
+      // another statement while this (background) load was in flight.
+      const currentStatementId = this.selectedStatementIdState();
       const selectedStatementId = statements.some(
-        (statement) => statement.id === previousStatementId,
+        (statement) => statement.id === currentStatementId,
       )
-        ? previousStatementId
+        ? currentStatementId
         : initialStatementId(statements, todayCivilDate());
 
       this.cardSource.set({
