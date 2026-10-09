@@ -1,15 +1,17 @@
 @use '../../../styles/breakpoints' as bp;
 
+// The shell is exactly one viewport tall so only the content pane scrolls
+// (mat-drawer-content is the scroll container) and the sidebar stays put.
 :host {
   display: block;
-  min-height: 100dvh;
+  height: 100dvh;
 }
 
 .shell {
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--bf-brand) 3%, transparent), transparent 32rem),
     var(--bf-bg);
-  min-height: 100dvh;
+  height: 100%;
 }
 
 .shell__navigation {
@@ -23,7 +25,7 @@
 }
 
 .shell__body {
-  min-height: 100dvh;
+  overscroll-behavior: contain;
 }
 
 .shell__content {
