@@ -46,10 +46,7 @@
     matTooltipPosition="right"
     (click)="logoutRequested.emit()"
   >
-    <svg class="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5m5-4 4-4-4-4m4 4H9" />
-    </svg>
+    <app-icon name="logout" />
     <span [class.u-visually-hidden]="mode() === 'rail'">Sair</span>
   </button>
-  <p [class.u-visually-hidden]="mode() === 'rail'">Seu dinheiro, no lugar certo.</p>
 </div>
