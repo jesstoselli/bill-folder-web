@@ -124,12 +124,6 @@
   }
 }
 
-.home-page__error {
-  display: grid;
-  gap: 1rem;
-  justify-items: start;
-}
-
 @media (max-width: 1199.98px) {
   .home-page__layout {
     grid-template-columns: minmax(0, 1fr);

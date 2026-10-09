@@ -63,14 +63,13 @@
       <app-page-state state="loading" />
     }
     @case ('error') {
-      <div class="cards-page__state">
-        <app-page-state
-          state="error"
-          title="Não foi possível carregar os cartões"
-          [message]="loadError()"
-        />
-        <button type="button" appButton (click)="refresh()">Tentar novamente</button>
-      </div>
+      <app-page-state
+        state="error"
+        title="Não foi possível carregar os cartões"
+        [message]="loadError()"
+        actionLabel="Tentar novamente"
+        (action)="refresh()"
+      />
     }
     @case ('no-cards') {
       <app-page-state

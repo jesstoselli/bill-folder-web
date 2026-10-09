@@ -53,7 +53,7 @@ export class SavingsTransactionFormComponent {
       this.initial()?.type ?? 'deposit',
       Validators.required,
     ),
-    amount: [this.initial()?.amount ?? 0, [Validators.required, Validators.min(0)]],
+    amount: [this.initial()?.amount ?? 0, [Validators.required, Validators.min(0.01)]],
     date: [this.initial()?.date ?? todayCivilDate(), [Validators.required, validCivilDate]],
     label: [this.initial()?.label ?? '', Validators.maxLength(200)],
     linkedTransactionId: [

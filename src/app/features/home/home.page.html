@@ -20,14 +20,13 @@
       <app-page-state state="loading" />
     }
     @case ('error') {
-      <div class="home-page__error">
-        <app-page-state
-          state="error"
-          title="Não foi possível carregar a Home"
-          [message]="errorMessage()"
-        />
-        <button type="button" appButton (click)="refresh()">Tentar novamente</button>
-      </div>
+      <app-page-state
+        state="error"
+        title="Não foi possível carregar a Home"
+        [message]="errorMessage()"
+        actionLabel="Tentar novamente"
+        (action)="refresh()"
+      />
     }
     @case ('content') {
       @if (content(); as data) {
@@ -72,16 +71,13 @@
                 @if (selectedTab() === 'recent' && store.recentState().kind === 'loading') {
                   <app-page-state state="loading" />
                 } @else if (selectedTab() === 'recent' && store.recentState().kind === 'error') {
-                  <div class="home-page__error">
-                    <app-page-state
-                      state="error"
-                      title="Não foi possível carregar as despesas avulsas recentes"
-                      [message]="recentErrorMessage()"
-                    />
-                    <button type="button" appButton (click)="store.refreshRecent()">
-                      Tentar novamente
-                    </button>
-                  </div>
+                  <app-page-state
+                    state="error"
+                    title="Não foi possível carregar as despesas avulsas recentes"
+                    [message]="recentErrorMessage()"
+                    actionLabel="Tentar novamente"
+                    (action)="store.refreshRecent()"
+                  />
                 } @else {
                   <app-projection-list
                     [rows]="visibleRows()"

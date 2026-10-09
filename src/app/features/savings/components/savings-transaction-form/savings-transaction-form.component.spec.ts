@@ -121,6 +121,19 @@ describe('SavingsTransactionFormComponent', () => {
     );
   });
 
+  it('rejects a zero amount without writing', async () => {
+    const createTransaction = vi.fn(() => Promise.resolve(savedTransaction));
+    const fixture = await createFixture({ createTransaction });
+    const component = fixture.componentInstance;
+    component.form.patchValue({ amount: 0 });
+
+    await component.submit();
+    fixture.detectChanges();
+
+    expect(createTransaction).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Informe um valor maior que zero.');
+  });
+
   it('rejects a nonblank linked transaction that is not a GUID without writing', async () => {
     const createTransaction = vi.fn(() => Promise.resolve(savedTransaction));
     const fixture = await createFixture({ createTransaction });

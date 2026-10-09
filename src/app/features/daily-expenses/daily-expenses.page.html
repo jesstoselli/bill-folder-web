@@ -46,20 +46,22 @@
       <app-page-state state="loading" />
     }
     @case ('error') {
-      <div class="daily-expenses-page__state">
-        <app-page-state state="error" [title]="loadErrorTitle()" [message]="loadError()" />
-        <button type="button" appButton (click)="refresh()">Tentar novamente</button>
-      </div>
+      <app-page-state
+        state="error"
+        [title]="loadErrorTitle()"
+        [message]="loadError()"
+        actionLabel="Tentar novamente"
+        (action)="refresh()"
+      />
     }
     @case ('no-cycle') {
-      <div class="daily-expenses-page__state">
-        <app-page-state
-          state="empty"
-          title="Nenhum ciclo disponível"
-          message="Crie ou disponibilize um ciclo para registrar e consultar despesas avulsas."
-        />
-        <button type="button" appButton (click)="refresh()">Buscar ciclos novamente</button>
-      </div>
+      <app-page-state
+        state="empty"
+        title="Nenhum ciclo disponível"
+        message="Crie ou disponibilize um ciclo para registrar e consultar despesas avulsas."
+        actionLabel="Buscar ciclos novamente"
+        (action)="refresh()"
+      />
     }
     @case ('content') {
       <app-refresh-status [state]="store.state()" (retry)="refresh()" />

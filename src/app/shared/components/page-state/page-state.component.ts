@@ -1,9 +1,11 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
+import { ButtonComponent } from '../button/button.component';
 
 export type PageState = 'loading' | 'empty' | 'error';
 
 @Component({
   selector: 'app-page-state',
+  imports: [ButtonComponent],
   template: `
     @if (state() === 'loading') {
       <section class="page-state page-state--loading" role="status" aria-live="polite">
@@ -22,6 +24,11 @@ export type PageState = 'loading' | 'empty' | 'error';
         <h2>{{ title() }}</h2>
         @if (message()) {
           <p>{{ message() }}</p>
+        }
+        @if (actionLabel()) {
+          <button type="button" appButton class="page-state__action" (click)="action.emit()">
+            {{ actionLabel() }}
+          </button>
         }
       </section>
     }
@@ -60,6 +67,10 @@ export type PageState = 'loading' | 'empty' | 'error';
       max-width: 50ch;
     }
 
+    .page-state__action {
+      margin-top: 1.25rem;
+    }
+
     .page-state--loading {
       display: grid;
       gap: 0.75rem;
@@ -96,4 +107,7 @@ export class PageStateComponent {
   readonly state = input.required<PageState>();
   readonly title = input('');
   readonly message = input('');
+  /** Recovery action rendered inside the card (e.g. "Tentar novamente"). */
+  readonly actionLabel = input('');
+  readonly action = output<void>();
 }
