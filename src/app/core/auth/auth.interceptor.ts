@@ -113,6 +113,10 @@ function expireSession(
   router: Router,
   redirect: SessionEndRedirect,
 ): void {
+  if (session.isLogoutPending()) {
+    return;
+  }
+
   const returnUrl = safeInternalReturnUrl(router.url);
   session.clear();
   redirect.toLogin(returnUrl);

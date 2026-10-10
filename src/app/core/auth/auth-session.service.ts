@@ -56,6 +56,10 @@ export class AuthSessionService {
     return state.kind === 'authenticated' ? state.accessToken : null;
   });
 
+  isLogoutPending(): boolean {
+    return this.logoutRequested;
+  }
+
   constructor() {
     this.coordination.logoutEvents.pipe(takeUntilDestroyed()).subscribe(() => {
       const wasAuthenticated = this.isAuthenticated();

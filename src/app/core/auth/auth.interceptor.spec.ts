@@ -95,6 +95,29 @@ describe('authInterceptor', () => {
     expect(redirect.toLogin).toHaveBeenCalledWith('/home');
   });
 
+  it('does not reload the app while logout waits for an in-flight refresh', async () => {
+    const login = firstValueFrom(
+      session.login({ email: 'jess@example.com', password: 'senha-segura' }),
+    );
+    backend.expectOne('/v1/auth/web/login').flush(authResponse);
+    await login;
+    await router.navigateByUrl('/home');
+
+    const result = firstValueFrom(http.get('/v1/private'));
+    backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
+    const refreshRequest = backend.expectOne('/v1/auth/web/refresh');
+    const logout = firstValueFrom(session.logout());
+
+    refreshRequest.flush({ ...authResponse, accessToken: 'late-token' });
+    backend.expectOne('/v1/private').flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    expect(redirect.toLogin).not.toHaveBeenCalled();
+
+    backend.expectOne('/v1/auth/web/logout').flush(null);
+    await logout;
+  });
+
   it('ends the session with a reload when the refresh cookie is rejected', async () => {
     await router.navigateByUrl('/home');
     const result = firstValueFrom(http.get('/v1/private'));
