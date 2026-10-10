@@ -1,0 +1,34 @@
+@use '../../../styles/breakpoints' as bp;
+
+.manage-savings-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.savings-ledger {
+  @media (min-width: #{bp.$md + 1px}) {
+    table {
+      min-width: 52rem;
+    }
+  }
+
+  @media (max-width: bp.$md) {
+    tbody tr:not(.bf-ledger__group):not(.bf-ledger__empty) th {
+      border: 0;
+      display: block;
+      grid-column: 1;
+      padding: 0.2rem 0;
+    }
+
+    // Two amounts share the right column; the label tells them apart.
+    td[data-label^='Saldo']::before {
+      color: var(--bf-muted);
+      content: attr(data-label) ': ';
+    }
+  }
+}
+
+.savings-ledger__name {
+  font-size: var(--bf-text-lg);
+  font-weight: 500;
+}

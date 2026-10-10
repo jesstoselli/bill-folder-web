@@ -105,6 +105,14 @@ export const routes: Routes = [
           ),
         data: { title: 'Cartões' },
       },
+      {
+        path: 'gerenciar/poupancas',
+        loadComponent: () =>
+          import('./features/manage-savings/manage-savings.page').then(
+            ({ ManageSavingsPage }) => ManageSavingsPage,
+          ),
+        data: { title: 'Poupanças' },
+      },
       { path: '', pathMatch: 'full', redirectTo: 'home' },
     ],
   },

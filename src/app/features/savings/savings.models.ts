@@ -13,6 +13,22 @@ export interface SavingsAccountResponse {
   readonly updatedAt: string;
 }
 
+export interface CreateSavingsAccountRequest {
+  readonly checkingAccountId: string;
+  readonly bankName: string;
+  readonly branch: string;
+  readonly accountNumber: string;
+  readonly initialBalance: number;
+}
+
+/** The linked checking account is fixed once the savings account exists. */
+export interface UpdateSavingsAccountRequest {
+  readonly bankName?: string;
+  readonly branch?: string;
+  readonly accountNumber?: string;
+  readonly initialBalance?: number;
+}
+
 export interface SavingsTransactionResponse {
   readonly id: string;
   readonly savingsAccountId: string;

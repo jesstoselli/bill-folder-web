@@ -75,6 +75,11 @@ const NAVIGATION_SECTIONS: readonly NavigationSection[] = [
         path: '/gerenciar/cartoes',
         icon: 'creditCard',
       },
+      {
+        label: 'Poupanças',
+        path: '/gerenciar/poupancas',
+        icon: 'savings',
+      },
     ],
   },
 ];

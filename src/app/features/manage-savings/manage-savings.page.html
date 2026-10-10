@@ -1,0 +1,108 @@
+<section class="manage-savings-page">
+  <app-page-header
+    heading="Poupanças"
+    subtitle="Gerencie as poupanças vinculadas às suas contas-correntes."
+  >
+    <button type="button" appButton [disabled]="refreshing()" (click)="refresh()">Atualizar</button>
+    <button
+      type="button"
+      appButton
+      variant="primary"
+      class="manage-savings-page__create"
+      (click)="openCreate()"
+    >
+      Nova poupança
+    </button>
+  </app-page-header>
+
+  <app-inline-alert [message]="actionError()" />
+
+  @switch (savings.state().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <app-page-state
+        state="error"
+        title="Não foi possível carregar as poupanças"
+        [message]="loadError()"
+        actionLabel="Tentar novamente"
+        (action)="refresh()"
+      />
+    }
+    @case ('content') {
+      <app-refresh-status [state]="savings.state()" (retry)="refresh()" />
+      @if (savings.accounts().length) {
+        <div class="savings-ledger bf-ledger" tabindex="-1" aria-label="Poupanças cadastradas">
+          <table>
+            <caption class="u-visually-hidden">
+              Poupanças cadastradas
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Poupança</th>
+                <th scope="col">Agência / número</th>
+                <th scope="col" class="bf-ledger__amount">Saldo inicial</th>
+                <th scope="col" class="bf-ledger__amount">Saldo atual</th>
+                <th scope="col" class="bf-ledger__actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (account of savings.accounts(); track account.id) {
+                <tr [attr.data-savings-account-id]="account.id">
+                  <th scope="row" class="savings-ledger__name">{{ account.bankName }}</th>
+                  <td data-label="Agência / número" class="bf-tabular">
+                    {{ account.branch }} / {{ account.accountNumber }}
+                  </td>
+                  <td data-label="Saldo inicial" class="bf-ledger__amount bf-tabular">
+                    {{ formatBrl(account.initialBalance) }}
+                  </td>
+                  <td data-label="Saldo atual" class="bf-ledger__amount bf-tabular">
+                    {{ formatBrl(account.currentBalance) }}
+                  </td>
+                  <td class="bf-ledger__actions">
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      data-row-action
+                      data-action="edit"
+                      [attr.aria-label]="'Editar poupança do ' + account.bankName"
+                      [disabled]="deletingId() !== null"
+                      (click)="openEdit(account)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      tone="danger"
+                      data-row-action
+                      data-action="delete"
+                      [attr.aria-label]="'Excluir poupança do ' + account.bankName"
+                      [disabled]="deletingId() !== null"
+                      (click)="confirmDelete(account)"
+                    >
+                      {{ deletingId() === account.id ? 'Excluindo…' : 'Excluir' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <app-page-state
+          state="empty"
+          title="Nenhuma poupança cadastrada"
+          message="Cadastre uma poupança vinculada a uma conta-corrente para acompanhar aportes, saques e rendimentos."
+          actionLabel="Nova poupança"
+          (action)="openCreate()"
+        />
+      }
+    }
+  }
+</section>

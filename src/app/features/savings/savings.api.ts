@@ -7,9 +7,11 @@ import { notifyingWrite } from '../../core/data-change/notifying-write';
 import { mapApiErrors } from '../../core/http/api-error';
 import { apiUrl } from '../../core/http/api-url';
 import {
+  CreateSavingsAccountRequest,
   CreateSavingsTransactionRequest,
   SavingsAccountResponse,
   SavingsTransactionResponse,
+  UpdateSavingsAccountRequest,
   UpdateSavingsTransactionRequest,
 } from './savings.models';
 
@@ -23,6 +25,32 @@ export class SavingsApi {
 
   listAccounts(): Observable<SavingsAccountResponse[]> {
     return this.http.get<SavingsAccountResponse[]>(`${this.accountsUrl}/`).pipe(mapApiErrors());
+  }
+
+  createAccount(request: CreateSavingsAccountRequest): Observable<SavingsAccountResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http.post<SavingsAccountResponse>(`${this.accountsUrl}/`, request).pipe(mapApiErrors()),
+    );
+  }
+
+  updateAccount(
+    id: string,
+    request: UpdateSavingsAccountRequest,
+  ): Observable<SavingsAccountResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http
+        .patch<SavingsAccountResponse>(`${this.accountsUrl}/${id}`, request)
+        .pipe(mapApiErrors()),
+    );
+  }
+
+  deleteAccount(id: string): Observable<null> {
+    return notifyingWrite(
+      this.changes,
+      this.http.delete<null>(`${this.accountsUrl}/${id}`).pipe(mapApiErrors()),
+    );
   }
 
   listTransactions(

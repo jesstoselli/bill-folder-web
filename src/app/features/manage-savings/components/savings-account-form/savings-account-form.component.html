@@ -1,0 +1,62 @@
+<form class="savings-account-form" [formGroup]="form" (ngSubmit)="submit()">
+  <app-dialog-frame
+    titleId="savings-account-form-title"
+    [heading]="data.mode === 'create' ? 'Nova poupança' : 'Editar poupança'"
+    closeLabel="Fechar formulário de poupança"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar poupança"
+    savingLabel="Salvando…"
+    [submitDisabled]="loadingAccounts() || (data.mode === 'create' && !availableAccounts().length)"
+  >
+    <p dialogSubtitle>
+      Cada poupança fica vinculada a uma conta-corrente e acompanha aportes, saques e rendimentos.
+    </p>
+
+    <div class="savings-account-form__fields">
+      @if (data.mode === 'create') {
+        @if (!loadingAccounts() && !availableAccounts().length) {
+          <p class="savings-account-form__notice" role="status">
+            Todas as contas-correntes já têm uma poupança vinculada. Cadastre outra conta-corrente
+            para criar uma nova poupança.
+          </p>
+        } @else {
+          <mat-form-field appearance="outline">
+            <mat-label>Conta-corrente vinculada</mat-label>
+            <mat-select formControlName="checkingAccountId">
+              @for (account of availableAccounts(); track account.id) {
+                <mat-option [value]="account.id">{{ accountLabel(account) }}</mat-option>
+              }
+            </mat-select>
+            @if (form.controls.checkingAccountId.hasError('incompleteAccount')) {
+              <mat-error>
+                Esta conta-corrente não tem agência e número. Complete os dados dela em
+                Contas-correntes.
+              </mat-error>
+            } @else if (form.controls.checkingAccountId.invalid) {
+              <mat-error>Escolha a conta-corrente que vai ficar vinculada.</mat-error>
+            }
+          </mat-form-field>
+        }
+      } @else {
+        <div class="savings-account-form__linked">
+          <span>Conta-corrente vinculada</span>
+          <strong>{{ data.account.bankName }} · {{ data.account.accountNumber }}</strong>
+          <p>
+            O vínculo não pode ser alterado depois da criação. Para mudar, exclua a poupança e crie
+            outra.
+          </p>
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Saldo inicial</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input matInput appMoneyInput formControlName="initialBalance" />
+        @if (form.controls.initialBalance.invalid) {
+          <mat-error>Informe um saldo inicial igual ou maior que zero.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </app-dialog-frame>
+</form>

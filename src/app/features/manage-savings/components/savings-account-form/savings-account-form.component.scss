@@ -1,0 +1,33 @@
+:host {
+  display: block;
+}
+
+.savings-account-form__fields {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.savings-account-form__linked,
+.savings-account-form__notice {
+  background: var(--bf-surface-high);
+  border: 1px solid var(--bf-outline);
+  border-radius: var(--bf-radius-control);
+  margin: 0 0 1rem;
+  padding: 1rem;
+}
+
+.savings-account-form__linked {
+  display: grid;
+  gap: 0.25rem;
+
+  span,
+  p {
+    color: var(--bf-muted);
+    font-size: var(--bf-text-sm);
+    margin: 0;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}

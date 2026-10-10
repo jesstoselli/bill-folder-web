@@ -34,6 +34,7 @@ describe('SidebarComponent', () => {
       'Ciclos',
       'Contas-correntes',
       'Cartões',
+      'Poupanças',
     ]);
     expect(linkLabels).toContain('Ciclos');
     expect(linkLabels).toContain('Contas-correntes');
@@ -76,6 +77,7 @@ describe('SidebarComponent', () => {
       'Ciclos',
       'Contas-correntes',
       'Cartões',
+      'Poupanças',
     ]);
     expect(
       Array.from(root.querySelectorAll<HTMLElement>('.sidebar__section-label')).every((label) =>
@@ -107,6 +109,7 @@ describe('SidebarComponent', () => {
       'calendarMonth',
       'accountBalance',
       'creditCard',
+      'savings',
     ]);
     const iconNames = links.map((link) =>
       link.querySelector('app-icon')?.getAttribute('data-icon'),
