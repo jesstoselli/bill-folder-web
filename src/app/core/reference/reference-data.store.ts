@@ -6,8 +6,9 @@ import { CategoryDto, ReferenceDataApi } from './reference-data.api';
 import { compareCategories, compareCheckingAccounts } from './reference-ordering';
 
 /**
- * How long a fetched list is reused. The web app never edits these lists, but
- * the mobile app can add an account, so a long-open tab must pick it up.
+ * How long a fetched list is reused. Writes made here invalidate the cache
+ * right away; the max age covers changes made in the mobile app, which a
+ * long-open tab must still pick up.
  */
 export const REFERENCE_MAX_AGE_MS = 5 * 60 * 1_000;
 

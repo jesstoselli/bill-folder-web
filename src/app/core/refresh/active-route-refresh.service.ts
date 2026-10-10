@@ -35,6 +35,11 @@ export class ActiveRouteRefreshService {
     return target === null || target === owner;
   }
 
+  /** Whether `owner` is exactly what the current page registered. */
+  isShowing(owner: object): boolean {
+    return untracked(this.target) === owner;
+  }
+
   refresh(): Promise<void> {
     const target = untracked(this.target);
     if (!target) return Promise.resolve();
@@ -92,7 +97,10 @@ export class TabResumeRefreshService {
   // pages follow the cycle selection on their own.
   private async resume(): Promise<void> {
     await this.cycles.load();
-    await this.activeRoute.refresh();
+    // On the cycles page the page's store is the cycle store just reloaded.
+    if (!this.activeRoute.isShowing(this.cycles)) {
+      await this.activeRoute.refresh();
+    }
   }
 }
 

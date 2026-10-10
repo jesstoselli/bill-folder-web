@@ -55,6 +55,20 @@ describe('tab resume refresh', () => {
     expect(cycles.load).toHaveBeenCalledOnce();
   });
 
+  it('reloads cycles only once when the cycles page is the active route', async () => {
+    const { hide, show, advance, cycles } = setup();
+    const cyclesTarget = Object.assign(cycles, { refresh: vi.fn(() => Promise.resolve()) });
+    TestBed.inject(ActiveRouteRefreshService).register(cyclesTarget);
+
+    hide();
+    advance(RESUME_FRESHNESS_MS);
+    show();
+    await vi.waitFor(() => expect(cycles.load).toHaveBeenCalledOnce());
+    await Promise.resolve();
+
+    expect(cyclesTarget.refresh).not.toHaveBeenCalled();
+  });
+
   it('does not refetch after a short trip to another tab', () => {
     const { hide, show, advance, refresh, cycles } = setup();
 
