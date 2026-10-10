@@ -5,10 +5,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { mapApiError } from '../../../../core/http/api-error';
-import {
-  CategoryDto,
-  CheckingAccountResponse,
-} from '../../../../core/reference/reference-data.api';
+import { CheckingAccountResponse } from '../../../../core/checking-accounts/checking-account.models';
+import { CategoryDto } from '../../../../core/reference/reference-data.api';
 import { ReferenceDataStore } from '../../../../core/reference/reference-data.store';
 import { WriteDialogLock } from '../../../../shared/dialogs/write-dialog-lock';
 import { DailyExpensesStore } from '../../daily-expenses.store';

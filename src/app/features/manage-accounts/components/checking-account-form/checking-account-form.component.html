@@ -1,0 +1,55 @@
+<form class="checking-account-form" [formGroup]="form" (ngSubmit)="submit()">
+  <app-dialog-frame
+    titleId="checking-account-form-title"
+    [heading]="data.mode === 'create' ? 'Nova conta' : 'Editar conta'"
+    closeLabel="Fechar formulário de conta-corrente"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar conta"
+    savingLabel="Salvando…"
+  >
+    <p dialogSubtitle>Cadastre os dados usados para saldos e pagamentos.</p>
+
+    <div class="checking-account-form__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Banco</mat-label>
+        <input matInput formControlName="bankName" autocomplete="organization" maxlength="100" />
+        @if (form.controls.bankName.invalid) {
+          <mat-error>Informe o banco com até 100 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="checking-account-form__split">
+        <mat-form-field appearance="outline">
+          <mat-label>Agência</mat-label>
+          <input matInput formControlName="branch" autocomplete="off" maxlength="20" />
+          @if (form.controls.branch.invalid) {
+            <mat-error>Informe a agência.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Número da conta</mat-label>
+          <input matInput formControlName="accountNumber" autocomplete="off" maxlength="30" />
+          @if (form.controls.accountNumber.invalid) {
+            <mat-error>Informe o número da conta.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Saldo inicial</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input matInput appMoneyInput formControlName="initialBalance" />
+        @if (form.controls.initialBalance.invalid) {
+          <mat-error>Informe um saldo inicial igual ou maior que zero.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="checking-account-form__primary">
+        <mat-slide-toggle formControlName="isPrimary">Conta principal</mat-slide-toggle>
+        <p>Ao marcar, esta conta substitui a principal atual.</p>
+      </div>
+    </div>
+  </app-dialog-frame>
+</form>

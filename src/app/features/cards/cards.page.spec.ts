@@ -3,6 +3,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { of } from 'rxjs';
+import { CheckingAccountsApi } from '../../core/checking-accounts/checking-accounts.api';
 import { ReferenceDataApi } from '../../core/reference/reference-data.api';
 import { LoadState } from '../../shared/states/load-state';
 import { CardsPage } from './cards.page';
@@ -260,8 +261,9 @@ async function createFixture(
       { provide: CardsStore, useValue: store },
       {
         provide: ReferenceDataApi,
-        useValue: { categories: () => of([]), checkingAccounts: () => of([]) },
+        useValue: { categories: () => of([]) },
       },
+      { provide: CheckingAccountsApi, useValue: { list: () => of([]) } },
       {
         provide: ActivatedRoute,
         useValue: {

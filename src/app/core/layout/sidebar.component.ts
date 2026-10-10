@@ -11,41 +11,66 @@ interface NavigationDestination {
   readonly icon: BillFolderIconName;
 }
 
-const NAVIGATION_DESTINATIONS: readonly NavigationDestination[] = [
+interface NavigationSection {
+  readonly label: string;
+  readonly destinations: readonly NavigationDestination[];
+}
+
+const NAVIGATION_SECTIONS: readonly NavigationSection[] = [
   {
-    label: 'Home',
-    path: '/home',
-    icon: 'home',
+    label: 'Principal',
+    destinations: [
+      {
+        label: 'Home',
+        path: '/home',
+        icon: 'home',
+      },
+      {
+        label: 'Despesas',
+        path: '/despesas',
+        icon: 'receiptLong',
+      },
+      {
+        label: 'Despesas avulsas',
+        path: '/gastos-diarios',
+        icon: 'shoppingBag',
+      },
+      {
+        label: 'Recebimentos',
+        path: '/receitas',
+        icon: 'attachMoney',
+      },
+      {
+        label: 'Cartões',
+        path: '/cartoes',
+        icon: 'creditCard',
+      },
+      {
+        label: 'Poupança',
+        path: '/poupanca',
+        icon: 'savings',
+      },
+      {
+        label: 'Ajustes',
+        path: '/ajustes',
+        icon: 'tune',
+      },
+    ],
   },
   {
-    label: 'Despesas',
-    path: '/despesas',
-    icon: 'receiptLong',
-  },
-  {
-    label: 'Despesas avulsas',
-    path: '/gastos-diarios',
-    icon: 'shoppingBag',
-  },
-  {
-    label: 'Recebimentos',
-    path: '/receitas',
-    icon: 'attachMoney',
-  },
-  {
-    label: 'Cartões',
-    path: '/cartoes',
-    icon: 'creditCard',
-  },
-  {
-    label: 'Poupança',
-    path: '/poupanca',
-    icon: 'savings',
-  },
-  {
-    label: 'Ajustes',
-    path: '/ajustes',
-    icon: 'tune',
+    label: 'Gerenciar',
+    destinations: [
+      {
+        label: 'Ciclos',
+        path: '/gerenciar/ciclos',
+        icon: 'calendarMonth',
+      },
+      {
+        label: 'Contas-correntes',
+        path: '/gerenciar/contas',
+        icon: 'accountBalance',
+      },
+    ],
   },
 ];
 
@@ -61,7 +86,7 @@ export class SidebarComponent {
   readonly navigationRequested = output<void>();
   readonly logoutRequested = output<void>();
 
-  protected readonly destinations = NAVIGATION_DESTINATIONS;
+  protected readonly sections = NAVIGATION_SECTIONS;
 
   protected isActive(path: string): boolean {
     const activeRoute = this.activeRoute().split(/[?#]/, 1)[0];

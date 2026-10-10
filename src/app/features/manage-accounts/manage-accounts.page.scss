@@ -1,0 +1,42 @@
+@use '../../../styles/breakpoints' as bp;
+
+.manage-accounts-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.accounts-ledger {
+  @media (min-width: #{bp.$md + 1px}) {
+    table {
+      min-width: 52rem;
+    }
+  }
+
+  @media (max-width: bp.$md) {
+    tbody tr:not(.bf-ledger__group):not(.bf-ledger__empty) th {
+      border: 0;
+      display: block;
+      grid-column: 1;
+      padding: 0.2rem 0;
+      text-align: left;
+    }
+  }
+}
+
+.accounts-ledger__name {
+  font-size: var(--bf-text-lg);
+  font-weight: 500;
+}
+
+.accounts-ledger__badge {
+  background: color-mix(in srgb, var(--bf-brand) 12%, var(--bf-surface));
+  border: 1px solid color-mix(in srgb, var(--bf-brand) 46%, var(--bf-outline));
+  border-radius: var(--bf-radius-pill);
+  display: inline-flex;
+  font-size: var(--bf-text-sm);
+  padding: 0.3rem 0.55rem;
+}
+
+.accounts-ledger__secondary {
+  color: var(--bf-muted);
+}

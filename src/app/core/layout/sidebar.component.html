@@ -12,28 +12,42 @@
 </div>
 
 <nav aria-label="Navegação principal">
-  <ul class="sidebar__list">
-    @for (destination of destinations; track destination.path) {
-      <li>
-        <a
-          class="sidebar__link"
-          [class.sidebar__link--active]="isActive(destination.path)"
-          [routerLink]="destination.path"
-          [attr.aria-current]="isActive(destination.path) ? 'page' : null"
-          [attr.aria-label]="destination.label"
-          [matTooltip]="destination.label"
-          [matTooltipDisabled]="mode() !== 'rail'"
-          matTooltipPosition="right"
-          (click)="navigationRequested.emit()"
+  <div class="sidebar__sections">
+    @for (section of sections; track section.label; let sectionIndex = $index) {
+      <section class="sidebar__section" [attr.aria-labelledby]="'sidebar-section-' + sectionIndex">
+        <h2
+          class="sidebar__section-label"
+          [class.u-visually-hidden]="mode() === 'rail'"
+          [id]="'sidebar-section-' + sectionIndex"
         >
-          <app-icon [name]="destination.icon" />
-          <span class="sidebar__label" [class.u-visually-hidden]="mode() === 'rail'">
-            {{ destination.label }}
-          </span>
-        </a>
-      </li>
+          {{ section.label }}
+        </h2>
+
+        <ul class="sidebar__list">
+          @for (destination of section.destinations; track destination.path) {
+            <li>
+              <a
+                class="sidebar__link"
+                [class.sidebar__link--active]="isActive(destination.path)"
+                [routerLink]="destination.path"
+                [attr.aria-current]="isActive(destination.path) ? 'page' : null"
+                [attr.aria-label]="destination.label"
+                [matTooltip]="destination.label"
+                [matTooltipDisabled]="mode() !== 'rail'"
+                matTooltipPosition="right"
+                (click)="navigationRequested.emit()"
+              >
+                <app-icon [name]="destination.icon" />
+                <span class="sidebar__label" [class.u-visually-hidden]="mode() === 'rail'">
+                  {{ destination.label }}
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      </section>
     }
-  </ul>
+  </div>
 </nav>
 
 <div class="sidebar__footer">

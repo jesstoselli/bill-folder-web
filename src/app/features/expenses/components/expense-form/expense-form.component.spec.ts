@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
+import { CheckingAccountsApi } from '../../../../core/checking-accounts/checking-accounts.api';
 import { ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { ExpenseResponse } from '../../expenses.models';
 import { ExpenseFormComponent } from './expense-form.component';
@@ -60,6 +61,7 @@ describe('ExpenseFormComponent failed save', () => {
         { provide: MAT_DIALOG_DATA, useValue: { mode: 'create' } },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
+        { provide: CheckingAccountsApi, useValue: { list: () => of([]) } },
         {
           provide: ExpensesStore,
           useValue: { create, state: state.asReadonly() },
@@ -134,6 +136,7 @@ describe('ExpenseFormComponent failed save', () => {
         { provide: MAT_DIALOG_DATA, useValue: { mode: 'create' } },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
+        { provide: CheckingAccountsApi, useValue: { list: () => of([]) } },
         { provide: ExpensesStore, useValue: { create } },
       ],
     }).compileComponents();

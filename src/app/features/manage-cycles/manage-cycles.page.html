@@ -1,0 +1,119 @@
+<section class="manage-cycles-page">
+  <app-page-header
+    heading="Ciclos"
+    subtitle="Organize os períodos que dão contexto aos lançamentos e saldos."
+  >
+    <button type="button" appButton [disabled]="refreshing()" (click)="refresh()">Atualizar</button>
+    <button
+      type="button"
+      appButton
+      variant="primary"
+      class="manage-cycles-page__create"
+      (click)="openCreate()"
+    >
+      Novo ciclo
+    </button>
+  </app-page-header>
+
+  <app-inline-alert [message]="actionError()" />
+
+  @switch (cycles.state().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <app-page-state
+        state="error"
+        title="Não foi possível carregar os ciclos"
+        [message]="loadError()"
+        actionLabel="Tentar novamente"
+        (action)="refresh()"
+      />
+    }
+    @case ('content') {
+      <app-refresh-status [state]="cycles.state()" (retry)="refresh()" />
+      @if (cycles.cycles().length) {
+        <div class="cycles-ledger bf-ledger" tabindex="-1" aria-label="Ciclos cadastrados">
+          <table>
+            <caption class="u-visually-hidden">
+              Ciclos cadastrados em ordem cronológica
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Ciclo</th>
+                <th scope="col">Período</th>
+                <th scope="col">Origem/estado</th>
+                <th scope="col" class="bf-ledger__actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cycle of cycles.cycles(); track cycle.id) {
+                <tr [attr.data-cycle-id]="cycle.id">
+                  <td class="cycles-ledger__name">
+                    <strong>{{ cycle.label }}</strong>
+                  </td>
+                  <td class="cycles-ledger__period bf-tabular">
+                    <time [attr.datetime]="cycle.startDate">{{
+                      formatCivilDate(cycle.startDate)
+                    }}</time>
+                    <span aria-hidden="true"> a </span>
+                    <time [attr.datetime]="cycle.endDate">{{
+                      formatCivilDate(cycle.endDate)
+                    }}</time>
+                  </td>
+                  <td class="cycles-ledger__status">
+                    @if (cycle.isCurrent) {
+                      <span class="cycles-ledger__badge cycles-ledger__badge--current">Atual</span>
+                    }
+                    <span class="cycles-ledger__badge">
+                      {{
+                        cycle.isRecurrenceGenerated
+                          ? 'Gerado automaticamente'
+                          : 'Criado manualmente'
+                      }}
+                    </span>
+                  </td>
+                  <td class="bf-ledger__actions">
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      data-row-action
+                      data-action="edit"
+                      [disabled]="deletingId() !== null"
+                      (click)="openEdit(cycle)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      tone="danger"
+                      data-row-action
+                      data-action="delete"
+                      [disabled]="deletingId() !== null"
+                      (click)="confirmDelete(cycle)"
+                    >
+                      {{ deletingId() === cycle.id ? 'Excluindo…' : 'Excluir' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <app-page-state
+          state="empty"
+          title="Nenhum ciclo cadastrado"
+          message="Crie um ciclo para organizar seus lançamentos por período."
+          actionLabel="Novo ciclo"
+          (action)="openCreate()"
+        />
+      }
+    }
+  }
+</section>

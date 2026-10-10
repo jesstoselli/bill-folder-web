@@ -8,3 +8,11 @@ export interface CycleResponse {
   readonly createdAt: string;
   readonly updatedAt: string;
 }
+
+export interface CreateCycleRequest {
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly label: string;
+}
+
+export type UpdateCycleRequest = Partial<CreateCycleRequest>;

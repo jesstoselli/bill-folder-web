@@ -13,17 +13,6 @@ export interface CategoryDto {
   readonly displayOrder: number;
 }
 
-export interface CheckingAccountResponse {
-  readonly id: string;
-  readonly bankName: string;
-  readonly branch: string | null;
-  readonly accountNumber: string | null;
-  readonly initialBalance: number;
-  readonly isPrimary: boolean;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
-
 export interface CreditCardAccountResponse {
   readonly id: string;
   readonly name: string;
@@ -54,10 +43,6 @@ export class ReferenceDataApi {
 
   categories(): Observable<CategoryDto[]> {
     return this.get<CategoryDto>('categories');
-  }
-
-  checkingAccounts(): Observable<CheckingAccountResponse[]> {
-    return this.get<CheckingAccountResponse>('checking-accounts');
   }
 
   creditCardAccounts(): Observable<CreditCardAccountResponse[]> {

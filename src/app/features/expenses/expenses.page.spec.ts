@@ -4,6 +4,7 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { MatDialog, MatDialogState } from '@angular/material/dialog';
 import { CycleResponse } from '../../core/cycles/cycle.models';
 import { CycleStore } from '../../core/cycles/cycle.store';
+import { CheckingAccountsApi } from '../../core/checking-accounts/checking-accounts.api';
 import { ReferenceDataApi } from '../../core/reference/reference-data.api';
 import { LoadState } from '../../shared/states/load-state';
 import { ExpenseResponse } from './expenses.models';
@@ -656,8 +657,9 @@ async function createActionFixture(
       },
       {
         provide: ReferenceDataApi,
-        useValue: { categories: () => of([]), checkingAccounts: () => of([]) },
+        useValue: { categories: () => of([]) },
       },
+      { provide: CheckingAccountsApi, useValue: { list: () => of([]) } },
       {
         provide: CycleStore,
         useValue: {

@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { CycleResponse } from '../../core/cycles/cycle.models';
 import { CycleStore } from '../../core/cycles/cycle.store';
+import { CheckingAccountsApi } from '../../core/checking-accounts/checking-accounts.api';
 import { ReferenceDataApi } from '../../core/reference/reference-data.api';
 import { DailyExpenseFormComponent } from './components/daily-expense-form/daily-expense-form.component';
 import { DailyExpenseResponse } from './daily-expenses.models';
@@ -204,8 +205,9 @@ async function createFixture(
       },
       {
         provide: ReferenceDataApi,
-        useValue: { categories: () => of([]), checkingAccounts: () => of([]) },
+        useValue: { categories: () => of([]) },
       },
+      { provide: CheckingAccountsApi, useValue: { list: () => of([]) } },
     ],
   }).compileComponents();
 

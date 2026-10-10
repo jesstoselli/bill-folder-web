@@ -7,11 +7,13 @@ Access tokens stay in application memory; browser refresh authentication uses an
 
 The final whole-product review and its scoped re-review are complete. The two residual Important
 findings were corrected locally with deterministic regressions, and all local delivery gates are
-green. The MVP is **locally ready for an explicitly authorized rollout**, but has not been pushed,
-published, deployed, or validated in a live environment. See the binding
+green. The authorized preview rollout has also been completed and validated. The first post-MVP
+parity slice adds safe administration of cycles and checking accounts, including cross-client
+protection against deleting an account that is still in use. See the binding
 [final whole-product review](../BillFolder/.superpowers/sdd/2026-10-07-billfolder-web-mvp/final-whole-review.md)
 and the [residual-fix report](../BillFolder/.superpowers/sdd/2026-10-07-billfolder-web-mvp/final-residual-fix-report.md).
-No remote, Cloudflare project, domain, deployment, publication, or production smoke is implied.
+Those reports preserve the MVP baseline; the current post-MVP verification totals and live preview
+status are documented below.
 
 ## Requirements and clean install
 
@@ -54,7 +56,8 @@ npm run e2e
 
 - `audit:ci` fails on high or critical npm advisories. The exception process and current empty
   exception list are in `docs/security/npm-audit-exceptions.md`.
-- `test:ci` runs the Angular unit suite and source-level PWA/security configuration tests.
+- `test:ci` enforces repository formatting, then runs the Angular unit suite and source-level
+  PWA/security configuration tests.
 - `build:prod` creates the production application and then verifies the manifest, generated Angular
   service worker, absence of API data caching, copied Cloudflare control files, CSP authorization for
   built inline scripts, and ordinary screen stylesheet loading.
@@ -62,12 +65,13 @@ npm run e2e
   `http://127.0.0.1:4200`, and runs Chromium against a strict deterministic API fixture on the
   distinct origin `http://127.0.0.1:4301`.
 
-Final local evidence from 2026-10-08:
+Final local evidence from 2026-10-10:
 
-- Angular/Vitest: **351 passed in 78 files; 0 failed**.
+- Angular/Vitest: **511 passed; 0 failed**.
 - Static security/PWA source checks: **6 passed; 0 failed**.
 - Production artifact checks: **5 passed; 0 failed**.
-- Playwright E2E: **12 passed; 0 failed**; the CSP smoke is also independently runnable as one test.
+- Production and preview builds: **passed**.
+- Playwright E2E: **17 passed; 0 failed**; the CSP smoke is also independently runnable as one test.
 - npm audit: **0 vulnerabilities** at the configured high-severity gate.
 
 The authoritative exact results and bundle sizes are recorded after the clean final run in the
@@ -135,12 +139,20 @@ npm run build:preview
 
 The output remains `dist/bill-folder-web/browser`. The preview configuration uses the production
 service worker, CSP, cookie strength, and exact API origin. Wildcard credentialed CORS and
-authenticated `pages.dev` previews are prohibited. This is a build/runbook contract only; no
-preview project, DNS, domain, remote, or deployment was created in the final-fix round.
+authenticated `pages.dev` previews are prohibited.
 
-## Cloudflare runbook — authorization required
+## Current preview rollout
 
-Only after explicit user authorization, configure Cloudflare Workers Builds with:
+The following rollout work has already been completed:
+
+- the GitHub remotes were connected and the user pushed both repositories;
+- migration `20261008120000_AddRefreshTokenFamilies` was applied and the API was restarted;
+- CORS for `https://preview.billfolder.app` was validated;
+- Cloudflare Worker `bill-folder-web-preview` is connected to `main` with automatic builds;
+- `https://preview.billfolder.app` is active, with authentication and password recovery validated;
+- deployment remains outside the implicit authorization of future changes.
+
+The active Cloudflare Workers Builds configuration is:
 
 - Project name: `bill-folder-web-preview`
 - Production branch: `main`
@@ -151,18 +163,6 @@ Only after explicit user authorization, configure Cloudflare Workers Builds with
 The Workers Static Assets output directory is declared in `wrangler.jsonc`, not in the dashboard.
 Node `24.15.0` or newer is required; Workers Builds detects the version from `package.json`.
 
-Do not begin this rollout without explicit user authorization, even though the local gates are green.
-
-The authorized rollout order is:
-
-1. Create or connect the approved Git remote.
-2. Create the Cloudflare Worker project and configure its build and deploy commands.
-3. Configure the exact web origins in backend `WebAuth:AllowedOrigins`, then deploy the backend.
-4. Connect `preview.billfolder.app`, deploy the static web build, and confirm `_headers` plus SPA
-   fallback behavior on a deep link such as `/login`.
-5. Run the separately authorized authenticated production smoke.
-
-Without that explicit authorization, do **not** create or connect a remote, push, create a Cloudflare
-project or domain, change production CORS/origins, deploy, publish, use SSH, or run production smoke
-tests. Backend production changes and web publication are separate operations; local readiness does
-not authorize either one.
+Any new backend or web deployment, publication, production configuration change, SSH operation, or
+production smoke still requires explicit authorization. The completed preview rollout does not make
+deployment an implicit side effect of future code changes.

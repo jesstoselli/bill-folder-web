@@ -2,7 +2,7 @@ import { computed, Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { LoadState } from '../../shared/states/load-state';
 import { mapApiError } from '../http/api-error';
-import { CycleResponse } from './cycle.models';
+import { CreateCycleRequest, CycleResponse, UpdateCycleRequest } from './cycle.models';
 import { CyclesApi } from './cycles.api';
 import { compareText } from '../../shared/formatters/compare-text';
 
@@ -83,6 +83,27 @@ export class CycleStore {
       this.selectedId.set(null);
       this.stateValue.set({ kind: 'error', message: mapApiError(error).message });
     }
+  }
+
+  refresh(): Promise<void> {
+    return this.load();
+  }
+
+  async create(request: CreateCycleRequest): Promise<CycleResponse> {
+    const saved = await firstValueFrom(this.api.create(request));
+    await this.load();
+    return saved;
+  }
+
+  async update(id: string, request: UpdateCycleRequest): Promise<CycleResponse> {
+    const saved = await firstValueFrom(this.api.update(id, request));
+    await this.load();
+    return saved;
+  }
+
+  async delete(id: string): Promise<void> {
+    await firstValueFrom(this.api.delete(id));
+    await this.load();
   }
 
   select(id: string): boolean {

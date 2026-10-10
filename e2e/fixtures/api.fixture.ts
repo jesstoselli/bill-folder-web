@@ -101,6 +101,28 @@ interface StatementFixture {
   updatedAt: string;
 }
 
+interface CycleFixture {
+  id: string;
+  startDate: string;
+  endDate: string;
+  label: string;
+  isRecurrenceGenerated: boolean;
+  isCurrent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface CheckingAccountFixture {
+  id: string;
+  bankName: string;
+  branch: string;
+  accountNumber: string;
+  initialBalance: number;
+  isPrimary: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const cycle = {
   id: 'cycle-oct-2026',
   startDate: '2026-10-01',
@@ -205,6 +227,8 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
   private readonly recordedPreflights: CorsPreflightEvidence[] = [];
   private readonly recordedEvents: string[] = [];
   private readonly expenses: ExpenseFixture[] = [{ ...weeklyExpense }, { ...ordinaryExpense }];
+  private readonly cycles: CycleFixture[] = [{ ...cycle }];
+  private readonly checkingAccounts: CheckingAccountFixture[] = [{ ...checkingAccount }];
   private statement: StatementFixture = { ...statementBase };
   private currentAccessToken: string | null = null;
   private currentRefreshCookie: string | null = null;
@@ -458,7 +482,7 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
   ): Promise<void> {
     const path = url.pathname;
     if (method === 'GET' && path === '/v1/cycles') {
-      this.json(response, [cycle]);
+      this.json(response, this.cycles);
       return;
     }
     if (method === 'GET' && path === '/v1/cycles/current') {
@@ -481,8 +505,122 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       this.json(response, [category]);
       return;
     }
-    if (method === 'GET' && path === '/v1/checking-accounts') {
-      this.json(response, [checkingAccount]);
+    if (method === 'GET' && ['/v1/checking-accounts', '/v1/checking-accounts/'].includes(path)) {
+      this.json(response, this.checkingAccounts);
+      return;
+    }
+    if (method === 'POST' && path === '/v1/cycles/') {
+      const body = await readJson(request);
+      if (!isCycleWriteBody(body)) {
+        this.json(response, { error: 'invalid_cycle_fixture_body' }, 400);
+        return;
+      }
+      const created: CycleFixture = {
+        id: 'cycle-created',
+        ...body,
+        isRecurrenceGenerated: false,
+        isCurrent: false,
+        createdAt: '2026-10-10T12:00:00Z',
+        updatedAt: '2026-10-10T12:00:00Z',
+      };
+      this.recordWrite(method, path, body);
+      this.cycles.push(created);
+      this.json(response, created, 201);
+      return;
+    }
+    const cycleId = resourceId(path, '/v1/cycles/');
+    if (cycleId && method === 'PATCH') {
+      const body = await readJson(request);
+      if (!isCycleWriteBody(body)) {
+        this.json(response, { error: 'invalid_cycle_fixture_body' }, 400);
+        return;
+      }
+      const index = this.cycles.findIndex((candidate) => candidate.id === cycleId);
+      if (index < 0) {
+        this.json(response, { error: 'cycle_not_found' }, 404);
+        return;
+      }
+      this.recordWrite(method, path, body);
+      this.cycles[index] = {
+        ...this.cycles[index],
+        ...body,
+        updatedAt: '2026-10-10T13:00:00Z',
+      };
+      this.json(response, this.cycles[index]);
+      return;
+    }
+    if (cycleId && method === 'DELETE') {
+      const index = this.cycles.findIndex((candidate) => candidate.id === cycleId);
+      if (index < 0) {
+        this.json(response, { error: 'cycle_not_found' }, 404);
+        return;
+      }
+      this.recordWrite(method, path, null);
+      this.cycles.splice(index, 1);
+      this.noContent(response);
+      return;
+    }
+    if (method === 'POST' && path === '/v1/checking-accounts/') {
+      const body = await readJson(request);
+      if (!isCheckingAccountWriteBody(body)) {
+        this.json(response, { error: 'invalid_checking_account_fixture_body' }, 400);
+        return;
+      }
+      if (body.isPrimary) this.clearPrimaryAccounts();
+      const created: CheckingAccountFixture = {
+        id: 'checking-created',
+        ...body,
+        createdAt: '2026-10-10T12:00:00Z',
+        updatedAt: '2026-10-10T12:00:00Z',
+      };
+      this.recordWrite(method, path, body);
+      this.checkingAccounts.push(created);
+      this.json(response, created, 201);
+      return;
+    }
+    const accountId = resourceId(path, '/v1/checking-accounts/');
+    if (accountId && method === 'PATCH') {
+      const body = await readJson(request);
+      if (!isPartialCheckingAccountWriteBody(body)) {
+        this.json(response, { error: 'invalid_checking_account_fixture_body' }, 400);
+        return;
+      }
+      const index = this.checkingAccounts.findIndex((candidate) => candidate.id === accountId);
+      if (index < 0) {
+        this.json(response, { error: 'checking_account_not_found' }, 404);
+        return;
+      }
+      if (body.isPrimary === true) this.clearPrimaryAccounts();
+      this.recordWrite(method, path, body);
+      this.checkingAccounts[index] = {
+        ...this.checkingAccounts[index],
+        ...body,
+        updatedAt: '2026-10-10T13:00:00Z',
+      };
+      this.json(response, this.checkingAccounts[index]);
+      return;
+    }
+    if (accountId && method === 'DELETE') {
+      if (accountId === checkingAccount.id) {
+        this.json(
+          response,
+          {
+            error: 'account_in_use',
+            message:
+              'Esta conta ainda está vinculada a uma poupança ou despesa avulsa. Remova ou altere esses vínculos antes de excluir.',
+          },
+          409,
+        );
+        return;
+      }
+      const index = this.checkingAccounts.findIndex((candidate) => candidate.id === accountId);
+      if (index < 0) {
+        this.json(response, { error: 'checking_account_not_found' }, 404);
+        return;
+      }
+      this.recordWrite(method, path, null);
+      this.checkingAccounts.splice(index, 1);
+      this.noContent(response);
       return;
     }
     if (method === 'GET' && path === '/v1/expenses/') {
@@ -594,6 +732,10 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
     if (method === 'GET' && ['/v1/cycles', '/v1/cycles/current'].includes(path)) {
       return query === '';
     }
+    if (method === 'POST' && path === '/v1/cycles/') return query === '';
+    if (['PATCH', 'DELETE'].includes(method) && resourceId(path, '/v1/cycles/')) {
+      return query === '';
+    }
     if (method === 'GET' && path === '/v1/home/') {
       return query === 'cycleId=cycle-oct-2026';
     }
@@ -602,8 +744,17 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
     }
     if (
       method === 'GET' &&
-      ['/v1/categories', '/v1/checking-accounts', '/v1/credit-card-accounts/'].includes(path)
+      [
+        '/v1/categories',
+        '/v1/checking-accounts',
+        '/v1/checking-accounts/',
+        '/v1/credit-card-accounts/',
+      ].includes(path)
     ) {
+      return query === '';
+    }
+    if (method === 'POST' && path === '/v1/checking-accounts/') return query === '';
+    if (['PATCH', 'DELETE'].includes(method) && resourceId(path, '/v1/checking-accounts/')) {
       return query === '';
     }
     if (method === 'GET' && path === '/v1/expenses/') {
@@ -711,6 +862,15 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
     this.recordedWrites.push({ method, path, body });
   }
 
+  private clearPrimaryAccounts(): void {
+    for (const account of this.checkingAccounts) account.isPrimary = false;
+  }
+
+  private noContent(response: ServerResponse): void {
+    response.writeHead(204, this.corsHeaders());
+    response.end();
+  }
+
   private activeCookie(value: string): string {
     return `${refreshCookieName}=${value}; Path=${refreshCookiePath}; HttpOnly; SameSite=Lax`;
   }
@@ -815,6 +975,60 @@ function isCreateExpenseBody(body: unknown): body is {
     record['categoryId'] === category.id &&
     (typeof record['notes'] === 'string' || record['notes'] === null)
   );
+}
+
+function isCycleWriteBody(
+  body: unknown,
+): body is Pick<CycleFixture, 'label' | 'startDate' | 'endDate'> {
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) return false;
+  const record = body as Record<string, unknown>;
+  return (
+    typeof record['label'] === 'string' &&
+    typeof record['startDate'] === 'string' &&
+    typeof record['endDate'] === 'string'
+  );
+}
+
+function isCheckingAccountWriteBody(
+  body: unknown,
+): body is Pick<
+  CheckingAccountFixture,
+  'bankName' | 'branch' | 'accountNumber' | 'initialBalance' | 'isPrimary'
+> {
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) return false;
+  const record = body as Record<string, unknown>;
+  return (
+    typeof record['bankName'] === 'string' &&
+    typeof record['branch'] === 'string' &&
+    typeof record['accountNumber'] === 'string' &&
+    typeof record['initialBalance'] === 'number' &&
+    typeof record['isPrimary'] === 'boolean'
+  );
+}
+
+function isPartialCheckingAccountWriteBody(
+  body: unknown,
+): body is Partial<
+  Pick<
+    CheckingAccountFixture,
+    'bankName' | 'branch' | 'accountNumber' | 'initialBalance' | 'isPrimary'
+  >
+> {
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) return false;
+  const record = body as Record<string, unknown>;
+  return (
+    (record['bankName'] === undefined || typeof record['bankName'] === 'string') &&
+    (record['branch'] === undefined || typeof record['branch'] === 'string') &&
+    (record['accountNumber'] === undefined || typeof record['accountNumber'] === 'string') &&
+    (record['initialBalance'] === undefined || typeof record['initialBalance'] === 'number') &&
+    (record['isPrimary'] === undefined || typeof record['isPrimary'] === 'boolean')
+  );
+}
+
+function resourceId(path: string, prefix: string): string | null {
+  if (!path.startsWith(prefix)) return null;
+  const id = path.slice(prefix.length);
+  return id && !id.includes('/') ? id : null;
 }
 
 async function listen(server: Server): Promise<void> {

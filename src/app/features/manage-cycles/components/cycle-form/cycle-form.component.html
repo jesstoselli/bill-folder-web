@@ -1,0 +1,47 @@
+<form class="cycle-form" [formGroup]="form" (ngSubmit)="submit()">
+  <app-dialog-frame
+    titleId="cycle-form-title"
+    [heading]="data.mode === 'create' ? 'Novo ciclo' : 'Editar ciclo'"
+    closeLabel="Fechar formulário de ciclo"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar ciclo"
+    savingLabel="Salvando…"
+  >
+    <p dialogSubtitle>Defina o nome e o período usado para organizar os lançamentos.</p>
+    <div class="cycle-form__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Nome do ciclo</mat-label>
+        <input matInput formControlName="label" autocomplete="off" maxlength="100" />
+        @if (form.controls.label.invalid) {
+          <mat-error>Informe um nome com até 100 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="cycle-form__period">
+        <mat-form-field appearance="outline">
+          <mat-label>Data inicial</mat-label>
+          <input matInput type="date" formControlName="startDate" />
+          @if (form.controls.startDate.invalid) {
+            <mat-error>Informe uma data inicial válida.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Data final</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="endDate"
+            [errorStateMatcher]="dateRangeErrorMatcher"
+          />
+          @if (form.controls.endDate.invalid) {
+            <mat-error>Informe uma data final válida.</mat-error>
+          } @else if (form.hasError('dateRange')) {
+            <mat-error>A data final deve ser posterior à data inicial.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </div>
+  </app-dialog-frame>
+</form>

@@ -5,7 +5,6 @@ import { firstValueFrom, Observable } from 'rxjs';
 import { APP_ENVIRONMENT } from '../config/app-environment';
 import {
   CategoryDto,
-  CheckingAccountResponse,
   CreditCardAccountResponse,
   ReferenceDataApi,
   SavingsAccountResponse,
@@ -42,23 +41,6 @@ describe('ReferenceDataApi', () => {
           isSystem: false,
           displayOrder: 1,
         } satisfies CategoryDto,
-      ],
-    ],
-    [
-      'checking accounts',
-      () => api.checkingAccounts(),
-      '/v1/checking-accounts',
-      [
-        {
-          id: 'checking-id',
-          bankName: 'Banco',
-          branch: null,
-          accountNumber: null,
-          initialBalance: 150.25,
-          isPrimary: true,
-          createdAt: '2026-01-01T10:00:00Z',
-          updatedAt: '2026-01-02T10:00:00Z',
-        } satisfies CheckingAccountResponse,
       ],
     ],
     [

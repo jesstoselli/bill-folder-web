@@ -33,6 +33,24 @@
   width: 2.5rem;
 }
 
+.sidebar__sections {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sidebar__section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sidebar__section-label {
+  color: var(--bf-muted);
+  font-size: var(--bf-text-sm);
+  font-weight: 500;
+  margin: 0;
+  padding-inline: 0.75rem;
+}
+
 .sidebar__list {
   display: grid;
   gap: 0.375rem;

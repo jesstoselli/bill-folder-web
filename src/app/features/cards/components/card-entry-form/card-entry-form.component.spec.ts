@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
+import { CheckingAccountsApi } from '../../../../core/checking-accounts/checking-accounts.api';
 import { ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { CardEntryResponse } from '../../cards.models';
 import { CardsStore } from '../../cards.store';
@@ -213,6 +214,7 @@ async function createFixture(
             ]),
         },
       },
+      { provide: CheckingAccountsApi, useValue: { list: () => of([]) } },
     ],
   }).compileComponents();
   const fixture = TestBed.createComponent(CardEntryFormComponent);

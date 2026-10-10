@@ -96,7 +96,7 @@ describe('CardsPage write focus across the shared data refresh', () => {
     await loadPage();
     findButton(fixture.nativeElement, 'Pagar fatura').click();
     fixture.detectChanges();
-    backend.expectOne('/v1/checking-accounts').flush([]);
+    backend.expectOne('/v1/checking-accounts/').flush([]);
     await settle();
 
     const payment = openDialog(PayStatementDialogComponent);
@@ -173,7 +173,7 @@ describe('CardsPage write focus across the shared data refresh', () => {
     await loadPage({ statements: [older, current] });
     findButton(fixture.nativeElement, 'Pagar fatura').click();
     fixture.detectChanges();
-    backend.expectOne('/v1/checking-accounts').flush([]);
+    backend.expectOne('/v1/checking-accounts/').flush([]);
     await settle();
 
     const payment = openDialog(PayStatementDialogComponent);

@@ -1,4 +1,5 @@
-import { CategoryDto, CheckingAccountResponse } from './reference-data.api';
+import { CheckingAccountResponse } from '../checking-accounts/checking-account.models';
+import { CategoryDto } from './reference-data.api';
 import { compareCategories, compareCheckingAccounts } from './reference-ordering';
 
 describe('reference ordering', () => {

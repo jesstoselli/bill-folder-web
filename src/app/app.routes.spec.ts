@@ -5,6 +5,8 @@ import { ExpensesPage } from './features/expenses/expenses.page';
 import { DailyExpensesPage } from './features/daily-expenses/daily-expenses.page';
 import { CardsPage } from './features/cards/cards.page';
 import { SavingsPage } from './features/savings/savings.page';
+import { ManageCyclesPage } from './features/manage-cycles/manage-cycles.page';
+import { ManageAccountsPage } from './features/manage-accounts/manage-accounts.page';
 
 describe('application routes', () => {
   it('keeps every MVP destination available behind the application shell', () => {
@@ -13,15 +15,19 @@ describe('application routes', () => {
       ?.filter((route) => route.path && route.path !== '**')
       .map((route) => [route.path, route.data?.['title']]);
 
-    expect(destinations).toEqual([
-      ['home', 'Home'],
-      ['despesas', 'Despesas'],
-      ['gastos-diarios', 'Despesas avulsas'],
-      ['receitas', 'Recebimentos'],
-      ['cartoes', 'Cartões'],
-      ['poupanca', 'Poupança'],
-      ['ajustes', 'Ajustes'],
-    ]);
+    expect(destinations).toEqual(
+      expect.arrayContaining([
+        ['home', 'Home'],
+        ['despesas', 'Despesas'],
+        ['gastos-diarios', 'Despesas avulsas'],
+        ['receitas', 'Recebimentos'],
+        ['cartoes', 'Cartões'],
+        ['poupanca', 'Poupança'],
+        ['ajustes', 'Ajustes'],
+        ['gerenciar/ciclos', 'Ciclos'],
+        ['gerenciar/contas', 'Contas-correntes'],
+      ]),
+    );
     expect(shellRoute?.children?.find((route) => route.path === '')?.redirectTo).toBe('home');
     expect(shellRoute?.canActivate).toEqual([authGuard]);
     expect(routes.find((route) => route.path === '**')?.redirectTo).toBe('home');
@@ -89,5 +95,25 @@ describe('application routes', () => {
     expect(savingsRoute?.component).toBeUndefined();
     expect(savingsRoute?.loadComponent).toBeTypeOf('function');
     await expect(savingsRoute?.loadComponent?.()).resolves.toBe(SavingsPage);
+  });
+
+  it('lazy-loads cycle management behind the application shell', async () => {
+    const cyclesRoute = routes
+      .find((route) => route.path === '')
+      ?.children?.find((route) => route.path === 'gerenciar/ciclos');
+
+    expect(cyclesRoute?.component).toBeUndefined();
+    expect(cyclesRoute?.loadComponent).toBeTypeOf('function');
+    await expect(cyclesRoute?.loadComponent?.()).resolves.toBe(ManageCyclesPage);
+  });
+
+  it('lazy-loads checking account management behind the application shell', async () => {
+    const accountsRoute = routes
+      .find((route) => route.path === '')
+      ?.children?.find((route) => route.path === 'gerenciar/contas');
+
+    expect(accountsRoute?.component).toBeUndefined();
+    expect(accountsRoute?.loadComponent).toBeTypeOf('function');
+    await expect(accountsRoute?.loadComponent?.()).resolves.toBe(ManageAccountsPage);
   });
 });

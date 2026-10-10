@@ -81,6 +81,22 @@ export const routes: Routes = [
           ),
         data: { title: 'Ajustes' },
       },
+      {
+        path: 'gerenciar/ciclos',
+        loadComponent: () =>
+          import('./features/manage-cycles/manage-cycles.page').then(
+            ({ ManageCyclesPage }) => ManageCyclesPage,
+          ),
+        data: { title: 'Ciclos' },
+      },
+      {
+        path: 'gerenciar/contas',
+        loadComponent: () =>
+          import('./features/manage-accounts/manage-accounts.page').then(
+            ({ ManageAccountsPage }) => ManageAccountsPage,
+          ),
+        data: { title: 'Contas-correntes' },
+      },
       { path: '', pathMatch: 'full', redirectTo: 'home' },
     ],
   },

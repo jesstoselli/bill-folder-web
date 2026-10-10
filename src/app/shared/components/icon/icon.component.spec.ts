@@ -3,6 +3,13 @@ import { BILL_FOLDER_ICON_PATHS, IconComponent } from './icon.component';
 import type { BillFolderIconName } from './icon.component';
 
 describe('IconComponent', () => {
+  it('provides the local Material Filled vectors for admin navigation', () => {
+    const iconNames = Object.keys(BILL_FOLDER_ICON_PATHS);
+
+    expect(iconNames).toContain('calendarMonth');
+    expect(iconNames).toContain('accountBalance');
+  });
+
   it.each(Object.keys(BILL_FOLDER_ICON_PATHS) as BillFolderIconName[])(
     'renders the local %s vector as a decorative icon',
     (name) => {

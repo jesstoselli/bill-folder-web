@@ -1,5 +1,5 @@
-import { FormControl } from '@angular/forms';
-import { integer, nonBlank, normalizeOptional, validCivilDate } from './validators';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { dateRange, integer, nonBlank, normalizeOptional, validCivilDate } from './validators';
 
 function control<T>(value: T): FormControl<T> {
   return new FormControl(value, { nonNullable: true }) as FormControl<T>;
@@ -26,5 +26,39 @@ describe('shared form validators', () => {
   it('maps blank optional text to null and trims the rest', () => {
     expect(normalizeOptional('   ')).toBeNull();
     expect(normalizeOptional(' nota ')).toBe('nota');
+  });
+
+  it('rejects a civil date range whose end is not after its start', () => {
+    const form = new FormGroup(
+      {
+        startDate: control('2026-11-30'),
+        endDate: control('2026-11-01'),
+      },
+      { validators: dateRange('startDate', 'endDate') },
+    );
+
+    expect(form.errors).toEqual({ dateRange: true });
+
+    form.controls.endDate.setValue('2026-12-01');
+    expect(form.errors).toBeNull();
+  });
+
+  it('leaves empty and individually invalid dates to their field validators', () => {
+    const form = new FormGroup(
+      {
+        startDate: control(''),
+        endDate: control('2026-02-30'),
+      },
+      { validators: dateRange('startDate', 'endDate') },
+    );
+    form.controls.startDate.addValidators(Validators.required);
+    form.controls.endDate.addValidators(validCivilDate);
+    form.controls.startDate.updateValueAndValidity();
+    form.controls.endDate.updateValueAndValidity();
+    form.updateValueAndValidity();
+
+    expect(form.controls.startDate.errors).toEqual({ required: true });
+    expect(form.controls.endDate.errors).toEqual({ civilDate: true });
+    expect(form.errors).toBeNull();
   });
 });

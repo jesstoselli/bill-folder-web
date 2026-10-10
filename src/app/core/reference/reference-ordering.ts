@@ -1,4 +1,5 @@
-import { CategoryDto, CheckingAccountResponse } from './reference-data.api';
+import { CheckingAccountResponse } from '../checking-accounts/checking-account.models';
+import { CategoryDto } from './reference-data.api';
 
 /** Categories in the order the backend curates, then by name. */
 export function compareCategories(left: CategoryDto, right: CategoryDto): number {

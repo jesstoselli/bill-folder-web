@@ -1,11 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
-import {
-  CategoryDto,
-  CheckingAccountResponse,
-  ReferenceDataApi,
-} from '../../../../core/reference/reference-data.api';
+import { CheckingAccountResponse } from '../../../../core/checking-accounts/checking-account.models';
+import { CheckingAccountsApi } from '../../../../core/checking-accounts/checking-accounts.api';
+import { CategoryDto, ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { DailyExpenseResponse } from '../../daily-expenses.models';
 import { DailyExpensesStore } from '../../daily-expenses.store';
 import { DailyExpenseFormComponent } from './daily-expense-form.component';
@@ -166,6 +164,7 @@ async function createComponent(
       { provide: MAT_DIALOG_DATA, useValue: options.data ?? { mode: 'create' } },
       { provide: MatDialogRef, useValue: dialogRef },
       { provide: ReferenceDataApi, useValue: references },
+      { provide: CheckingAccountsApi, useValue: { list: references.checkingAccounts } },
       {
         provide: DailyExpensesStore,
         useValue: {

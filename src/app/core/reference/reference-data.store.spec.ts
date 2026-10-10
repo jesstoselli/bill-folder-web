@@ -1,21 +1,29 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CategoryDto, CheckingAccountResponse, ReferenceDataApi } from './reference-data.api';
+import { CheckingAccountResponse } from '../checking-accounts/checking-account.models';
+import { CheckingAccountsApi } from '../checking-accounts/checking-accounts.api';
+import { CategoryDto, ReferenceDataApi } from './reference-data.api';
 import { REFERENCE_MAX_AGE_MS, ReferenceDataStore } from './reference-data.store';
 
 describe('ReferenceDataStore', () => {
-  let api: { categories: ReturnType<typeof vi.fn>; checkingAccounts: ReturnType<typeof vi.fn> };
+  let api: { categories: ReturnType<typeof vi.fn> };
+  let checkingAccountsApi: { list: ReturnType<typeof vi.fn> };
   let store: ReferenceDataStore;
 
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
     api = {
       categories: vi.fn(() => of([category('later', 2, 'Zeta'), category('first', 1, 'Beta')])),
-      checkingAccounts: vi.fn(() => of([account('other', false), account('primary', true)])),
+    };
+    checkingAccountsApi = {
+      list: vi.fn(() => of([account('other', false), account('primary', true)])),
     };
     TestBed.configureTestingModule({
-      providers: [{ provide: ReferenceDataApi, useValue: api }],
+      providers: [
+        { provide: ReferenceDataApi, useValue: api },
+        { provide: CheckingAccountsApi, useValue: checkingAccountsApi },
+      ],
     });
     store = TestBed.inject(ReferenceDataStore);
   });
@@ -42,7 +50,7 @@ describe('ReferenceDataStore', () => {
     vi.advanceTimersByTime(REFERENCE_MAX_AGE_MS);
     await store.checkingAccounts();
 
-    expect(api.checkingAccounts).toHaveBeenCalledTimes(2);
+    expect(checkingAccountsApi.list).toHaveBeenCalledTimes(2);
   });
 
   it('does not keep a failure, so the next dialog retries', async () => {
@@ -54,11 +62,34 @@ describe('ReferenceDataStore', () => {
   });
 
   it('turns a synchronous throw into a rejection', async () => {
-    api.checkingAccounts.mockImplementationOnce(() => {
+    checkingAccountsApi.list.mockImplementationOnce(() => {
       throw new Error('boom');
     });
 
     await expect(store.checkingAccounts()).rejects.toThrow('boom');
+  });
+
+  it('fetches checking accounts again after explicit invalidation', async () => {
+    const accountsApi = TestBed.inject(CheckingAccountsApi);
+    const list = vi.spyOn(accountsApi, 'list');
+    await store.checkingAccounts();
+
+    store.invalidateCheckingAccounts();
+    await store.checkingAccounts();
+
+    expect(list).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not invalidate categories when checking accounts are invalidated', async () => {
+    await store.categories();
+    await store.checkingAccounts();
+
+    store.invalidateCheckingAccounts();
+    await store.categories();
+    await store.checkingAccounts();
+
+    expect(api.categories).toHaveBeenCalledTimes(1);
+    expect(checkingAccountsApi.list).toHaveBeenCalledTimes(2);
   });
 });
 

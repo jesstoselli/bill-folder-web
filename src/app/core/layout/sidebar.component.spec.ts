@@ -10,15 +10,20 @@ describe('SidebarComponent', () => {
     }).compileComponents();
   });
 
-  it('renders every MVP destination with Home active', () => {
+  it('renders grouped operational and admin destinations with Home active', () => {
     const fixture = TestBed.createComponent(SidebarComponent);
     fixture.componentRef.setInput('activeRoute', '/home');
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
 
     const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('a'));
+    const sectionLabels = Array.from(
+      root.querySelectorAll<HTMLElement>('.sidebar__section-label'),
+    ).map((label) => label.textContent?.trim());
+    const linkLabels = links.map((link) => link.textContent?.trim());
 
-    expect(links.map((link) => link.textContent?.trim())).toEqual([
+    expect(sectionLabels).toEqual(['Principal', 'Gerenciar']);
+    expect(linkLabels).toEqual([
       'Home',
       'Despesas',
       'Despesas avulsas',
@@ -26,7 +31,17 @@ describe('SidebarComponent', () => {
       'Cartões',
       'Poupança',
       'Ajustes',
+      'Ciclos',
+      'Contas-correntes',
     ]);
+    expect(linkLabels).toContain('Ciclos');
+    expect(linkLabels).toContain('Contas-correntes');
+    expect(links.find((link) => link.textContent?.includes('Ciclos'))?.getAttribute('href')).toBe(
+      '/gerenciar/ciclos',
+    );
+    expect(
+      links.find((link) => link.textContent?.includes('Contas-correntes'))?.getAttribute('href'),
+    ).toBe('/gerenciar/contas');
     expect(root.querySelector<HTMLElement>('[aria-current="page"]')?.textContent).toContain('Home');
   });
 
@@ -57,7 +72,14 @@ describe('SidebarComponent', () => {
       'Cartões',
       'Poupança',
       'Ajustes',
+      'Ciclos',
+      'Contas-correntes',
     ]);
+    expect(
+      Array.from(root.querySelectorAll<HTMLElement>('.sidebar__section-label')).every((label) =>
+        label.classList.contains('u-visually-hidden'),
+      ),
+    ).toBe(true);
     const logout = root.querySelector<HTMLButtonElement>('button[aria-label="Sair"]');
     expect(logout).not.toBeNull();
     expect(logout?.textContent?.trim()).toBe('Sair');
@@ -80,7 +102,14 @@ describe('SidebarComponent', () => {
       'creditCard',
       'savings',
       'tune',
+      'calendarMonth',
+      'accountBalance',
     ]);
+    const iconNames = links.map((link) =>
+      link.querySelector('app-icon')?.getAttribute('data-icon'),
+    );
+    expect(iconNames).toContain('calendarMonth');
+    expect(iconNames).toContain('accountBalance');
   });
 
   it('emits logout from a keyboard-operable button', () => {

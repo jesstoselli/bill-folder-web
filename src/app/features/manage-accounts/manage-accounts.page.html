@@ -1,0 +1,112 @@
+<section class="manage-accounts-page">
+  <app-page-header
+    heading="Contas-correntes"
+    subtitle="Gerencie as contas usadas nos saldos, pagamentos e despesas avulsas."
+  >
+    <button type="button" appButton [disabled]="refreshing()" (click)="refresh()">Atualizar</button>
+    <button
+      type="button"
+      appButton
+      variant="primary"
+      class="manage-accounts-page__create"
+      (click)="openCreate()"
+    >
+      Nova conta
+    </button>
+  </app-page-header>
+
+  <app-inline-alert [message]="actionError()" />
+
+  @switch (accounts.state().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <app-page-state
+        state="error"
+        title="Não foi possível carregar as contas"
+        [message]="loadError()"
+        actionLabel="Tentar novamente"
+        (action)="refresh()"
+      />
+    }
+    @case ('content') {
+      <app-refresh-status [state]="accounts.state()" (retry)="refresh()" />
+      @if (accounts.accounts().length) {
+        <div class="accounts-ledger bf-ledger" tabindex="-1" aria-label="Contas cadastradas">
+          <table>
+            <caption class="u-visually-hidden">
+              Contas-correntes cadastradas
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Conta</th>
+                <th scope="col">Agência / número</th>
+                <th scope="col" class="bf-ledger__amount">Saldo inicial</th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="bf-ledger__actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (account of accounts.accounts(); track account.id) {
+                <tr [attr.data-checking-account-id]="account.id">
+                  <th scope="row" class="accounts-ledger__name">{{ account.bankName }}</th>
+                  <td data-label="Agência / número" class="bf-tabular">
+                    {{ account.branch }} / {{ account.accountNumber }}
+                  </td>
+                  <td data-label="Saldo inicial" class="bf-ledger__amount bf-tabular">
+                    {{ formatBrl(account.initialBalance) }}
+                  </td>
+                  <td data-label="Estado">
+                    @if (account.isPrimary) {
+                      <span class="accounts-ledger__badge">Principal</span>
+                    } @else {
+                      <span class="accounts-ledger__secondary">Secundária</span>
+                    }
+                  </td>
+                  <td class="bf-ledger__actions">
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      data-row-action
+                      data-action="edit"
+                      [attr.aria-label]="'Editar conta ' + account.bankName"
+                      [disabled]="deletingId() !== null"
+                      (click)="openEdit(account)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      tone="danger"
+                      data-row-action
+                      data-action="delete"
+                      [attr.aria-label]="'Excluir conta ' + account.bankName"
+                      [disabled]="deletingId() !== null"
+                      (click)="confirmDelete(account)"
+                    >
+                      {{ deletingId() === account.id ? 'Excluindo…' : 'Excluir' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <app-page-state
+          state="empty"
+          title="Nenhuma conta cadastrada"
+          message="Cadastre uma conta para acompanhar saldos e registrar pagamentos."
+          actionLabel="Nova conta"
+          (action)="openCreate()"
+        />
+      }
+    }
+  }
+</section>

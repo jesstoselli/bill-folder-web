@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable, Subject, of, throwError } from 'rxjs';
-import { CycleResponse } from './cycle.models';
+import { CreateCycleRequest, CycleResponse, UpdateCycleRequest } from './cycle.models';
 import { CycleStore } from './cycle.store';
 import { CyclesApi } from './cycles.api';
 
@@ -27,13 +27,26 @@ const november: CycleResponse = cycle({
 });
 
 describe('CycleStore', () => {
-  let api: { list: ReturnType<typeof vi.fn>; current: ReturnType<typeof vi.fn> };
+  let api: {
+    list: ReturnType<typeof vi.fn>;
+    current: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
   let store: CycleStore;
 
   beforeEach(() => {
     api = {
       list: vi.fn((): Observable<CycleResponse[]> => of([november, september, october])),
       current: vi.fn((): Observable<CycleResponse | null> => of(october)),
+      create: vi.fn((request: CreateCycleRequest) =>
+        of(cycle({ id: 'created', isCurrent: false, ...request })),
+      ),
+      update: vi.fn((id: string, request: UpdateCycleRequest) =>
+        of({ ...october, id, ...request }),
+      ),
+      delete: vi.fn(() => of(null)),
     };
     TestBed.configureTestingModule({ providers: [{ provide: CyclesApi, useValue: api }] });
     store = TestBed.inject(CycleStore);
@@ -154,6 +167,94 @@ describe('CycleStore', () => {
       kind: 'error',
       message: 'Servidor indisponível. Tente novamente em instantes.',
     });
+  });
+
+  it('reloads the whole list after create because the backend can expand future cycles', async () => {
+    await store.load();
+    const december = cycle({
+      id: 'december',
+      startDate: '2026-11-28',
+      endDate: '2026-12-27',
+      label: 'dezembro/2026',
+      isCurrent: false,
+    });
+    const january = cycle({
+      id: 'january',
+      startDate: '2026-12-28',
+      endDate: '2027-01-27',
+      label: 'janeiro/2027',
+      isCurrent: false,
+    });
+    api.create.mockReturnValueOnce(of(december));
+    api.list.mockReturnValueOnce(of([september, october, november, december, january]));
+
+    const saved = await store.create({
+      startDate: december.startDate,
+      endDate: december.endDate,
+      label: december.label,
+    });
+
+    expect(saved).toEqual(december);
+    expect(api.list).toHaveBeenCalledTimes(2);
+    expect(store.cycles()).toEqual([september, october, november, december, january]);
+  });
+
+  it('falls back to backend current after deleting the selected cycle', async () => {
+    await store.load();
+    store.select('september');
+    api.list.mockReturnValueOnce(of([october, november]));
+
+    await store.delete('september');
+
+    expect(api.delete).toHaveBeenCalledWith('september');
+    expect(store.current()).toEqual(october);
+    expect(store.cycles()).toEqual([october, november]);
+  });
+
+  it('keeps previous content while refresh fails', async () => {
+    await store.load();
+    api.list.mockReturnValueOnce(
+      throwError(() => ({
+        status: 503,
+        code: 'http_503',
+        message: 'Servidor indisponível. Tente novamente em instantes.',
+      })),
+    );
+
+    await store.refresh();
+
+    expect(store.cycles()).toEqual([september, october, november]);
+    expect(store.current()).toEqual(october);
+    expect(store.state()).toMatchObject({
+      kind: 'content',
+      data: [september, october, november],
+      refreshing: false,
+      refreshError: 'Servidor indisponível. Tente novamente em instantes.',
+    });
+  });
+
+  it('does not let an older load overwrite a newer write reload', async () => {
+    await store.load();
+    const staleList = new Subject<CycleResponse[]>();
+    const staleCurrent = new Subject<CycleResponse | null>();
+    api.list.mockReturnValueOnce(staleList);
+    api.current.mockReturnValueOnce(staleCurrent);
+    const olderLoad = store.load();
+
+    const updatedOctober = { ...october, label: 'outubro revisado' };
+    api.update.mockReturnValueOnce(of(updatedOctober));
+    api.list.mockReturnValueOnce(of([september, updatedOctober, november]));
+    api.current.mockReturnValueOnce(of(updatedOctober));
+    await store.update(october.id, { label: updatedOctober.label });
+
+    staleList.next([september, october]);
+    staleList.complete();
+    staleCurrent.next(october);
+    staleCurrent.complete();
+    await olderLoad;
+
+    expect(store.cycles()).toEqual([september, updatedOctober, november]);
+    expect(store.current()).toEqual(updatedOctober);
   });
 });
 

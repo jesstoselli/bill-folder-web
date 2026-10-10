@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
+import { CheckingAccountsApi } from '../../../../core/checking-accounts/checking-accounts.api';
 import { ReferenceDataApi } from '../../../../core/reference/reference-data.api';
 import { CardStatementDetailResponse } from '../../cards.models';
 import { CardsStore } from '../../cards.store';
@@ -91,10 +92,11 @@ async function createFixture(
       { provide: MAT_DIALOG_DATA, useValue: { statement: value } },
       { provide: MatDialogRef, useValue: dialogRef },
       { provide: CardsStore, useValue: { payStatement } },
+      { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
       {
-        provide: ReferenceDataApi,
+        provide: CheckingAccountsApi,
         useValue: {
-          checkingAccounts: () =>
+          list: () =>
             of([
               {
                 id: 'account-1',

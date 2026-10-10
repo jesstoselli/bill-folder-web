@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { CheckingAccountResponse } from '../../../../core/reference/reference-data.api';
+import { CheckingAccountResponse } from '../../../../core/checking-accounts/checking-account.models';
 import { ReferenceDataStore } from '../../../../core/reference/reference-data.store';
 import { mapApiError } from '../../../../core/http/api-error';
 import { todayCivilDate } from '../../../../shared/formatters/civil-date';

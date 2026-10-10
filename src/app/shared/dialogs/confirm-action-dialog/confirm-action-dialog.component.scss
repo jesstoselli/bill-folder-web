@@ -1,0 +1,47 @@
+@use '../../../../styles/breakpoints' as bp;
+
+:host {
+  display: block;
+}
+
+.confirm-action {
+  min-width: min(28rem, calc(100vw - 2rem));
+
+  header {
+    border-bottom: 1px solid var(--bf-outline);
+    padding: 1.25rem 1.5rem 1rem;
+  }
+
+  h2 {
+    font-size: var(--bf-text-2xl);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+mat-dialog-content {
+  padding-top: 1.25rem;
+
+  p {
+    color: var(--bf-muted);
+    margin: 0;
+    max-width: 38rem;
+  }
+}
+
+mat-dialog-actions {
+  background: var(--bf-surface);
+  border-top: 1px solid var(--bf-outline);
+}
+
+@media (max-width: bp.$sm) {
+  .confirm-action {
+    min-width: 0;
+
+    header {
+      padding-inline: 1rem;
+    }
+  }
+}

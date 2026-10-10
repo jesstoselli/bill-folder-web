@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, defer, firstValueFrom } from 'rxjs';
-import { CategoryDto, CheckingAccountResponse, ReferenceDataApi } from './reference-data.api';
+import { CheckingAccountResponse } from '../checking-accounts/checking-account.models';
+import { CheckingAccountsApi } from '../checking-accounts/checking-accounts.api';
+import { CategoryDto, ReferenceDataApi } from './reference-data.api';
 import { compareCategories, compareCheckingAccounts } from './reference-ordering';
 
 /**
@@ -32,6 +34,11 @@ class SortedListCache<T> {
     return value;
   }
 
+  invalidate(): void {
+    this.fetchedAt = 0;
+    this.value = null;
+  }
+
   private async fetch(): Promise<readonly T[]> {
     const items = await firstValueFrom(defer(this.request));
     return [...items].sort(this.compare);
@@ -42,12 +49,13 @@ class SortedListCache<T> {
 @Injectable({ providedIn: 'root' })
 export class ReferenceDataStore {
   private readonly api = inject(ReferenceDataApi);
+  private readonly checkingAccountsApi = inject(CheckingAccountsApi);
   private readonly categoriesCache = new SortedListCache(
     () => this.api.categories(),
     compareCategories,
   );
   private readonly accountsCache = new SortedListCache(
-    () => this.api.checkingAccounts(),
+    () => this.checkingAccountsApi.list(),
     compareCheckingAccounts,
   );
 
@@ -57,5 +65,9 @@ export class ReferenceDataStore {
 
   checkingAccounts(): Promise<readonly CheckingAccountResponse[]> {
     return this.accountsCache.get();
+  }
+
+  invalidateCheckingAccounts(): void {
+    this.accountsCache.invalidate();
   }
 }

@@ -1,0 +1,55 @@
+@use '../../../styles/breakpoints' as bp;
+
+.manage-cycles-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.cycles-ledger {
+  @media (min-width: #{bp.$md + 1px}) {
+    table {
+      min-width: 48rem;
+    }
+  }
+}
+
+.cycles-ledger__name strong {
+  font-size: var(--bf-text-lg);
+  font-weight: 500;
+}
+
+.cycles-ledger__period {
+  color: var(--bf-muted);
+  white-space: nowrap;
+}
+
+.cycles-ledger__status {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.cycles-ledger__badge {
+  background: var(--bf-surface-high);
+  border: 1px solid var(--bf-outline);
+  border-radius: var(--bf-radius-pill);
+  color: var(--bf-muted);
+  display: inline-flex;
+  font-size: var(--bf-text-sm);
+  line-height: 1.2;
+  padding: 0.3rem 0.55rem;
+}
+
+.cycles-ledger__badge--current {
+  background: color-mix(in srgb, var(--bf-brand) 12%, var(--bf-surface));
+  border-color: color-mix(in srgb, var(--bf-brand) 46%, var(--bf-outline));
+  color: var(--bf-text);
+}
+
+@media (max-width: bp.$md) {
+  .cycles-ledger__status {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
