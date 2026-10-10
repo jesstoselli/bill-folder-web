@@ -25,7 +25,7 @@ describe('application routes', () => {
         ['poupanca', 'Poupança'],
         ['ajustes', 'Ajustes'],
         ['gerenciar/ciclos', 'Ciclos'],
-        ['gerenciar/contas', 'Contas-correntes'],
+        ['gerenciar/contas', 'Bancos'],
         ['gerenciar/cartoes', 'Cartões'],
         ['gerenciar/poupancas', 'Poupanças'],
       ]),

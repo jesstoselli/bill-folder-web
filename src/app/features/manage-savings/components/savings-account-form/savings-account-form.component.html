@@ -30,8 +30,7 @@
             </mat-select>
             @if (form.controls.checkingAccountId.hasError('incompleteAccount')) {
               <mat-error>
-                Esta conta-corrente não tem agência e número. Complete os dados dela em
-                Contas-correntes.
+                Esta conta-corrente não tem agência e número. Complete os dados dela em Bancos.
               </mat-error>
             } @else if (form.controls.checkingAccountId.invalid) {
               <mat-error>Escolha a conta-corrente que vai ficar vinculada.</mat-error>

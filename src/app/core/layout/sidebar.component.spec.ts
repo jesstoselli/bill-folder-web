@@ -32,18 +32,18 @@ describe('SidebarComponent', () => {
       'Poupança',
       'Ajustes',
       'Ciclos',
-      'Contas-correntes',
+      'Bancos',
       'Cartões',
       'Poupanças',
     ]);
     expect(linkLabels).toContain('Ciclos');
-    expect(linkLabels).toContain('Contas-correntes');
+    expect(linkLabels).toContain('Bancos');
     expect(links.find((link) => link.textContent?.includes('Ciclos'))?.getAttribute('href')).toBe(
       '/gerenciar/ciclos',
     );
-    expect(
-      links.find((link) => link.textContent?.includes('Contas-correntes'))?.getAttribute('href'),
-    ).toBe('/gerenciar/contas');
+    expect(links.find((link) => link.textContent?.includes('Bancos'))?.getAttribute('href')).toBe(
+      '/gerenciar/contas',
+    );
     expect(root.querySelector<HTMLElement>('[aria-current="page"]')?.textContent).toContain('Home');
   });
 
@@ -75,7 +75,7 @@ describe('SidebarComponent', () => {
       'Poupança',
       'Ajustes',
       'Ciclos',
-      'Contas-correntes',
+      'Bancos',
       'Cartões',
       'Poupanças',
     ]);

@@ -95,7 +95,7 @@ export const routes: Routes = [
           import('./features/manage-accounts/manage-accounts.page').then(
             ({ ManageAccountsPage }) => ManageAccountsPage,
           ),
-        data: { title: 'Contas-correntes' },
+        data: { title: 'Bancos' },
       },
       {
         path: 'gerenciar/cartoes',

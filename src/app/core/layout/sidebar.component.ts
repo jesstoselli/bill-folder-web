@@ -66,7 +66,7 @@ const NAVIGATION_SECTIONS: readonly NavigationSection[] = [
         icon: 'calendarMonth',
       },
       {
-        label: 'Contas-correntes',
+        label: 'Bancos',
         path: '/gerenciar/contas',
         icon: 'accountBalance',
       },

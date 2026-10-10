@@ -50,10 +50,10 @@ test('admin foundation refreshes account consumers and preserves an account bloc
 }) => {
   await api.startAuthenticated(context);
   await page.goto('/gerenciar/contas');
-  await expect(page.getByRole('heading', { name: 'Contas-correntes' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bancos' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Nova conta' }).click();
-  await page.getByLabel('Banco').fill('Banco Novo');
+  await page.getByLabel('Banco', { exact: true }).fill('Banco Novo');
   await page.getByLabel('Agência').fill('1234');
   await page.getByLabel('Número da conta').fill('987-0');
   await page.getByLabel('Saldo inicial').fill('900.00');
@@ -76,7 +76,7 @@ test('admin foundation refreshes account consumers and preserves an account bloc
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Fechar pagamento' }).click();
 
-  await page.getByRole('link', { name: 'Contas-correntes' }).click();
+  await page.getByRole('link', { name: 'Bancos' }).click();
   const inUse = page.locator('[data-checking-account-id="checking-primary"]');
   await inUse.getByRole('button', { name: 'Excluir conta Conta E2E' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Excluir conta' }).click();
