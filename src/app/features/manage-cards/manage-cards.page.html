@@ -1,0 +1,105 @@
+<section class="manage-cards-page">
+  <app-page-header
+    heading="Cartões"
+    subtitle="Gerencie os cartões usados nas compras parceladas e assinaturas."
+  >
+    <button type="button" appButton [disabled]="refreshing()" (click)="refresh()">Atualizar</button>
+    <button
+      type="button"
+      appButton
+      variant="primary"
+      class="manage-cards-page__create"
+      (click)="openCreate()"
+    >
+      Novo cartão
+    </button>
+  </app-page-header>
+
+  <app-inline-alert [message]="actionError()" />
+
+  @switch (cards.state().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <app-page-state
+        state="error"
+        title="Não foi possível carregar os cartões"
+        [message]="loadError()"
+        actionLabel="Tentar novamente"
+        (action)="refresh()"
+      />
+    }
+    @case ('content') {
+      <app-refresh-status [state]="cards.state()" (retry)="refresh()" />
+      @if (cards.cards().length) {
+        <div class="cards-ledger bf-ledger" tabindex="-1" aria-label="Cartões cadastrados">
+          <table>
+            <caption class="u-visually-hidden">
+              Cartões cadastrados
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Cartão</th>
+                <th scope="col">Fechamento</th>
+                <th scope="col">Vencimento</th>
+                <th scope="col" class="bf-ledger__actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (card of cards.cards(); track card.id) {
+                <tr [attr.data-credit-card-id]="card.id">
+                  <th scope="row" class="cards-ledger__name">
+                    <strong>{{ card.name }}</strong>
+                    @if (issuerLine(card); as issuer) {
+                      <span>{{ issuer }}</span>
+                    }
+                  </th>
+                  <td data-label="Fechamento" class="bf-tabular">Dia {{ card.closingDay }}</td>
+                  <td data-label="Vencimento" class="bf-tabular">Dia {{ card.dueDay }}</td>
+                  <td class="bf-ledger__actions">
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      data-row-action
+                      data-action="edit"
+                      [attr.aria-label]="'Editar cartão ' + card.name"
+                      [disabled]="deletingId() !== null"
+                      (click)="openEdit(card)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      tone="danger"
+                      data-row-action
+                      data-action="delete"
+                      [attr.aria-label]="'Excluir cartão ' + card.name"
+                      [disabled]="deletingId() !== null"
+                      (click)="confirmDelete(card)"
+                    >
+                      {{ deletingId() === card.id ? 'Excluindo…' : 'Excluir' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <app-page-state
+          state="empty"
+          title="Nenhum cartão cadastrado"
+          message="Cadastre um cartão para registrar compras parceladas e assinaturas."
+          actionLabel="Novo cartão"
+          (action)="openCreate()"
+        />
+      }
+    }
+  }
+</section>

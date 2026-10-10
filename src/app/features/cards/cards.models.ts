@@ -11,6 +11,26 @@ export interface CreditCardAccountResponse {
   readonly updatedAt: string;
 }
 
+export interface CreateCreditCardAccountRequest {
+  readonly name: string;
+  readonly issuerBank: string | null;
+  readonly brand: string | null;
+  readonly closingDay: number;
+  readonly dueDay: number;
+}
+
+/**
+ * Omitted fields stay as they are. An empty `issuerBank` or `brand` clears
+ * it (`null` would mean "unchanged").
+ */
+export interface UpdateCreditCardAccountRequest {
+  readonly name?: string;
+  readonly issuerBank?: string;
+  readonly brand?: string;
+  readonly closingDay?: number;
+  readonly dueDay?: number;
+}
+
 export interface CardStatementResponse {
   readonly id: string;
   readonly cardId: string;

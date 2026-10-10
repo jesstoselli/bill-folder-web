@@ -65,7 +65,7 @@ export const routes: Routes = [
         path: 'cartoes',
         loadComponent: () =>
           import('./features/cards/cards.page').then(({ CardsPage }) => CardsPage),
-        data: { title: 'Cartões' },
+        data: { title: 'Despesas no cartão' },
       },
       {
         path: 'poupanca',
@@ -96,6 +96,14 @@ export const routes: Routes = [
             ({ ManageAccountsPage }) => ManageAccountsPage,
           ),
         data: { title: 'Contas-correntes' },
+      },
+      {
+        path: 'gerenciar/cartoes',
+        loadComponent: () =>
+          import('./features/manage-cards/manage-cards.page').then(
+            ({ ManageCardsPage }) => ManageCardsPage,
+          ),
+        data: { title: 'Cartões' },
       },
       { path: '', pathMatch: 'full', redirectTo: 'home' },
     ],

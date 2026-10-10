@@ -41,7 +41,7 @@ const NAVIGATION_SECTIONS: readonly NavigationSection[] = [
         icon: 'attachMoney',
       },
       {
-        label: 'Cartões',
+        label: 'Despesas no cartão',
         path: '/cartoes',
         icon: 'creditCard',
       },
@@ -69,6 +69,11 @@ const NAVIGATION_SECTIONS: readonly NavigationSection[] = [
         label: 'Contas-correntes',
         path: '/gerenciar/contas',
         icon: 'accountBalance',
+      },
+      {
+        label: 'Cartões',
+        path: '/gerenciar/cartoes',
+        icon: 'creditCard',
       },
     ],
   },

@@ -1,0 +1,80 @@
+<form class="credit-card-form" [formGroup]="form" (ngSubmit)="submit()">
+  <app-dialog-frame
+    titleId="credit-card-form-title"
+    [heading]="data.mode === 'create' ? 'Novo cartão' : 'Editar cartão'"
+    closeLabel="Fechar formulário de cartão"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar cartão"
+    savingLabel="Salvando…"
+  >
+    <p dialogSubtitle>Os dias de fechamento e vencimento definem as faturas do cartão.</p>
+
+    <div class="credit-card-form__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Nome</mat-label>
+        <input
+          matInput
+          formControlName="name"
+          autocomplete="off"
+          maxlength="50"
+          placeholder="Ex.: Itaú Personnalité"
+        />
+        @if (form.controls.name.invalid) {
+          <mat-error>Informe o nome do cartão com até 50 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="credit-card-form__split">
+        <mat-form-field appearance="outline">
+          <mat-label>Banco emissor (opcional)</mat-label>
+          <input matInput formControlName="issuerBank" autocomplete="off" maxlength="50" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Bandeira (opcional)</mat-label>
+          <input matInput formControlName="brand" autocomplete="off" maxlength="30" />
+        </mat-form-field>
+      </div>
+
+      <div class="credit-card-form__split">
+        <mat-form-field appearance="outline">
+          <mat-label>Dia do fechamento</mat-label>
+          <input
+            matInput
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            formControlName="closingDay"
+          />
+          @if (form.controls.closingDay.invalid) {
+            <mat-error>Informe um dia entre 1 e 31.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Dia do vencimento</mat-label>
+          <input
+            matInput
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            formControlName="dueDay"
+          />
+          @if (form.controls.dueDay.invalid) {
+            <mat-error>Informe um dia entre 1 e 31.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      @if (data.mode === 'edit') {
+        <p class="credit-card-form__hint">
+          Mudar o fechamento ou o vencimento afeta só os lançamentos futuros. Faturas e compras
+          existentes mantêm os dias originais.
+        </p>
+      }
+    </div>
+  </app-dialog-frame>
+</form>

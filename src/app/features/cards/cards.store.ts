@@ -104,9 +104,7 @@ export class CardsStore {
         return;
       }
       this.observedVersion = version;
-      if (cardId) {
-        untracked(() => void this.loadCard(cardId, true));
-      }
+      untracked(() => void this.reloadAfterChange(cardId));
     });
   }
 
@@ -130,6 +128,44 @@ export class CardsStore {
       if (generation === this.cardsGeneration) {
         this.cardsSource.set({ kind: 'error', message: mapApiError(error).message });
         this.clearSelection();
+      }
+    }
+  }
+
+  /**
+   * A write may have added, renamed or removed a card, not just changed the
+   * selected card's entries, so the card list reloads in the background too.
+   */
+  private async reloadAfterChange(cardId: string | null): Promise<void> {
+    const previous = this.cardsSource();
+    if (previous.kind !== 'content') {
+      await this.load();
+      return;
+    }
+    const generation = ++this.cardsGeneration;
+    this.cardsSource.set({ ...previous, refreshing: true });
+    try {
+      const cards = await firstValueFrom(this.api.listCards());
+      if (generation !== this.cardsGeneration) {
+        return;
+      }
+      this.cardsSource.set({ kind: 'content', data: cards, refreshing: false });
+      if (cards.length === 0) {
+        this.clearSelection();
+      } else if (cardId && cards.some((card) => card.id === cardId)) {
+        await this.loadCard(cardId, true);
+      } else {
+        await this.selectCard(cards[0].id);
+      }
+    } catch {
+      if (generation !== this.cardsGeneration) {
+        return;
+      }
+      // Keep the known cards; the selected card still refreshes and reports
+      // its own failure.
+      this.cardsSource.set({ ...previous, refreshing: false });
+      if (cardId) {
+        await this.loadCard(cardId, true);
       }
     }
   }

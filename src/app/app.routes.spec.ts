@@ -21,11 +21,12 @@ describe('application routes', () => {
         ['despesas', 'Despesas'],
         ['gastos-diarios', 'Despesas avulsas'],
         ['receitas', 'Recebimentos'],
-        ['cartoes', 'Cartões'],
+        ['cartoes', 'Despesas no cartão'],
         ['poupanca', 'Poupança'],
         ['ajustes', 'Ajustes'],
         ['gerenciar/ciclos', 'Ciclos'],
         ['gerenciar/contas', 'Contas-correntes'],
+        ['gerenciar/cartoes', 'Cartões'],
       ]),
     );
     expect(shellRoute?.children?.find((route) => route.path === '')?.redirectTo).toBe('home');

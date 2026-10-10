@@ -200,6 +200,8 @@ describe('CardsPage write focus across the shared data refresh', () => {
     expect(document.activeElement).toBe(nextButton);
   });
 
+  let loadedCards: readonly CreditCardAccountResponse[] = [];
+
   async function loadPage(
     options: {
       cards?: readonly CreditCardAccountResponse[];
@@ -209,6 +211,7 @@ describe('CardsPage write focus across the shared data refresh', () => {
     } = {},
   ): Promise<void> {
     const cards = options.cards ?? [card('card-a')];
+    loadedCards = cards;
     const entries = options.entries ?? [entry()];
     const statements = options.statements ?? [
       statement('statement-current', 'card-a', '2026-10-10'),
@@ -238,6 +241,9 @@ describe('CardsPage write focus across the shared data refresh', () => {
     ],
   ): Promise<void> {
     TestBed.tick();
+    await nextMicrotask();
+    // A write reloads the card list first: it may have added or renamed a card.
+    backend.expectOne('/v1/credit-card-accounts/').flush(loadedCards);
     await nextMicrotask();
     backend.expectOne(`/v1/card-entries/?cardId=${cardId}`).flush(entries);
     backend.expectOne(`/v1/card-statements/?cardId=${cardId}`).flush(statements);

@@ -28,11 +28,12 @@ describe('SidebarComponent', () => {
       'Despesas',
       'Despesas avulsas',
       'Recebimentos',
-      'Cartões',
+      'Despesas no cartão',
       'Poupança',
       'Ajustes',
       'Ciclos',
       'Contas-correntes',
+      'Cartões',
     ]);
     expect(linkLabels).toContain('Ciclos');
     expect(linkLabels).toContain('Contas-correntes');
@@ -69,11 +70,12 @@ describe('SidebarComponent', () => {
       'Despesas',
       'Despesas avulsas',
       'Recebimentos',
-      'Cartões',
+      'Despesas no cartão',
       'Poupança',
       'Ajustes',
       'Ciclos',
       'Contas-correntes',
+      'Cartões',
     ]);
     expect(
       Array.from(root.querySelectorAll<HTMLElement>('.sidebar__section-label')).every((label) =>
@@ -104,6 +106,7 @@ describe('SidebarComponent', () => {
       'tune',
       'calendarMonth',
       'accountBalance',
+      'creditCard',
     ]);
     const iconNames = links.map((link) =>
       link.querySelector('app-icon')?.getAttribute('data-icon'),

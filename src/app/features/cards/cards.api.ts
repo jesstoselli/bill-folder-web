@@ -14,10 +14,12 @@ import {
   CardStatementResponse,
   CreateCardEntryRecurrenceRequest,
   CreateCardEntryRequest,
+  CreateCreditCardAccountRequest,
   CreditCardAccountResponse,
   PayCardStatementRequest,
   UpdateCardEntryRequest,
   UpdateCardSubscriptionAmountRequest,
+  UpdateCreditCardAccountRequest,
 } from './cards.models';
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +34,27 @@ export class CardsApi {
 
   listCards(): Observable<CreditCardAccountResponse[]> {
     return this.http.get<CreditCardAccountResponse[]>(`${this.cardsUrl}/`).pipe(mapApiErrors());
+  }
+
+  createCard(request: CreateCreditCardAccountRequest): Observable<CreditCardAccountResponse> {
+    return this.write(
+      this.http.post<CreditCardAccountResponse>(`${this.cardsUrl}/`, request).pipe(mapApiErrors()),
+    );
+  }
+
+  updateCard(
+    id: string,
+    request: UpdateCreditCardAccountRequest,
+  ): Observable<CreditCardAccountResponse> {
+    return this.write(
+      this.http
+        .patch<CreditCardAccountResponse>(`${this.cardsUrl}/${id}`, request)
+        .pipe(mapApiErrors()),
+    );
+  }
+
+  deleteCard(id: string): Observable<null> {
+    return this.write(this.http.delete<null>(`${this.cardsUrl}/${id}`).pipe(mapApiErrors()));
   }
 
   listEntries(cardId: string): Observable<CardEntryResponse[]> {

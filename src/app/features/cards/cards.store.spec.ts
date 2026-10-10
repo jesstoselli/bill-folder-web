@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { APP_ENVIRONMENT } from '../../core/config/app-environment';
+import { DataChangeService } from '../../core/data-change/data-change.service';
 import { CardsStore } from './cards.store';
 import {
   CardEntryResponse,
@@ -161,6 +162,45 @@ describe('CardsStore', () => {
     expect(store.selectedStatementId()).toBe('statement-jan');
     expect(store.statement()?.id).toBe('statement-jan');
     backend.expectNone('/v1/card-statements/statement-apr');
+  });
+
+  it('picks up a card created elsewhere when a write is announced', async () => {
+    const loading = store.load();
+    backend.expectOne('/v1/credit-card-accounts/').flush([card('card-a')]);
+    await nextMicrotask();
+    backend.expectOne('/v1/card-entries/?cardId=card-a').flush([]);
+    backend.expectOne('/v1/card-statements/?cardId=card-a').flush([]);
+    await loading;
+
+    TestBed.inject(DataChangeService).notify();
+    TestBed.tick();
+    backend.expectOne('/v1/credit-card-accounts/').flush([card('card-a'), card('card-b')]);
+    await nextMicrotask();
+    backend.expectOne('/v1/card-entries/?cardId=card-a').flush([]);
+    backend.expectOne('/v1/card-statements/?cardId=card-a').flush([]);
+    await nextMicrotask();
+
+    expect(store.cards().map((item) => item.id)).toEqual(['card-a', 'card-b']);
+    expect(store.selectedCardId()).toBe('card-a');
+  });
+
+  it('moves to the first card when the selected one was deleted elsewhere', async () => {
+    const loading = store.load();
+    backend.expectOne('/v1/credit-card-accounts/').flush([card('card-a'), card('card-b')]);
+    await nextMicrotask();
+    backend.expectOne('/v1/card-entries/?cardId=card-a').flush([]);
+    backend.expectOne('/v1/card-statements/?cardId=card-a').flush([]);
+    await loading;
+
+    TestBed.inject(DataChangeService).notify();
+    TestBed.tick();
+    backend.expectOne('/v1/credit-card-accounts/').flush([card('card-b')]);
+    await nextMicrotask();
+    backend.expectOne('/v1/card-entries/?cardId=card-b').flush([]);
+    backend.expectOne('/v1/card-statements/?cardId=card-b').flush([]);
+    await nextMicrotask();
+
+    expect(store.selectedCardId()).toBe('card-b');
   });
 
   it('uses the shared scope mappings for subscription delete and reprice', async () => {
