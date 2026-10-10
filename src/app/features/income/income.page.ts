@@ -9,6 +9,7 @@ import { ConfirmIncomeDialogComponent } from './components/confirm-income-dialog
 import { IncomeEntryFormComponent } from './components/income-entry-form/income-entry-form.component';
 import { IncomeEntryResponse } from './income.models';
 import { IncomeStore } from './income.store';
+import { IncomeSourcesComponent } from './components/income-sources/income-sources.component';
 import { RowFocus, RowFocusTicket } from '../../shared/focus/row-focus';
 import { registerActiveRouteRefresh } from '../../core/refresh/active-route-refresh.service';
 import { RefreshStatusComponent } from '../../shared/components/refresh-status/refresh-status.component';
@@ -28,6 +29,7 @@ import { sumMoney } from '../../shared/formatters/money';
 @Component({
   selector: 'app-income-page',
   imports: [
+    IncomeSourcesComponent,
     MoneyComponent,
     PageHeaderComponent,
     CycleBarComponent,

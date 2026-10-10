@@ -12,10 +12,12 @@ export interface IncomeEntryResponse {
   readonly updatedAt: string;
 }
 
+export type IncomeOriginType = 'work' | 'rent' | 'investment' | 'freelance' | 'gift' | 'other';
+
 export interface IncomeSourceResponse {
   readonly id: string;
   readonly origin: string;
-  readonly originType: string;
+  readonly originType: IncomeOriginType;
   readonly defaultAmount: number;
   readonly expectedDay: number;
   readonly startDate: string;
@@ -23,6 +25,29 @@ export interface IncomeSourceResponse {
   readonly isActive: boolean;
   readonly createdAt: string;
   readonly updatedAt: string;
+}
+
+export interface CreateIncomeSourceRequest {
+  readonly origin: string;
+  readonly originType: IncomeOriginType;
+  readonly defaultAmount: number;
+  readonly expectedDay: number;
+  readonly startDate: string;
+  readonly endDate: string | null;
+}
+
+/**
+ * Omitted fields stay as they are, so `endDate: null` would not remove the
+ * end date; `clearEndDate: true` does.
+ */
+export interface UpdateIncomeSourceRequest {
+  readonly origin?: string;
+  readonly originType?: IncomeOriginType;
+  readonly defaultAmount?: number;
+  readonly expectedDay?: number;
+  readonly startDate?: string;
+  readonly endDate?: string;
+  readonly clearEndDate?: boolean;
 }
 
 export interface CreateIncomeEntryRequest {

@@ -1,0 +1,111 @@
+<section class="income-sources" aria-labelledby="income-sources-title">
+  <header class="income-sources__header">
+    <div>
+      <h2 id="income-sources-title">Fontes recorrentes</h2>
+      <p>Cada fonte gera um recebimento previsto por mês nos ciclos que ela cobre.</p>
+    </div>
+    <button
+      type="button"
+      appButton
+      variant="secondary"
+      class="income-sources__create"
+      (click)="openCreate()"
+    >
+      Nova fonte
+    </button>
+  </header>
+
+  <app-inline-alert [message]="actionError()" />
+
+  @switch (store.state().kind) {
+    @case ('loading') {
+      <app-page-state state="loading" />
+    }
+    @case ('error') {
+      <app-page-state
+        state="error"
+        title="Não foi possível carregar as fontes"
+        [message]="loadError()"
+        actionLabel="Tentar novamente"
+        (action)="store.load()"
+      />
+    }
+    @case ('content') {
+      @if (store.sources().length) {
+        <div class="income-sources-ledger bf-ledger" tabindex="-1" aria-label="Fontes recorrentes">
+          <table>
+            <caption class="u-visually-hidden">
+              Fontes de renda recorrentes
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Fonte</th>
+                <th scope="col">Dia</th>
+                <th scope="col">Período</th>
+                <th scope="col" class="bf-ledger__amount">Valor padrão</th>
+                <th scope="col" class="bf-ledger__actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (source of store.sources(); track source.id) {
+                <tr [attr.data-income-source-id]="source.id">
+                  <th scope="row" class="income-sources-ledger__name">
+                    <strong>{{ source.origin }}</strong>
+                    <span>
+                      {{ typeLabel(source.originType) }}
+                      @if (!source.isActive) {
+                        · Inativa
+                      }
+                    </span>
+                  </th>
+                  <td data-label="Dia" class="bf-tabular">Todo dia {{ source.expectedDay }}</td>
+                  <td data-label="Período" class="bf-tabular">{{ period(source) }}</td>
+                  <td class="bf-ledger__amount">
+                    <app-money [value]="source.defaultAmount" />
+                  </td>
+                  <td class="bf-ledger__actions">
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      data-row-action
+                      data-action="edit"
+                      [attr.aria-label]="'Editar fonte ' + source.origin"
+                      [disabled]="deletingId() !== null"
+                      (click)="openEdit(source)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      appButton
+                      variant="text"
+                      size="sm"
+                      tone="danger"
+                      data-row-action
+                      data-action="delete"
+                      [attr.aria-label]="'Excluir fonte ' + source.origin"
+                      [disabled]="deletingId() !== null"
+                      (click)="confirmDelete(source)"
+                    >
+                      {{ deletingId() === source.id ? 'Excluindo…' : 'Excluir' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <app-page-state
+          state="empty"
+          title="Nenhuma fonte recorrente"
+          message="Cadastre salário, aluguel ou outras rendas que se repetem todo mês."
+          actionLabel="Nova fonte"
+          (action)="openCreate()"
+        />
+      }
+    }
+  }
+</section>

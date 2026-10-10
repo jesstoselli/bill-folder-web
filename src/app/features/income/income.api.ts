@@ -9,9 +9,11 @@ import { apiUrl } from '../../core/http/api-url';
 import {
   ConfirmIncomeReceivedRequest,
   CreateIncomeEntryRequest,
+  CreateIncomeSourceRequest,
   IncomeEntryResponse,
   IncomeSourceResponse,
   UpdateIncomeEntryRequest,
+  UpdateIncomeSourceRequest,
 } from './income.models';
 
 @Injectable({ providedIn: 'root' })
@@ -34,6 +36,34 @@ export class IncomeApi {
     return this.http
       .get<IncomeSourceResponse[]>(`${this.sourcesUrl}/`, { params })
       .pipe(mapApiErrors());
+  }
+
+  /** Every source, active or not, for managing them. */
+  listAllSources(): Observable<IncomeSourceResponse[]> {
+    return this.http.get<IncomeSourceResponse[]>(`${this.sourcesUrl}/`).pipe(mapApiErrors());
+  }
+
+  createSource(request: CreateIncomeSourceRequest): Observable<IncomeSourceResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http.post<IncomeSourceResponse>(`${this.sourcesUrl}/`, request).pipe(mapApiErrors()),
+    );
+  }
+
+  updateSource(id: string, request: UpdateIncomeSourceRequest): Observable<IncomeSourceResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http
+        .patch<IncomeSourceResponse>(`${this.sourcesUrl}/${id}`, request)
+        .pipe(mapApiErrors()),
+    );
+  }
+
+  deleteSource(id: string): Observable<null> {
+    return notifyingWrite(
+      this.changes,
+      this.http.delete<null>(`${this.sourcesUrl}/${id}`).pipe(mapApiErrors()),
+    );
   }
 
   create(request: CreateIncomeEntryRequest): Observable<IncomeEntryResponse> {

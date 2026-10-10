@@ -1,0 +1,95 @@
+<form class="income-source-form" [formGroup]="form" (ngSubmit)="submit()">
+  <app-dialog-frame
+    titleId="income-source-form-title"
+    [heading]="data.mode === 'create' ? 'Nova fonte de renda' : 'Editar fonte de renda'"
+    closeLabel="Fechar formulário de fonte de renda"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar fonte"
+    savingLabel="Salvando…"
+  >
+    <p dialogSubtitle>
+      {{
+        data.mode === 'create'
+          ? 'Ao salvar, a fonte gera os recebimentos previstos nos ciclos que já existem.'
+          : 'As mudanças valem para os próximos ciclos; recebimentos já criados não mudam.'
+      }}
+    </p>
+
+    <div class="income-source-form__fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Nome</mat-label>
+        <input
+          matInput
+          formControlName="origin"
+          autocomplete="off"
+          maxlength="100"
+          placeholder="Ex.: Salário CLT"
+        />
+        @if (form.controls.origin.invalid) {
+          <mat-error>Informe o nome da fonte com até 100 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="income-source-form__split">
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo</mat-label>
+          <mat-select formControlName="originType">
+            @for (type of originTypes; track type.value) {
+              <mat-option [value]="type.value">{{ type.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Dia esperado</mat-label>
+          <input
+            matInput
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            formControlName="expectedDay"
+          />
+          @if (form.controls.expectedDay.invalid) {
+            <mat-error>Informe um dia entre 1 e 31.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Valor padrão</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input matInput appMoneyInput formControlName="defaultAmount" />
+        @if (form.controls.defaultAmount.invalid) {
+          <mat-error>Informe um valor maior que zero.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="income-source-form__split">
+        <mat-form-field appearance="outline">
+          <mat-label>Início</mat-label>
+          <input matInput type="date" formControlName="startDate" />
+          @if (form.controls.startDate.invalid) {
+            <mat-error>Informe uma data de início válida.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fim (opcional)</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="endDate"
+            [errorStateMatcher]="endDateErrorMatcher"
+          />
+          @if (form.controls.endDate.invalid) {
+            <mat-error>Informe uma data válida.</mat-error>
+          } @else if (form.hasError('dateRange')) {
+            <mat-error>O fim deve ser igual ou posterior ao início.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </div>
+  </app-dialog-frame>
+</form>

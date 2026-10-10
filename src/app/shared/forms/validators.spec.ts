@@ -43,6 +43,17 @@ describe('shared form validators', () => {
     expect(form.errors).toBeNull();
   });
 
+  it('accepts the same day only when allowSameDay is set', () => {
+    const range = (allowSameDay: boolean) =>
+      new FormGroup(
+        { startDate: control('2026-11-01'), endDate: control('2026-11-01') },
+        { validators: dateRange('startDate', 'endDate', { allowSameDay }) },
+      );
+
+    expect(range(false).errors).toEqual({ dateRange: true });
+    expect(range(true).errors).toBeNull();
+  });
+
   it('leaves empty and individually invalid dates to their field validators', () => {
     const form = new FormGroup(
       {

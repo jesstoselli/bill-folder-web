@@ -21,7 +21,12 @@ export function integer(control: AbstractControl<number>): ValidationErrors | nu
   return Number.isInteger(control.value) ? null : { integer: true };
 }
 
-export function dateRange(startKey: string, endKey: string): ValidatorFn {
+/** End after start; with `allowSameDay`, the end may also equal the start. */
+export function dateRange(
+  startKey: string,
+  endKey: string,
+  { allowSameDay = false }: { allowSameDay?: boolean } = {},
+): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
     const start = group.get(startKey);
     const end = group.get(endKey);
@@ -36,7 +41,8 @@ export function dateRange(startKey: string, endKey: string): ValidatorFn {
       return null;
     }
 
-    return start.value < end.value ? null : { dateRange: true };
+    const valid = allowSameDay ? start.value <= end.value : start.value < end.value;
+    return valid ? null : { dateRange: true };
   };
 }
 
