@@ -15,6 +15,7 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { InlineAlertComponent } from '../../shared/components/inline-alert/inline-alert.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.component';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 type AdjustmentsViewState =
   | { readonly kind: 'loading' }
@@ -89,18 +90,13 @@ export class AdjustmentsPage implements OnInit {
     if (!focus) return;
     this.actionError.set('');
     this.dialog
-      .open(AdjustmentFormComponent, {
-        data: { mode: 'edit', adjustment },
-        position: { right: '0' },
-        width: 'min(30rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'adjustment-form-title',
-        panelClass: 'bf-adjustment-side-sheet',
-      })
+      .open(
+        AdjustmentFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', adjustment },
+          ariaLabelledBy: 'adjustment-form-title',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }

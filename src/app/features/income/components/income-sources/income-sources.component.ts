@@ -12,6 +12,7 @@ import { IncomeSourcesStore } from '../../income-sources.store';
 import { incomeOriginTypeLabel } from '../../income-origin-types';
 import { IncomeSourceResponse } from '../../income.models';
 import { IncomeSourceFormComponent } from '../income-source-form/income-source-form.component';
+import { sideSheetConfig } from '../../../../shared/dialogs/side-sheet';
 
 /** The "Fontes recorrentes" section of the income page, as on Android. */
 @Component({
@@ -72,18 +73,14 @@ export class IncomeSourcesComponent implements OnInit {
     if (!focus) return;
     this.actionError.set('');
     this.dialog
-      .open(IncomeSourceFormComponent, {
-        data: { mode: 'edit', source },
-        position: { right: '0' },
-        width: 'min(32rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'income-source-form-title',
-        panelClass: 'bf-income-source-side-sheet',
-      })
+      .open(
+        IncomeSourceFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', source },
+          ariaLabelledBy: 'income-source-form-title',
+          width: '32rem',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }

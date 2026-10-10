@@ -43,6 +43,7 @@ type ExpensesViewState =
   | { readonly kind: 'no-cycle' }
   | { readonly kind: 'content' };
 import { MoneyComponent } from '../../shared/components/money/money.component';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 @Component({
   selector: 'app-expenses-page',
@@ -274,18 +275,14 @@ export class ExpensesPage implements OnInit {
 
   private openEdit(expense: ExpenseProjection): void {
     this.actionError.set('');
-    this.dialog.open(ExpenseFormComponent, {
-      data: { mode: 'edit', expense },
-      position: { right: '0' },
-      width: 'min(30rem, 100vw)',
-      maxWidth: '100vw',
-      height: '100dvh',
-      maxHeight: '100dvh',
-      autoFocus: 'first-tabbable',
-      restoreFocus: true,
-      ariaLabelledBy: 'expense-form-title',
-      panelClass: 'bf-expense-side-sheet',
-    });
+    this.dialog.open(
+      ExpenseFormComponent,
+      sideSheetConfig({
+        data: { mode: 'edit', expense },
+        restoreFocus: true,
+        ariaLabelledBy: 'expense-form-title',
+      }),
+    );
   }
 
   private openPayment(expense: ExpenseProjection, focusContext: RowFocusTicket): void {

@@ -25,6 +25,7 @@ type IncomeViewState =
   | { readonly kind: 'content' };
 import { MoneyComponent } from '../../shared/components/money/money.component';
 import { sumMoney } from '../../shared/formatters/money';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 @Component({
   selector: 'app-income-page',
@@ -124,18 +125,13 @@ export class IncomePage implements OnInit {
     if (!focus) return;
     this.actionError.set('');
     this.dialog
-      .open(IncomeEntryFormComponent, {
-        data: { mode: 'edit', entry },
-        position: { right: '0' },
-        width: 'min(30rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'income-form-title',
-        panelClass: 'bf-income-side-sheet',
-      })
+      .open(
+        IncomeEntryFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', entry },
+          ariaLabelledBy: 'income-form-title',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }

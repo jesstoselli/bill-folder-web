@@ -13,6 +13,7 @@ import { RowFocus, RowFocusTicket } from '../../shared/focus/row-focus';
 import { formatBrl } from '../../shared/formatters/money';
 import { CheckingAccountFormComponent } from './components/checking-account-form/checking-account-form.component';
 import { ManageAccountsStore } from './manage-accounts.store';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 const DELETE_MESSAGE =
   'Excluir esta conta remove o cadastro e desfaz referências históricas permitidas. Se houver poupança ou despesa avulsa vinculada, a exclusão será bloqueada para proteger seus dados.';
@@ -82,18 +83,13 @@ export class ManageAccountsPage implements OnInit {
     if (!focus) return;
     this.actionError.set('');
     this.dialog
-      .open(CheckingAccountFormComponent, {
-        data: { mode: 'edit', account },
-        position: { right: '0' },
-        width: 'min(30rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'checking-account-form-title',
-        panelClass: 'bf-checking-account-side-sheet',
-      })
+      .open(
+        CheckingAccountFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', account },
+          ariaLabelledBy: 'checking-account-form-title',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }

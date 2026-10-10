@@ -12,6 +12,7 @@ import { RowFocus, RowFocusTicket } from '../../shared/focus/row-focus';
 import { CreditCardAccountResponse } from '../cards/cards.models';
 import { CreditCardFormComponent } from './components/credit-card-form/credit-card-form.component';
 import { ManageCardsStore } from './manage-cards.store';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 @Component({
   selector: 'app-manage-cards-page',
@@ -77,18 +78,13 @@ export class ManageCardsPage implements OnInit {
     if (!focus) return;
     this.actionError.set('');
     this.dialog
-      .open(CreditCardFormComponent, {
-        data: { mode: 'edit', card },
-        position: { right: '0' },
-        width: 'min(30rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'credit-card-form-title',
-        panelClass: 'bf-credit-card-side-sheet',
-      })
+      .open(
+        CreditCardFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', card },
+          ariaLabelledBy: 'credit-card-form-title',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }

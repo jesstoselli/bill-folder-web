@@ -36,6 +36,15 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+// Side sheets (sideSheetConfig) stretch the form component, its <form> and
+// the dialog frame to the panel height, so the actions sit at the bottom edge
+// instead of right below the fields.
+.bf-side-sheet .mat-mdc-dialog-surface > *,
+.bf-side-sheet .mat-mdc-dialog-surface > * > form,
+.bf-side-sheet app-dialog-frame {
+  height: 100%;
+}
+
 // Material only spaces its own buttons inside dialog actions; appButton needs
 // the gap set on the container.
 .mat-mdc-dialog-actions {

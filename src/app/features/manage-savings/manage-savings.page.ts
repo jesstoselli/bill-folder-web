@@ -13,6 +13,7 @@ import { formatBrl } from '../../shared/formatters/money';
 import { SavingsAccountResponse } from '../savings/savings.models';
 import { SavingsAccountFormComponent } from './components/savings-account-form/savings-account-form.component';
 import { ManageSavingsStore } from './manage-savings.store';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 @Component({
   selector: 'app-manage-savings-page',
@@ -79,18 +80,13 @@ export class ManageSavingsPage implements OnInit {
     if (!focus) return;
     this.actionError.set('');
     this.dialog
-      .open(SavingsAccountFormComponent, {
-        data: { mode: 'edit', account },
-        position: { right: '0' },
-        width: 'min(30rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'savings-account-form-title',
-        panelClass: 'bf-savings-account-side-sheet',
-      })
+      .open(
+        SavingsAccountFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', account },
+          ariaLabelledBy: 'savings-account-form-title',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }

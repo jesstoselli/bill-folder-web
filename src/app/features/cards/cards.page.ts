@@ -29,6 +29,7 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { InlineAlertComponent } from '../../shared/components/inline-alert/inline-alert.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { NavigationArrowComponent } from '../../shared/components/navigation-arrow/navigation-arrow.component';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 interface EntryFocusContext {
   readonly cardId: string;
@@ -174,18 +175,14 @@ export class CardsPage implements OnInit {
     if (!focus) return;
     this.actionError.set('');
     this.dialog
-      .open(CardEntryFormComponent, {
-        data: { mode: 'edit', entry },
-        position: { right: '0' },
-        width: 'min(32rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'card-entry-form-title',
-        panelClass: 'bf-card-entry-side-sheet',
-      })
+      .open(
+        CardEntryFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', entry },
+          ariaLabelledBy: 'card-entry-form-title',
+          width: '32rem',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.restoreEntryDialogFocus(focus, result !== undefined));
   }

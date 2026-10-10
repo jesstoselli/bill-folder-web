@@ -21,6 +21,7 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { InlineAlertComponent } from '../../shared/components/inline-alert/inline-alert.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.component';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 type SavingsViewState =
   | { readonly kind: 'loading' }
@@ -170,18 +171,14 @@ export class SavingsPage implements OnInit {
     if (!accountId || !focus) return;
     this.actionError.set('');
     this.dialog
-      .open(SavingsTransactionFormComponent, {
-        data: { mode: 'edit', accountId, transaction },
-        position: { right: '0' },
-        width: 'min(32rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'savings-transaction-form-title',
-        panelClass: 'bf-savings-transaction-side-sheet',
-      })
+      .open(
+        SavingsTransactionFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', accountId, transaction },
+          ariaLabelledBy: 'savings-transaction-form-title',
+          width: '32rem',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }

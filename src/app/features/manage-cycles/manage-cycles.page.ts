@@ -13,6 +13,7 @@ import { ConfirmActionDialogComponent } from '../../shared/dialogs/confirm-actio
 import { RowFocus, RowFocusTicket } from '../../shared/focus/row-focus';
 import { formatCivilDate } from '../../shared/formatters/civil-date';
 import { CycleFormComponent } from './components/cycle-form/cycle-form.component';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 @Component({
   selector: 'app-manage-cycles-page',
@@ -79,18 +80,13 @@ export class ManageCyclesPage implements OnInit {
     if (!focus) return;
     this.actionError.set('');
     this.dialog
-      .open(CycleFormComponent, {
-        data: { mode: 'edit', cycle },
-        position: { right: '0' },
-        width: 'min(30rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'cycle-form-title',
-        panelClass: 'bf-cycle-side-sheet',
-      })
+      .open(
+        CycleFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', cycle },
+          ariaLabelledBy: 'cycle-form-title',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }

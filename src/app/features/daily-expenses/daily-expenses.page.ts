@@ -35,6 +35,7 @@ type DailyExpensesViewState =
   | { readonly kind: 'content' };
 import { MoneyComponent } from '../../shared/components/money/money.component';
 import { sumMoney } from '../../shared/formatters/money';
+import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
 
 @Component({
   selector: 'app-daily-expenses-page',
@@ -181,18 +182,13 @@ export class DailyExpensesPage implements OnInit {
   private openEdit(expense: DailyExpenseResponse, focus: RowFocusTicket): void {
     this.actionError.set('');
     this.dialog
-      .open(DailyExpenseFormComponent, {
-        data: { mode: 'edit', expense },
-        position: { right: '0' },
-        width: 'min(30rem, 100vw)',
-        maxWidth: '100vw',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        autoFocus: 'first-tabbable',
-        restoreFocus: false,
-        ariaLabelledBy: 'daily-expense-form-title',
-        panelClass: 'bf-daily-expense-side-sheet',
-      })
+      .open(
+        DailyExpenseFormComponent,
+        sideSheetConfig({
+          data: { mode: 'edit', expense },
+          ariaLabelledBy: 'daily-expense-form-title',
+        }),
+      )
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focus, result !== undefined));
   }
