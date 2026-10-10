@@ -103,6 +103,37 @@ describe('HomeStore', () => {
     });
   });
 
+  it('flags a missing cycle apart from other load failures', async () => {
+    api.get.mockReturnValueOnce(
+      throwError(() => ({
+        status: 404,
+        code: 'no_cycle',
+        message: 'Nenhum ciclo ativo cobre a data de hoje.',
+      })),
+    );
+    await store.load();
+    expect(store.state().kind).toBe('error');
+    expect(store.noCycle()).toBe(true);
+
+    api.get.mockReturnValueOnce(
+      throwError(() => ({ status: 503, code: 'http_503', message: 'Indisponível.' })),
+    );
+    await store.load();
+    expect(store.noCycle()).toBe(false);
+  });
+
+  it('clears the missing-cycle flag once a cycle loads', async () => {
+    api.get.mockReturnValueOnce(
+      throwError(() => ({ status: 404, code: 'no_cycle', message: 'Sem ciclo.' })),
+    );
+    await store.load();
+
+    await store.load('cycle-1');
+
+    expect(store.noCycle()).toBe(false);
+    expect(store.state().kind).toBe('content');
+  });
+
   it('preserves Home content and exposes retry details when a manual refresh fails', async () => {
     await store.load('cycle-1');
     api.get.mockReturnValueOnce(

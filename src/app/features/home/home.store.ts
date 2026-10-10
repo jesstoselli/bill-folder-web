@@ -27,7 +27,11 @@ export class HomeStore {
   private lastSuccessfulAt = 0;
   private recentLastSuccessfulAt = 0;
 
+  private readonly noCycleValue = signal(false);
+
   readonly state = this.stateValue.asReadonly();
+  /** The load failed only because no cycle covers the request (`no_cycle`). */
+  readonly noCycle = this.noCycleValue.asReadonly();
   readonly recentDailyExpenses = this.recentValue.asReadonly();
   readonly recentState = this.recentStateValue.asReadonly();
 
@@ -66,6 +70,7 @@ export class HomeStore {
         throw new Error(`Home returned unknown cycle ${home.cycle.id}`);
       }
       this.selectedCycleId = home.cycle.id;
+      this.noCycleValue.set(false);
       this.stateValue.set({ kind: 'content', data: home, refreshing: false });
       this.lastSuccessfulAt = Date.now();
       await this.loadRecent(home, generation);
@@ -82,8 +87,10 @@ export class HomeStore {
         });
         return;
       }
+      const apiError = mapApiError(error);
       this.recentValue.set([]);
-      this.stateValue.set({ kind: 'error', message: mapApiError(error).message });
+      this.noCycleValue.set(apiError.code === 'no_cycle');
+      this.stateValue.set({ kind: 'error', message: apiError.message });
     }
   }
 

@@ -1,5 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { RouterLink } from '@angular/router';
+import { CycleResponse } from '../../core/cycles/cycle.models';
 import { CycleStore } from '../../core/cycles/cycle.store';
 import { PageStateComponent } from '../../shared/components/page-state/page-state.component';
 import { BalanceHeroComponent } from './components/balance-hero/balance-hero.component';
@@ -21,6 +23,7 @@ import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.c
     CycleBarComponent,
     ButtonComponent,
     RouterLink,
+    MatDialogModule,
     PageStateComponent,
     BalanceHeroComponent,
     CategoryBreakdownComponent,
@@ -34,6 +37,7 @@ import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.c
 export class HomePage implements OnInit {
   protected readonly store = inject(HomeStore);
   protected readonly cycles = inject(CycleStore);
+  private readonly dialog = inject(MatDialog);
   protected readonly selectedTab = signal<HomeTab>('upcoming');
   protected readonly content = computed(() => {
     const state = this.store.state();
@@ -111,6 +115,27 @@ export class HomePage implements OnInit {
 
   protected refresh(): void {
     void this.store.refresh();
+  }
+
+  protected async openCreateCycle(): Promise<void> {
+    // Loaded on demand: only an account without a current cycle needs it.
+    const { CycleFormComponent } =
+      await import('../manage-cycles/components/cycle-form/cycle-form.component');
+    this.dialog
+      .open(CycleFormComponent, {
+        data: { mode: 'create' },
+        width: '34rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        maxHeight: 'calc(100dvh - 2rem)',
+        autoFocus: 'first-tabbable',
+        restoreFocus: true,
+        ariaLabelledBy: 'cycle-form-title',
+      })
+      .afterClosed()
+      .subscribe((created: CycleResponse | undefined) => {
+        // The new cycle may not cover today, so ask for it by id.
+        if (created) void this.store.load(created.id);
+      });
   }
 
   private async initialize(): Promise<void> {

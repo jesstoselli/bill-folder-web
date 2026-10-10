@@ -10,13 +10,33 @@
       <app-page-state state="loading" />
     }
     @case ('error') {
-      <app-page-state
-        state="error"
-        title="Não foi possível carregar a Home"
-        [message]="errorMessage()"
-        actionLabel="Tentar novamente"
-        (action)="refresh()"
-      />
+      @if (store.noCycle()) {
+        @if (cycles.cycles().length) {
+          <app-page-state
+            state="empty"
+            title="Nenhum ciclo cobre a data de hoje"
+            message="Crie o ciclo deste período para acompanhar o mês atual na Home."
+            actionLabel="Criar ciclo"
+            (action)="openCreateCycle()"
+          />
+        } @else {
+          <app-page-state
+            state="empty"
+            title="Você ainda não tem um ciclo aberto"
+            message="Crie seu primeiro ciclo para começar a registrar suas finanças. Um ciclo é um intervalo de datas, geralmente mensal, que agrupa despesas, recebimentos e movimentações."
+            actionLabel="Criar primeiro ciclo"
+            (action)="openCreateCycle()"
+          />
+        }
+      } @else {
+        <app-page-state
+          state="error"
+          title="Não foi possível carregar a Home"
+          [message]="errorMessage()"
+          actionLabel="Tentar novamente"
+          (action)="refresh()"
+        />
+      }
     }
     @case ('content') {
       @if (content(); as data) {
