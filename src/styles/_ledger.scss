@@ -34,10 +34,16 @@ $divider: color-mix(in srgb, var(--bf-outline) 72%, transparent);
     text-align: left;
   }
 
-  tbody tr:not(.bf-ledger__group) td {
+  // Row headers (`<th scope="row">`) are cells too: same divider and padding,
+  // and left-aligned instead of the browser's centered default.
+  tbody tr:not(.bf-ledger__group) > :is(td, th) {
     border-top: 1px solid $divider;
     padding: 0.9rem 1rem;
     vertical-align: middle;
+  }
+
+  tbody tr:not(.bf-ledger__group) > th {
+    text-align: left;
   }
 
   thead th.bf-ledger__amount,
