@@ -6,13 +6,6 @@
 
 // Base look, row cards and action spacing come from the global .bf-ledger.
 .installment-table {
-  // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: #{bp.$md + 1px}) {
-    table {
-      min-width: 52rem;
-    }
-  }
-
   td:first-child {
     strong,
     span {

@@ -26,13 +26,6 @@
 }
 
 .daily-expense-ledger {
-  // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: #{bp.$md + 1px}) {
-    table {
-      min-width: 50rem;
-    }
-  }
-
   td:nth-child(2) strong,
   td:nth-child(2) span {
     display: block;

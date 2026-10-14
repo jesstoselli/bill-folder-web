@@ -24,6 +24,14 @@ $divider: color-mix(in srgb, var(--bf-outline) 72%, transparent);
   table {
     border-collapse: collapse;
     width: 100%;
+
+    // Above the phone breakpoint the columns get room before the ledger
+    // scrolls sideways. One value for every ledger, small enough that a
+    // tablet in portrait (about 680px beside the rail) still shows the row
+    // actions without scrolling.
+    @media (min-width: #{$mobile + 1px}) {
+      min-width: 40rem;
+    }
   }
 
   thead th {

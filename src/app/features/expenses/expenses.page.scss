@@ -6,13 +6,6 @@
 }
 
 .expense-ledger {
-  // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: #{bp.$md + 1px}) {
-    table {
-      min-width: 46rem;
-    }
-  }
-
   td:first-child {
     strong,
     span {

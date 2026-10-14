@@ -24,13 +24,6 @@
   }
 }
 .adjustments-sheet {
-  // Desktop only: on phones the global ledger turns rows into cards.
-  @media (min-width: #{bp.$md + 1px}) {
-    table {
-      min-width: 48rem;
-    }
-  }
-
   td:first-child {
     color: var(--bf-muted);
     white-space: nowrap;

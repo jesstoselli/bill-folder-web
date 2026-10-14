@@ -6,12 +6,6 @@
 }
 
 .savings-ledger {
-  @media (min-width: #{bp.$md + 1px}) {
-    table {
-      min-width: 52rem;
-    }
-  }
-
   @media (max-width: bp.$md) {
     tbody tr:not(.bf-ledger__group):not(.bf-ledger__empty) th {
       border: 0;
