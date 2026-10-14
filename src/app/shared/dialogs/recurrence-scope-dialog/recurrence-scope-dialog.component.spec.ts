@@ -31,4 +31,28 @@ describe('RecurrenceScopeDialogComponent', () => {
     choices[1].click();
     expect(close).toHaveBeenCalledWith('thisAndFollowing');
   });
+
+  it('cancels without a scope, so callers do not go on to the next step', async () => {
+    const close = vi.fn();
+    await TestBed.configureTestingModule({
+      imports: [RecurrenceScopeDialogComponent],
+      providers: [
+        { provide: MatDialogRef, useValue: { close } },
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: { action: 'reprice', expenseLabel: 'Diarista' },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(RecurrenceScopeDialogComponent);
+    fixture.detectChanges();
+    const cancel = [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button'),
+    ].find((button) => button.textContent?.trim() === 'Cancelar');
+    cancel?.click();
+
+    expect(close).toHaveBeenCalledOnce();
+    expect(close.mock.calls[0][0]).toBeUndefined();
+  });
 });

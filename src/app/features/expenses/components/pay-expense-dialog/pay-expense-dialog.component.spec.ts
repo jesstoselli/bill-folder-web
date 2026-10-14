@@ -90,7 +90,7 @@ describe('PayExpenseDialogComponent', () => {
     expect(findButton(fixture.nativeElement, 'Cancelar').disabled).toBe(false);
     expect(dialogRef.close).not.toHaveBeenCalled();
     findButton(fixture.nativeElement, 'Cancelar').click();
-    expect(dialogRef.close).toHaveBeenCalledWith('');
+    expect(dialogRef.close).toHaveBeenCalledWith(undefined);
   });
 });
 

@@ -26,3 +26,24 @@ test('pays one occurrence of a weekly expense', async ({ api, context, page }) =
     query: 'from=2026-10-01&to=2026-10-31',
   });
 });
+
+test('cancelling the recurrence scope does not open the reprice dialog', async ({
+  api,
+  context,
+  page,
+}) => {
+  await api.startAuthenticated(context);
+  await page.goto('/despesas');
+
+  const row = page.locator('[data-expense-id="expense-weekly"]');
+  await row.getByRole('button', { name: 'Ações para Terapia semanal' }).click();
+  await page.getByRole('menuitem', { name: 'Reajustar valor por sessão' }).click();
+
+  const scope = page.getByRole('dialog', { name: 'Onde aplicar o novo valor?' });
+  await expect(scope).toBeVisible();
+  await scope.getByRole('button', { name: 'Cancelar' }).click();
+
+  await expect(scope).toBeHidden();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Reajustar valor por sessão' })).toHaveCount(0);
+});

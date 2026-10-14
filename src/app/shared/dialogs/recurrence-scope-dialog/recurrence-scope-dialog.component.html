@@ -34,6 +34,7 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button type="button" appButton variant="text" mat-dialog-close>Cancelar</button>
+    <!-- A bare mat-dialog-close closes with '', which callers would read as a choice. -->
+    <button type="button" appButton variant="text" [mat-dialog-close]="undefined">Cancelar</button>
   </mat-dialog-actions>
 </section>

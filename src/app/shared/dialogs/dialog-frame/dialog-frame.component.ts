@@ -9,6 +9,8 @@ import { InlineAlertComponent } from '../../components/inline-alert/inline-alert
  * a formGroup declared in their own template); the frame owns the header,
  * the server error, the scrollable body and the Cancel/Submit actions.
  * A subtitle can be projected with the `dialogSubtitle` attribute.
+ * Close and Cancel pass `undefined` explicitly: a bare `mat-dialog-close`
+ * closes with '', which callers checking `!== undefined` read as saved.
  */
 @Component({
   selector: 'app-dialog-frame',
@@ -23,7 +25,7 @@ import { InlineAlertComponent } from '../../components/inline-alert/inline-alert
         type="button"
         appButton
         variant="text"
-        mat-dialog-close
+        [mat-dialog-close]="undefined"
         [aria-label]="closeLabel()"
         [disabled]="saving()"
       >
@@ -37,7 +39,13 @@ import { InlineAlertComponent } from '../../components/inline-alert/inline-alert
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button type="button" appButton variant="text" mat-dialog-close [disabled]="saving()">
+      <button
+        type="button"
+        appButton
+        variant="text"
+        [mat-dialog-close]="undefined"
+        [disabled]="saving()"
+      >
         Cancelar
       </button>
       <button type="submit" appButton variant="primary" [disabled]="saving() || submitDisabled()">
