@@ -44,10 +44,11 @@
           <input
             id="signup-password"
             matInput
-            type="password"
+            [type]="showPassword() ? 'text' : 'password'"
             formControlName="password"
             autocomplete="new-password"
           />
+          <app-password-toggle matIconSuffix [(visible)]="showPassword" />
           <mat-hint>De 8 a 128 caracteres.</mat-hint>
           @if (form.controls.password.touched && form.controls.password.invalid) {
             <mat-error role="alert">Use entre 8 e 128 caracteres.</mat-error>

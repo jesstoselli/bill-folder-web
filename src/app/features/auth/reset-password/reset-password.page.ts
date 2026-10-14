@@ -8,10 +8,18 @@ import { finalize } from 'rxjs';
 import { AuthApi } from '../../../core/auth/auth.api';
 import { authErrorMessage } from '../auth-form-errors';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { PasswordToggleComponent } from '../../../shared/components/password-toggle/password-toggle.component';
 
 @Component({
   selector: 'app-reset-password-page',
-  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, MatFormFieldModule, MatInputModule],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ButtonComponent,
+    MatFormFieldModule,
+    MatInputModule,
+    PasswordToggleComponent,
+  ],
   templateUrl: './reset-password.page.html',
   styleUrl: './reset-password.page.scss',
 })
@@ -27,6 +35,7 @@ export class ResetPasswordPage {
     validators: [Validators.required, Validators.email, Validators.maxLength(255)],
   });
   readonly submitting = signal(false);
+  readonly showPassword = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly form = new FormGroup({
     code: new FormControl('', {

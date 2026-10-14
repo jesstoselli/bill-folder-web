@@ -8,7 +8,13 @@ test('logs in, keeps the access token out of browser storage, and restores from 
 }) => {
   await page.goto('/login');
   await page.getByLabel('Email').fill('browser-user@example.test');
-  await page.getByLabel('Senha').fill('local-only-password');
+  const password = page.getByLabel('Senha', { exact: true });
+  await password.fill('local-only-password');
+  await expect(password).toHaveAttribute('type', 'password');
+  await page.getByRole('button', { name: 'Mostrar senha' }).click();
+  await expect(password).toHaveAttribute('type', 'text');
+  await page.getByRole('button', { name: 'Ocultar senha' }).click();
+  await expect(password).toHaveAttribute('type', 'password');
   const loginResponsePromise = page.waitForResponse(
     (response) => response.url() === 'http://127.0.0.1:4301/v1/auth/web/login',
   );

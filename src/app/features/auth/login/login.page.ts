@@ -9,10 +9,18 @@ import { safeInternalReturnUrl } from '../../../core/auth/auth.guard';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { authErrorMessage } from '../auth-form-errors';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
+import { PasswordToggleComponent } from '../../../shared/components/password-toggle/password-toggle.component';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, MatFormFieldModule, MatInputModule],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ButtonComponent,
+    MatFormFieldModule,
+    MatInputModule,
+    PasswordToggleComponent,
+  ],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })
@@ -24,6 +32,7 @@ export class LoginPage {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly submitting = signal(false);
+  readonly showPassword = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly form = new FormGroup({
     email: new FormControl('', {

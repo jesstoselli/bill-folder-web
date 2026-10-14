@@ -42,10 +42,11 @@
           <input
             id="login-password"
             matInput
-            type="password"
+            [type]="showPassword() ? 'text' : 'password'"
             formControlName="password"
             autocomplete="current-password"
           />
+          <app-password-toggle matIconSuffix [(visible)]="showPassword" />
           @if (form.controls.password.touched && form.controls.password.invalid) {
             <mat-error role="alert">Informe sua senha.</mat-error>
           }
