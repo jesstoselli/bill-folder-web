@@ -8,6 +8,7 @@ import { ExpenseResponse } from '../../expenses.models';
 import { ExpenseFormComponent } from './expense-form.component';
 import { toCreateExpenseRequest, toUpdateExpenseRequest } from './expense-form.models';
 import { ExpensesStore } from '../../expenses.store';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 
 describe('expense form mapping', () => {
   const value = {
@@ -190,3 +191,24 @@ function expenseResponse(): ExpenseResponse {
     updatedAt: '2026-10-01T10:00:00Z',
   };
 }
+
+describe('ExpenseFormComponent defaults', () => {
+  it('starts a new expense due today', async () => {
+    const state = signal({ kind: 'content' as const, data: [], refreshing: false });
+    await TestBed.configureTestingModule({
+      imports: [ExpenseFormComponent],
+      providers: [
+        { provide: MAT_DIALOG_DATA, useValue: { mode: 'create' } },
+        { provide: MatDialogRef, useValue: { close: vi.fn(), disableClose: false } },
+        { provide: ReferenceDataApi, useValue: { categories: () => of([]) } },
+        { provide: CheckingAccountsApi, useValue: { list: () => of([]) } },
+        { provide: ExpensesStore, useValue: { state: state.asReadonly() } },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(ExpenseFormComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.form.controls.dueDate.value).toBe(todayCivilDate());
+  });
+});

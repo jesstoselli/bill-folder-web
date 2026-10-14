@@ -19,6 +19,7 @@ import {
 import { nonBlank, validCivilDate } from '../../../../shared/forms/validators';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 
 @Component({
   selector: 'app-daily-expense-form',
@@ -47,7 +48,7 @@ export class DailyExpenseFormComponent implements OnInit {
   readonly saving = this.writeLock.saving;
   readonly serverError = this.writeLock.error;
   readonly form = this.formBuilder.nonNullable.group({
-    date: [this.initialExpense()?.date ?? '', [Validators.required, validCivilDate]],
+    date: [this.initialExpense()?.date ?? todayCivilDate(), [Validators.required, validCivilDate]],
     label: [
       this.initialExpense()?.label ?? '',
       [Validators.required, nonBlank, Validators.maxLength(200)],

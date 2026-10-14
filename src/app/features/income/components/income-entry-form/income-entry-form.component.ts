@@ -13,6 +13,7 @@ import { IncomeStore } from '../../income.store';
 import { normalizeOptional, validCivilDate } from '../../../../shared/forms/validators';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 
 export type IncomeEntryFormDialogData =
   { readonly mode: 'create' } | { readonly mode: 'edit'; readonly entry: IncomeEntryResponse };
@@ -48,10 +49,10 @@ export class IncomeEntryFormComponent implements OnInit {
       Validators.required,
       Validators.min(0.01),
     ]),
-    expectedDate: this.formBuilder.nonNullable.control(this.initialEntry()?.expectedDate ?? '', [
-      Validators.required,
-      validCivilDate,
-    ]),
+    expectedDate: this.formBuilder.nonNullable.control(
+      this.initialEntry()?.expectedDate ?? todayCivilDate(),
+      [Validators.required, validCivilDate],
+    ),
     notes: this.formBuilder.nonNullable.control(
       this.initialEntry()?.notes ?? '',
       Validators.maxLength(500),

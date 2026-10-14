@@ -10,6 +10,7 @@ import { AdjustmentsStore } from '../../adjustments.store';
 import { nonBlank, validCivilDate } from '../../../../shared/forms/validators';
 import { DialogFrameComponent } from '../../../../shared/dialogs/dialog-frame/dialog-frame.component';
 import { MoneyInputDirective } from '../../../../shared/forms/money-input.directive';
+import { todayCivilDate } from '../../../../shared/formatters/civil-date';
 
 export type AdjustmentFormDialogData =
   | { readonly mode: 'create' }
@@ -46,7 +47,7 @@ export class AdjustmentFormComponent {
       [Validators.required, nonBlank, Validators.maxLength(200)],
     ],
     amount: [this.initial()?.amount ?? 0, [Validators.required, Validators.min(0)]],
-    date: [this.initial()?.date ?? '', [Validators.required, validCivilDate]],
+    date: [this.initial()?.date ?? todayCivilDate(), [Validators.required, validCivilDate]],
   });
 
   submit(): Promise<void> {
