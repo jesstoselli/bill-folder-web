@@ -128,6 +128,26 @@ catch-all `public/_redirects` rule alongside it: Workers rejects that combinatio
 from the application origin, permits the inline component styles required by Angular at runtime, and
 restricts connections to the application origin plus `https://api.billfolder.app`.
 
+## macOS app (Tauri)
+
+`src-tauri/` holds a Tauri v2 shell: a native macOS window around the published web app. Release
+builds open `https://preview.billfolder.app` (the live deployment), so login, refresh cookies and updates behave exactly as in
+the browser and every web deploy updates the app. Debug builds open the local `ng serve`
+(`http://localhost:4200`, API on `localhost:5077`). Navigation outside the app's origin opens in the
+default browser, and the remote page gets no Tauri capabilities (`"capabilities": []`).
+
+Requires Rust (`rustup`) and the Xcode command line tools.
+
+```bash
+npm run desktop:dev
+npm run desktop:build
+```
+
+`desktop:build` writes `BillFolder.app` and a `.dmg` under
+`src-tauri/target/release/bundle/`. The build is unsigned: on first launch, allow it in System
+Settings > Privacy & Security. `npm run generate:desktop-icon` regenerates the app icons from
+`public/brand/billfolder-symbol.svg`.
+
 ## Authenticated preview contract
 
 The only authenticated preview origin is `https://preview.billfolder.app`, and it calls
