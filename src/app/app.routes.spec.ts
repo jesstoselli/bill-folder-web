@@ -28,6 +28,7 @@ describe('application routes', () => {
         ['gerenciar/contas', 'Bancos'],
         ['gerenciar/cartoes', 'Cartões'],
         ['gerenciar/poupancas', 'Poupanças'],
+        ['conta', 'Sua conta'],
       ]),
     );
     expect(shellRoute?.children?.find((route) => route.path === '')?.redirectTo).toBe('home');

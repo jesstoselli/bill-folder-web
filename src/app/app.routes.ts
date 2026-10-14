@@ -113,6 +113,12 @@ export const routes: Routes = [
           ),
         data: { title: 'Poupanças' },
       },
+      {
+        path: 'conta',
+        loadComponent: () =>
+          import('./features/account/account.page').then(({ AccountPage }) => AccountPage),
+        data: { title: 'Sua conta' },
+      },
       { path: '', pathMatch: 'full', redirectTo: 'home' },
     ],
   },

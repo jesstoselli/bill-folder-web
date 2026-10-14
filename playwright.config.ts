@@ -12,6 +12,8 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4200',
     ...devices['Desktop Chrome'],
     serviceWorkers: 'block',
+    // The app follows the system theme; run against the default (dark) look.
+    colorScheme: 'dark',
     trace: 'off',
     video: 'off',
     screenshot: 'only-on-failure',

@@ -105,25 +105,34 @@ app-icon {
   padding-top: 0.75rem;
 }
 
-.sidebar__logout {
+// The account link reuses .sidebar__link; the avatar stands in for its icon.
+.sidebar__avatar {
   align-items: center;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--bf-radius-md);
-  color: var(--bf-muted);
-  cursor: pointer;
-  display: flex;
-  gap: 0.875rem;
-  min-height: 2.875rem;
-  padding: 0.25rem 0.75rem;
-  width: 100%;
+  background: var(--bf-surface-high);
+  border: 1.5px solid var(--bf-primary);
+  border-radius: 50%;
+  color: var(--bf-primary);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-weight: 500;
+  height: 1.9rem;
+  justify-content: center;
+  margin-inline: -0.275rem;
+  width: 1.9rem;
+}
 
-  &:hover {
-    background: color-mix(in srgb, var(--bf-danger) 10%, transparent);
-    color: var(--bf-text);
+.sidebar__account-text {
+  display: grid;
+  min-width: 0;
+
+  .sidebar__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  &:focus-visible {
-    @include focus.ring(2px);
+  small {
+    color: var(--bf-muted);
+    font-size: var(--bf-text-xs);
   }
 }

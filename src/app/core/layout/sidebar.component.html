@@ -7,7 +7,7 @@
       aria-hidden="true"
     />
   } @else {
-    <img class="sidebar__brand-logo" src="/brand/billfolder-wordmark.svg" alt="BillFolder" />
+    <img class="sidebar__brand-logo" [src]="wordmark()" alt="BillFolder" />
   }
 </div>
 
@@ -51,16 +51,23 @@
 </nav>
 
 <div class="sidebar__footer">
-  <button
-    class="sidebar__logout"
-    type="button"
-    aria-label="Sair"
-    matTooltip="Sair"
+  <a
+    class="sidebar__link sidebar__account"
+    routerLink="/conta"
+    [class.sidebar__link--active]="isActive('/conta')"
+    [attr.aria-current]="isActive('/conta') ? 'page' : null"
+    aria-label="Sua conta"
+    matTooltip="Sua conta"
     [matTooltipDisabled]="mode() !== 'rail'"
     matTooltipPosition="right"
-    (click)="logoutRequested.emit()"
+    (click)="navigationRequested.emit()"
   >
-    <app-icon name="logout" />
-    <span [class.u-visually-hidden]="mode() === 'rail'">Sair</span>
-  </button>
+    <span class="sidebar__avatar" aria-hidden="true">{{ initial() }}</span>
+    <span class="sidebar__account-text" [class.u-visually-hidden]="mode() === 'rail'">
+      <span class="sidebar__label">{{ user()?.displayName || 'Sua conta' }}</span>
+      @if (user()) {
+        <small>Sua conta</small>
+      }
+    </span>
+  </a>
 </div>

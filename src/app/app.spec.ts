@@ -20,6 +20,7 @@ describe('App', () => {
           provide: AuthSessionService,
           useValue: {
             isAuthenticated: () => true,
+            user: () => ({ id: 'user-1', email: 'jess@example.com', displayName: 'Jess' }),
             logout: () => of(void 0),
           },
         },

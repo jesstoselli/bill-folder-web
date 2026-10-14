@@ -1,3 +1,28 @@
+// Colour tokens. Dark is the default; light uses the Android app's light
+// scheme. The theme follows the user's choice (ThemeService sets
+// data-theme="light" | "dark" on <html>) or, with "Automático", the system.
+@mixin light-colors {
+  color-scheme: light;
+  --bf-bg: #f8faf1;
+  --bf-surface: #ecefe5;
+  --bf-surface-high: #e6e9df;
+  --bf-text: #181d14;
+  --bf-muted: #42493d;
+  --bf-outline: #c2c9bb;
+  --bf-primary: #4f7b3d;
+  --bf-danger: #ba1a1a;
+}
+
+:root[data-theme='light'] {
+  @include light-colors;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    @include light-colors;
+  }
+}
+
 :root {
   color-scheme: dark;
   --bf-brand: #86bc65;

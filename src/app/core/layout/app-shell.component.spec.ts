@@ -75,7 +75,7 @@ describe('AppShellComponent', () => {
     expect(menuButton?.getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('closes the drawer, clears the session and reloads into login once remote logout settles', async () => {
+  it('links the mobile header avatar to Sua conta with the user initial', async () => {
     const session = TestBed.inject(AuthSessionService);
     const backend = TestBed.inject(HttpTestingController);
     const login = firstValueFrom(
@@ -87,32 +87,17 @@ describe('AppShellComponent', () => {
       user: { id: 'user-1', email: 'jess@example.com', displayName: 'Jess' },
     });
     await login;
-
-    const router = TestBed.inject(Router);
-    await router.navigateByUrl('/home');
+    await TestBed.inject(Router).navigateByUrl('/home');
 
     const fixture = TestBed.createComponent(AppShellComponent);
-    const store = TestBed.inject(ShellStore);
-    store.setMode('drawer');
-    store.openDrawer();
+    TestBed.inject(ShellStore).setMode('drawer');
     fixture.detectChanges();
 
-    (fixture.nativeElement as HTMLElement)
-      .querySelector<HTMLButtonElement>('button[aria-label="Sair"]')
-      ?.click();
-    const logoutRequest = backend.expectOne('/v1/auth/web/logout');
-    await fixture.whenStable();
-
-    expect(router.url).toBe('/login');
-    expect(session.isAuthenticated()).toBe(false);
-    expect(redirect.toLogin).not.toHaveBeenCalled();
-
-    logoutRequest.flush({ message: 'offline' }, { status: 503, statusText: 'Unavailable' });
-    await fixture.whenStable();
-
-    expect(session.isAuthenticated()).toBe(false);
-    expect(store.drawerOpen()).toBe(false);
-    expect(router.url).toBe('/login');
-    expect(redirect.toLogin).toHaveBeenCalledOnce();
+    const avatar = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+      '.shell__account',
+    );
+    expect(avatar?.getAttribute('href')).toBe('/conta');
+    expect(avatar?.getAttribute('aria-label')).toBe('Sua conta');
+    expect(avatar?.textContent?.trim()).toBe('J');
   });
 });

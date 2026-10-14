@@ -11,6 +11,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { ThemeService } from './core/theme/theme.service';
 import { AuthSessionService } from './core/auth/auth-session.service';
 import { APP_ENVIRONMENT } from './core/config/app-environment';
 import { AppUpdateService } from './core/pwa/app-update.service';
@@ -21,6 +22,8 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
+    // First, so the chosen theme applies before the session restore waits on the API.
+    provideAppInitializer(() => void inject(ThemeService)),
     provideAppInitializer(() => firstValueFrom(inject(AuthSessionService).restore())),
     provideAppInitializer(() => inject(AppUpdateService).start()),
     { provide: APP_ENVIRONMENT, useValue: environment },

@@ -88,12 +88,25 @@
   justify-self: center;
 }
 
-.shell__mobile-mark {
-  background: var(--bf-brand);
+// Opens "Sua conta", like the avatar at the top of the Android Home.
+.shell__account {
+  align-items: center;
+  background: var(--bf-surface-high);
+  border: 1.5px solid var(--bf-primary);
   border-radius: 50%;
-  height: 0.5rem;
+  color: var(--bf-primary);
+  display: inline-flex;
+  font-weight: 500;
+  height: 2.5rem;
+  justify-content: center;
   justify-self: end;
-  width: 0.5rem;
+  text-decoration: none;
+  width: 2.5rem;
+
+  &:focus-visible {
+    box-shadow: var(--bf-focus-ring);
+    outline: 1px solid var(--bf-primary);
+  }
 }
 
 @media (max-width: bp.$shell-drawer) {

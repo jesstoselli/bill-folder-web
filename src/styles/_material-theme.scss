@@ -6,7 +6,9 @@
       color: (
         primary: mat.$green-palette,
         tertiary: mat.$spring-green-palette,
-        theme-type: dark,
+        // Follows the CSS color-scheme the tokens set, so Material's own
+        // colours switch with the app theme.
+        theme-type: color-scheme,
       ),
       typography: (
         plain-family: (

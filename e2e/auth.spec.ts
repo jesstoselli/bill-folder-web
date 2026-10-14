@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures/api.fixture';
 
 test('logs in, keeps the access token out of browser storage, and restores from the cookie', async ({
@@ -117,7 +118,7 @@ test('a delayed refresh cannot restore the session after logout', async ({
   const logoutResponsePromise = page.waitForResponse(
     (response) => response.url() === 'http://127.0.0.1:4301/v1/auth/web/logout',
   );
-  await page.getByRole('button', { name: 'Sair' }).click();
+  await signOut(page);
   expect(api.events).not.toContain('logout:requested');
 
   refresh.release();
@@ -192,7 +193,7 @@ test('two tabs serialize refresh and logout while logout clears both immediately
   await secondPage.getByRole('button', { name: 'Atualizar' }).click();
   await refresh.requested;
 
-  await page.getByRole('button', { name: 'Sair' }).click();
+  await signOut(page);
   await expect(secondPage).toHaveURL(/\/login$/);
   expect(api.events).not.toContain('logout:requested');
 
@@ -201,3 +202,13 @@ test('two tabs serialize refresh and logout while logout clears both immediately
   await expect.poll(() => api.events).toContain('logout:accepted');
   expect(api.maxConcurrentAuthMutations).toBe(1);
 });
+
+/** Signs out the way a user does: "Sua conta", then "Sair da conta" and confirm. */
+async function signOut(page: Page): Promise<void> {
+  await page.getByRole('link', { name: 'Sua conta' }).click();
+  await page.getByRole('button', { name: 'Sair da conta' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Sair', exact: true }).click();
+  // Logout starts when the confirmation finishes closing; the session is gone
+  // once the shell sends the user to login.
+  await expect(page).toHaveURL(/\/login$/);
+}

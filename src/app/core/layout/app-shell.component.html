@@ -16,8 +16,8 @@
     <app-sidebar
       [activeRoute]="activeRoute()"
       [mode]="store.mode()"
+      [user]="session.user()"
       (navigationRequested)="store.navigationCompleted()"
-      (logoutRequested)="logout()"
     />
   </mat-drawer>
 
@@ -37,7 +37,7 @@
           </svg>
         </button>
         <span class="shell__mobile-brand">BillFolder</span>
-        <span class="shell__mobile-mark" aria-hidden="true"></span>
+        <a class="shell__account" routerLink="/conta" aria-label="Sua conta">{{ initial() }}</a>
       </header>
     }
 

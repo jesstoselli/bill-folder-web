@@ -1,0 +1,54 @@
+<section class="account-page">
+  <app-page-header
+    heading="Sua conta"
+    subtitle="Seus dados, a aparência deste aparelho e o acesso."
+  />
+
+  @if (user(); as user) {
+    <div class="account-page__profile">
+      <span class="account-page__avatar" aria-hidden="true">{{ initial() }}</span>
+      <div>
+        <strong>{{ user.displayName }}</strong>
+        <span>{{ user.email }}</span>
+      </div>
+    </div>
+  }
+
+  <section class="account-page__section" aria-labelledby="account-appearance-title">
+    <h2 id="account-appearance-title">Aparência</h2>
+    <mat-button-toggle-group
+      class="account-page__themes"
+      aria-labelledby="account-appearance-title"
+      [value]="theme.mode()"
+      (change)="setTheme($event.value)"
+    >
+      @for (option of themeOptions; track option.value) {
+        <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+    <p class="account-page__hint">O automático segue o tema do aparelho.</p>
+  </section>
+
+  <section class="account-page__section" aria-labelledby="account-notifications-title">
+    <h2 id="account-notifications-title">Notificações</h2>
+    <div class="account-page__soon">
+      <app-icon name="notifications" />
+      <div>
+        <strong>Avisos de vencimento</strong>
+        <p>Em breve. Quando os avisos estiverem prontos, você vai poder ativá-los aqui.</p>
+      </div>
+    </div>
+  </section>
+
+  <button
+    type="button"
+    appButton
+    variant="secondary"
+    tone="danger"
+    class="account-page__logout"
+    (click)="confirmLogout()"
+  >
+    <app-icon name="logout" />
+    Sair da conta
+  </button>
+</section>
