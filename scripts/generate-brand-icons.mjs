@@ -12,6 +12,12 @@ const faviconSizes = [16, 32, 48];
 await mkdir(iconDirectory, { recursive: true });
 
 const svg = await readFile(source, 'utf8');
+// The symbol's own circle shares the background colour, so on a full-bleed
+// square only the glyph shows, centred inside the safe zone of both formats.
+const fullBleedSvg = svg.replace(
+  /(<svg[^>]*>)/,
+  '$1<rect width="200" height="200" fill="#1E1E1E" />',
+);
 const browser = await chromium.launch({ headless: true });
 
 try {
@@ -20,13 +26,24 @@ try {
     await writeFile(resolve(iconDirectory, `icon-${size}x${size}.png`), png);
   }
 
-  const faviconImages = await Promise.all(faviconSizes.map(renderPng));
+  // iOS fills transparency with black and Android masks "maskable" icons to
+  // any shape, so both need the symbol on a full-bleed background.
+  await writeFile(
+    resolve(iconDirectory, 'apple-touch-icon.png'),
+    await renderPng(180, fullBleedSvg),
+  );
+  await writeFile(
+    resolve(iconDirectory, 'icon-maskable-512x512.png'),
+    await renderPng(512, fullBleedSvg),
+  );
+
+  const faviconImages = await Promise.all(faviconSizes.map((size) => renderPng(size)));
   await writeFile(resolve(root, 'public/favicon.ico'), createIco(faviconImages, faviconSizes));
 } finally {
   await browser.close();
 }
 
-async function renderPng(size) {
+async function renderPng(size, markup = svg) {
   const page = await browser.newPage({ viewport: { width: size, height: size } });
 
   try {
@@ -35,7 +52,7 @@ async function renderPng(size) {
         html, body { background: transparent; height: 100%; margin: 0; width: 100%; }
         svg { display: block; height: 100%; width: 100%; }
       </style>
-      ${svg}
+      ${markup}
     `);
     return await page.screenshot({ omitBackground: true, type: 'png' });
   } finally {

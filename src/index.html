@@ -4,11 +4,16 @@
     <meta charset="utf-8" />
     <title>BillFolder</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover lets the installed app use the whole screen; the
+         shell pads itself with env(safe-area-inset-*) around the status bar,
+         rounded corners and home indicator. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-title" content="BillFolder" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#0a0d0a" />
     <link rel="icon" type="image/svg+xml" href="/brand/billfolder-symbol.svg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="manifest.webmanifest" />
   </head>
   <body>

@@ -33,7 +33,9 @@
   max-width: var(--bf-content-max);
   min-height: 100dvh;
   outline: none;
-  padding: clamp(1.25rem, 3vw, 3rem);
+  padding: calc(clamp(1.25rem, 3vw, 3rem) + env(safe-area-inset-top))
+    calc(clamp(1.25rem, 3vw, 3rem) + env(safe-area-inset-right))
+    calc(clamp(1.25rem, 3vw, 3rem) + env(safe-area-inset-bottom)) clamp(1.25rem, 3vw, 3rem);
 }
 
 .shell__mobile-header {
@@ -43,8 +45,10 @@
   border-bottom: 1px solid var(--bf-outline);
   display: grid;
   grid-template-columns: 2.75rem 1fr 2.75rem;
-  min-height: 4rem;
-  padding: 0 0.75rem;
+  // The header sits under the status bar of an installed iOS app.
+  min-height: calc(4rem + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) calc(0.75rem + env(safe-area-inset-right)) 0
+    calc(0.75rem + env(safe-area-inset-left));
   position: sticky;
   top: 0;
   z-index: 10;
@@ -99,7 +103,8 @@
   }
 
   .shell__content {
-    min-height: calc(100dvh - 4rem);
-    padding: 1.25rem 1rem 2rem;
+    min-height: calc(100dvh - 4rem - env(safe-area-inset-top));
+    padding: 1.25rem calc(1rem + env(safe-area-inset-right))
+      calc(2rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
   }
 }

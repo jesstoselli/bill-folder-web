@@ -45,6 +45,13 @@ a {
   height: 100%;
 }
 
+// Side sheets span the full height, so in the installed iOS app their header
+// and actions must clear the status bar and home indicator (insets are 0
+// everywhere else).
+.bf-side-sheet app-dialog-frame {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0;
+}
+
 // Material only spaces its own buttons inside dialog actions; appButton needs
 // the gap set on the container.
 .mat-mdc-dialog-actions {

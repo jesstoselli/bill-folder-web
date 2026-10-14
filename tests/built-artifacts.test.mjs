@@ -16,13 +16,18 @@ test('production build contains an installable Angular PWA shell', async () => {
   const index = await read('index.html');
   assert.match(index, /rel="manifest" href="manifest\.webmanifest"/);
   assert.match(index, /rel="icon" type="image\/svg\+xml" href="\/brand\/billfolder-symbol\.svg"/);
-  assert.match(index, /rel="apple-touch-icon" href="\/icons\/icon-192x192\.png"/);
+  assert.match(index, /rel="apple-touch-icon" href="\/icons\/apple-touch-icon\.png"/);
+  // The installed iOS app spans the whole screen; the shell pads itself with
+  // env(safe-area-inset-*), which only works with viewport-fit=cover.
+  assert.match(index, /name="viewport" content="[^"]*viewport-fit=cover/);
+  await access(new URL('icons/apple-touch-icon.png', output));
 
   const manifest = JSON.parse(await read('manifest.webmanifest'));
   assert.equal(manifest.name, 'BillFolder');
   assert.equal(manifest.short_name, 'BillFolder');
   assert.equal(manifest.display, 'standalone');
   assert.ok(manifest.icons.length >= 2);
+  assert.ok(manifest.icons.some((icon) => icon.purpose === 'maskable'));
   await Promise.all([
     access(new URL('brand/billfolder-symbol.svg', output)),
     access(new URL('favicon.ico', output)),
