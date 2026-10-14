@@ -52,6 +52,16 @@ a {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0;
 }
 
+// Dialogs carry the brand green on their edge; side sheets only on the edge
+// that faces the page.
+.mat-mdc-dialog-surface {
+  border: 1px solid var(--bf-brand);
+}
+
+.bf-side-sheet .mat-mdc-dialog-surface {
+  border-width: 0 0 0 1px;
+}
+
 // Material only spaces its own buttons inside dialog actions; appButton needs
 // the gap set on the container.
 .mat-mdc-dialog-actions {

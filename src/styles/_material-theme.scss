@@ -43,4 +43,12 @@
       error: var(--bf-danger),
     )
   );
+
+  // Material drops the content's bottom padding when actions follow, which
+  // glues short dialog text to the actions divider.
+  @include mat.dialog-overrides(
+    (
+      with-actions-content-padding: 20px 24px,
+    )
+  );
 }
