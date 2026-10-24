@@ -57,6 +57,20 @@ describe('Home projections', () => {
     });
   });
 
+  it('leaves out a statement whose refunds cover its purchases', () => {
+    const result = collectHomeRows(
+      [],
+      [],
+      [
+        statement({ id: 'credit', status: 'closed', totalAmount: -50 }),
+        statement({ id: 'zero', status: 'closed', totalAmount: 0 }),
+        statement({ id: 'due', status: 'closed', totalAmount: 120 }),
+      ],
+    );
+
+    expect(result.upcoming.map((row) => row.id)).toEqual(['due']);
+  });
+
   it('orders recent daily expenses descending by civil date with deterministic ties', () => {
     const rows = projectRecent([
       dailyExpense({ id: 'older', date: '2026-10-04' }),

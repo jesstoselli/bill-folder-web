@@ -19,6 +19,22 @@
   font-size: var(--bf-text-xs);
 }
 
+.installment-table__refund {
+  background: color-mix(in srgb, var(--bf-primary) 16%, transparent);
+  border-radius: 999px;
+  color: var(--bf-primary);
+  font-size: var(--bf-text-xs);
+  justify-self: start;
+  margin-top: 0.25rem;
+  padding: 0.05rem 0.55rem;
+  width: fit-content;
+}
+
+// A refund is a credit: shown in green, like money coming in.
+.installment-table__amount--credit {
+  color: var(--bf-primary);
+}
+
 .installment-table__empty td {
   text-align: center;
 }

@@ -13,8 +13,9 @@ export function compareStatements(
   return left.dueDate.localeCompare(right.dueDate) || left.id.localeCompare(right.id);
 }
 
-export function canPayStatement(status: CardStatementStatus): boolean {
-  return status === 'closed';
+/** Closed, with something left to pay after refunds. */
+export function canPayStatement(status: CardStatementStatus, totalAmount: number): boolean {
+  return status === 'closed' && totalAmount > 0;
 }
 
 export function initialStatementId(

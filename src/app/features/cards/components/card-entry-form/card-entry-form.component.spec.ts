@@ -28,6 +28,7 @@ describe('CardEntryFormComponent', () => {
       categoryId: 'category-1',
       notes: '',
       repeatMonthly: false,
+      isRefund: false,
     });
 
     const first = component.submit();
@@ -71,6 +72,7 @@ describe('CardEntryFormComponent', () => {
       categoryId: 'category-1',
       notes: '',
       repeatMonthly: true,
+      isRefund: false,
     });
     fixture.detectChanges();
 
@@ -107,6 +109,7 @@ describe('CardEntryFormComponent', () => {
       categoryId: 'category-1',
       notes: '',
       repeatMonthly: false,
+      isRefund: false,
     });
 
     await fixture.componentInstance.submit();
@@ -129,6 +132,7 @@ describe('CardEntryFormComponent', () => {
       categoryId: 'category-1',
       notes: '',
       repeatMonthly: false,
+      isRefund: false,
     });
 
     await fixture.componentInstance.submit();

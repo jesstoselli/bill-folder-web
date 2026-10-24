@@ -22,6 +22,9 @@
               @if (isSubscription(entry)) {
                 <span class="installment-table__subscription">Assinatura mensal</span>
               }
+              @if (installment.amount < 0) {
+                <span class="installment-table__refund">Estorno</span>
+              }
             </td>
             <td data-label="Parcela" class="bf-tabular">
               {{ installment.installmentNumber }}/{{ entry.installmentsCount }}
@@ -32,7 +35,11 @@
                 formatCivilDate(installment.purchaseDate)
               }}</time>
             </td>
-            <td data-label="Valor" class="installment-table__amount bf-ledger__amount">
+            <td
+              data-label="Valor"
+              class="installment-table__amount bf-ledger__amount"
+              [class.installment-table__amount--credit]="installment.amount < 0"
+            >
               <app-money [value]="installment.amount" />
             </td>
             <td class="installment-table__actions bf-ledger__actions">

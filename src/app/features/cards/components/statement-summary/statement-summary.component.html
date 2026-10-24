@@ -1,7 +1,14 @@
 <section class="statement-summary" [attr.data-status]="statement().status">
   <div class="statement-summary__total">
-    <span>Total da fatura</span>
-    <strong><app-money [value]="statement().totalAmount" /></strong>
+    @if (statement().totalAmount < 0) {
+      <span>Crédito na fatura</span>
+      <strong class="statement-summary__credit"
+        ><app-money [value]="-statement().totalAmount"
+      /></strong>
+    } @else {
+      <span>Total da fatura</span>
+      <strong><app-money [value]="statement().totalAmount" /></strong>
+    }
   </div>
 
   <dl>
@@ -33,7 +40,7 @@
     </div>
   </dl>
 
-  @if (canPayStatement(statement().status)) {
+  @if (canPayStatement(statement().status, statement().totalAmount)) {
     <button type="button" appButton variant="primary" (click)="pay.emit()">Pagar fatura</button>
   }
 

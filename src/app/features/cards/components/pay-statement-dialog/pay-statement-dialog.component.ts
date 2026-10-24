@@ -66,7 +66,7 @@ export class PayStatementDialogComponent implements OnInit {
   }
 
   async submit(): Promise<void> {
-    if (!canPayStatement(this.data.statement.status)) {
+    if (!canPayStatement(this.data.statement.status, this.data.statement.totalAmount)) {
       this.form.markAllAsTouched();
       return;
     }

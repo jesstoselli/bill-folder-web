@@ -1,16 +1,41 @@
 <form class="card-entry-form" [formGroup]="form" (ngSubmit)="submit()">
   <app-dialog-frame
     titleId="card-entry-form-title"
-    [heading]="data.mode === 'create' ? 'Nova compra' : 'Editar compra'"
+    [heading]="
+      (data.mode === 'create' ? (isRefund() ? 'Novo' : 'Nova') : 'Editar') +
+      (isRefund() ? ' estorno' : ' compra')
+    "
     closeLabel="Fechar formulário de compra"
     [saving]="saving()"
     [error]="serverError()"
-    [submitLabel]="data.mode === 'create' ? 'Salvar compra' : 'Salvar alterações'"
+    [submitLabel]="
+      data.mode === 'create'
+        ? isRefund()
+          ? 'Salvar estorno'
+          : 'Salvar compra'
+        : 'Salvar alterações'
+    "
     savingLabel="Salvando…"
     [submitDisabled]="loadingCategories()"
   >
     <p dialogSubtitle>{{ cardName() }}</p>
     <div class="card-entry-form__fields">
+      @if (data.mode === 'create') {
+        <mat-button-toggle-group
+          class="card-entry-form__kind"
+          formControlName="isRefund"
+          aria-label="Tipo de lançamento"
+        >
+          <mat-button-toggle [value]="false">Compra</mat-button-toggle>
+          <mat-button-toggle [value]="true">Estorno</mat-button-toggle>
+        </mat-button-toggle-group>
+        @if (isRefund()) {
+          <p class="card-entry-form__refund-note">
+            O estorno abate da fatura em que cair. Use a categoria da compra original.
+          </p>
+        }
+      }
+
       <mat-form-field appearance="outline">
         <mat-label>Descrição</mat-label>
         <input matInput formControlName="label" autocomplete="off" />
@@ -29,7 +54,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Valor total</mat-label>
+          <mat-label>{{ isRefund() ? 'Valor estornado' : 'Valor total' }}</mat-label>
           <span matTextPrefix>R$&nbsp;</span>
           <input matInput appMoneyInput formControlName="totalAmount" />
           @if (form.controls.totalAmount.invalid) {
@@ -38,13 +63,13 @@
         </mat-form-field>
       </div>
 
-      @if (data.mode === 'create') {
+      @if (data.mode === 'create' && !isRefund()) {
         <mat-checkbox data-field="repeat-monthly" formControlName="repeatMonthly">
           Repetir mensalmente como assinatura
         </mat-checkbox>
       }
 
-      @if (!form.controls.repeatMonthly.value) {
+      @if (!isRefund() && !form.controls.repeatMonthly.value) {
         <mat-form-field appearance="outline" data-field="installments">
           <mat-label>Parcelas</mat-label>
           <input
@@ -59,7 +84,7 @@
             <mat-error>Informe uma quantidade inteira entre 1 e 36.</mat-error>
           }
         </mat-form-field>
-      } @else {
+      } @else if (!isRefund()) {
         <p class="card-entry-form__recurrence-note">
           A assinatura gera uma cobrança por ciclo. Ela não cria parcelas nem guarda observações.
         </p>

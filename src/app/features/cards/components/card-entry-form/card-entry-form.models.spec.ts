@@ -15,6 +15,7 @@ const baseValue: CardEntryFormValue = {
   categoryId: 'category-1',
   notes: '  Formação  ',
   repeatMonthly: false,
+  isRefund: false,
 };
 
 describe('card entry form mapping', () => {
@@ -27,6 +28,23 @@ describe('card entry form mapping', () => {
         label: 'Curso online',
         totalAmount: 480,
         installmentsCount: 4,
+        categoryId: 'category-1',
+        notes: 'Formação',
+      },
+    });
+  });
+
+  it('maps a refund to a single negative charge, never a subscription', () => {
+    expect(
+      toCardEntryWrite({ ...baseValue, isRefund: true, repeatMonthly: true, totalAmount: 89.9 }),
+    ).toEqual({
+      kind: 'entry',
+      request: {
+        cardId: 'card-1',
+        purchaseDate: '2026-10-08',
+        label: 'Curso online',
+        totalAmount: -89.9,
+        installmentsCount: 1,
         categoryId: 'category-1',
         notes: 'Formação',
       },

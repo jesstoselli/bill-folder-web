@@ -117,3 +117,7 @@ dl {
     grid-row: auto;
   }
 }
+
+.statement-summary__total strong.statement-summary__credit {
+  color: var(--bf-primary);
+}

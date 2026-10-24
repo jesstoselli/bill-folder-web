@@ -110,7 +110,10 @@ export function collectHomeRows(
   const overdue = overdueExpenses.map(projectUpcoming).sort(compareRows);
   const upcoming = [
     ...upcomingExpenses.map(projectUpcoming).filter((row) => row.status !== 'paid'),
-    ...statements.filter((item) => item.status !== 'paid').map(projectStatement),
+    // A statement whose refunds cover its purchases has nothing to pay.
+    ...statements
+      .filter((item) => item.status !== 'paid' && item.totalAmount > 0)
+      .map(projectStatement),
   ].sort(compareRows);
 
   return { upcoming, overdue };

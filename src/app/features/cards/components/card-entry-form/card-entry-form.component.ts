@@ -1,5 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -31,6 +33,7 @@ export type CardEntryFormDialogData =
     MoneyInputDirective,
     DialogFrameComponent,
     ReactiveFormsModule,
+    MatButtonToggleModule,
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
@@ -47,6 +50,8 @@ export class CardEntryFormComponent implements OnInit {
   private readonly writeLock = new WriteDialogLock(this.dialogRef);
   readonly data = inject<CardEntryFormDialogData>(MAT_DIALOG_DATA);
   private readonly initialEntry = this.data.mode === 'edit' ? this.data.entry : null;
+  /** A refund is stored as a negative, single-installment charge. */
+  private readonly editingRefund = (this.initialEntry?.totalAmount ?? 0) < 0;
 
   readonly categories = signal<readonly CategoryDto[]>([]);
   readonly loadingCategories = signal(true);
@@ -62,7 +67,10 @@ export class CardEntryFormComponent implements OnInit {
       this.initialEntry?.label ?? '',
       [Validators.required, nonBlank, Validators.maxLength(200)],
     ],
-    totalAmount: [this.initialEntry?.totalAmount ?? 0, [Validators.required, Validators.min(0.01)]],
+    totalAmount: [
+      Math.abs(this.initialEntry?.totalAmount ?? 0),
+      [Validators.required, Validators.min(0.01)],
+    ],
     installmentsCount: [
       this.initialEntry?.installmentsCount ?? 1,
       [Validators.required, integer, Validators.min(1), Validators.max(36)],
@@ -70,6 +78,11 @@ export class CardEntryFormComponent implements OnInit {
     categoryId: [this.initialEntry?.categoryId ?? '', Validators.required],
     notes: [this.initialEntry?.notes ?? '', Validators.maxLength(500)],
     repeatMonthly: [false],
+    isRefund: [this.editingRefund],
+  });
+
+  readonly isRefund = toSignal(this.form.controls.isRefund.valueChanges, {
+    initialValue: this.editingRefund,
   });
 
   ngOnInit(): void {
@@ -79,10 +92,12 @@ export class CardEntryFormComponent implements OnInit {
       this.form.controls.totalAmount.disable();
       this.form.controls.installmentsCount.disable();
       this.form.controls.repeatMonthly.disable();
+      this.form.controls.isRefund.disable();
     } else {
       this.form.controls.repeatMonthly.valueChanges.subscribe((repeat) =>
         this.configureInstallments(repeat),
       );
+      this.form.controls.isRefund.valueChanges.subscribe((refund) => this.configureRefund(refund));
     }
     void this.loadCategories();
   }
@@ -114,6 +129,20 @@ export class CardEntryFormComponent implements OnInit {
       installments.disable({ emitEvent: false });
     } else {
       installments.enable({ emitEvent: false });
+    }
+  }
+
+  /** A refund is always a single installment and never a subscription. */
+  private configureRefund(refund: boolean): void {
+    const { installmentsCount, repeatMonthly } = this.form.controls;
+    if (refund) {
+      repeatMonthly.setValue(false);
+      installmentsCount.setValue(1);
+      installmentsCount.disable({ emitEvent: false });
+      repeatMonthly.disable({ emitEvent: false });
+    } else {
+      installmentsCount.enable({ emitEvent: false });
+      repeatMonthly.enable({ emitEvent: false });
     }
   }
 

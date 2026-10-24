@@ -7,7 +7,12 @@ describe('card statement lifecycle', () => {
     ['closed', true],
     ['paid', false],
   ] as const)('pay action for %s is %s', (status, expected) => {
-    expect(canPayStatement(status)).toBe(expected);
+    expect(canPayStatement(status, 120)).toBe(expected);
+  });
+
+  it('has nothing to pay when refunds cover the purchases', () => {
+    expect(canPayStatement('closed', 0)).toBe(false);
+    expect(canPayStatement('closed', -50)).toBe(false);
   });
 });
 

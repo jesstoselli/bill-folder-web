@@ -14,6 +14,8 @@ export interface CardEntryFormValue {
   readonly categoryId: string;
   readonly notes: string;
   readonly repeatMonthly: boolean;
+  /** Typed positive; sent negative as a single-installment credit on the card. */
+  readonly isRefund: boolean;
 }
 
 export type CardEntryWrite =
@@ -21,7 +23,7 @@ export type CardEntryWrite =
   | { readonly kind: 'recurrence'; readonly request: CreateCardEntryRecurrenceRequest };
 
 export function toCardEntryWrite(value: CardEntryFormValue): CardEntryWrite {
-  if (value.repeatMonthly) {
+  if (value.repeatMonthly && !value.isRefund) {
     return {
       kind: 'recurrence',
       request: {
@@ -42,8 +44,8 @@ export function toCardEntryWrite(value: CardEntryFormValue): CardEntryWrite {
       cardId: value.cardId,
       purchaseDate: value.purchaseDate,
       label: value.label.trim(),
-      totalAmount: value.totalAmount,
-      installmentsCount: value.installmentsCount,
+      totalAmount: value.isRefund ? -value.totalAmount : value.totalAmount,
+      installmentsCount: value.isRefund ? 1 : value.installmentsCount,
       categoryId: value.categoryId,
       notes: value.notes.trim() || null,
     },
