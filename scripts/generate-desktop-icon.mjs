@@ -11,7 +11,8 @@ const symbolBody = symbol.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <rect x="100" y="100" width="824" height="824" rx="185" fill="#1E1E1E" />
-  <g transform="translate(172 172) scale(3.4)">${symbolBody}</g>
+  <!-- Slightly larger and optically centered inside the macOS icon tile. -->
+  <g transform="translate(106 96) scale(4)">${symbolBody}</g>
 </svg>`;
 
 const browser = await chromium.launch({ headless: true });
