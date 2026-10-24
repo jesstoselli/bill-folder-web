@@ -249,7 +249,11 @@ describe('ExpensesPage actions', () => {
     ]
       .map((button) => button.textContent?.trim())
       .filter(Boolean);
-    expect(enabledActions).toEqual(['Reajustar valor por sessão', 'Excluir recorrência']);
+    expect(enabledActions).toEqual([
+      'Reajustar valor por sessão',
+      'Ajustar sessões neste ciclo',
+      'Excluir recorrência',
+    ]);
     expect(overlay.textContent).not.toMatch(/pagar|pagamento/i);
   });
 

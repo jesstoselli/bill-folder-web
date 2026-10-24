@@ -60,6 +60,11 @@ export interface RepriceProvisionedExpenseRequest {
   readonly scope: 'this' | 'thisAndFollowing';
 }
 
+/** Sessions of a provisioned expense in its own cycle; other cycles keep the recurrence's count. */
+export interface UpdateOccurrencesRequest {
+  readonly occurrencesTotal: number;
+}
+
 export type ExpenseRecurrenceFrequency = 'monthly' | 'weekly';
 
 export interface CreateExpenseRecurrenceRequest {

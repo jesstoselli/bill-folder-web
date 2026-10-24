@@ -188,6 +188,14 @@
           <button type="button" mat-menu-item data-action="reprice" (click)="queueReprice(expense)">
             Reajustar valor por sessão
           </button>
+          <button
+            type="button"
+            mat-menu-item
+            data-action="adjust-occurrences"
+            (click)="queueAdjustOccurrences(expense)"
+          >
+            Ajustar sessões neste ciclo
+          </button>
         } @else {
           <button type="button" mat-menu-item data-action="edit" (click)="queueEdit(expense)">
             Editar despesa

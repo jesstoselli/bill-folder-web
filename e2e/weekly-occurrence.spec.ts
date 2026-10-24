@@ -47,3 +47,31 @@ test('cancelling the recurrence scope does not open the reprice dialog', async (
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Reajustar valor por sessão' })).toHaveCount(0);
 });
+
+test('lowers the sessions of a weekly expense in this cycle only', async ({
+  api,
+  context,
+  page,
+}) => {
+  await api.startAuthenticated(context);
+  await page.goto('/despesas');
+
+  const row = page.locator('[data-expense-id="expense-weekly"]');
+  await expect(row).toContainText('1 de 4 ocorrências pagas');
+  await row.getByRole('button', { name: 'Ações para Terapia semanal' }).click();
+  await page.getByRole('menuitem', { name: 'Ajustar sessões neste ciclo' }).click();
+
+  const dialog = page.getByRole('dialog', { name: 'Sessões neste ciclo' });
+  await expect(dialog).toContainText('4 sessões');
+  await dialog.getByRole('button', { name: 'Uma sessão a menos' }).click();
+  await expect(dialog).toContainText('R$ 450,00');
+  await dialog.getByRole('button', { name: 'Salvar sessões' }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(row).toContainText('1 de 3 ocorrências pagas');
+  expect(api.writes).toContainEqual({
+    method: 'POST',
+    path: '/v1/expenses/expense-weekly/update-occurrences',
+    body: { occurrencesTotal: 3 },
+  });
+});

@@ -1,0 +1,55 @@
+<form class="occurrences-dialog" [formGroup]="form" (ngSubmit)="submit()">
+  <app-dialog-frame
+    titleId="adjust-occurrences-title"
+    heading="Sessões neste ciclo"
+    closeLabel="Fechar ajuste de sessões"
+    [saving]="saving()"
+    [error]="serverError()"
+    submitLabel="Salvar sessões"
+    savingLabel="Salvando…"
+    [submitDisabled]="!changed()"
+  >
+    <p dialogSubtitle id="adjust-occurrences-description">
+      {{ data.expense.label }} · só este ciclo muda; os próximos seguem a recorrência.
+    </p>
+
+    <section class="occurrences-dialog__stepper" aria-label="Sessões neste ciclo">
+      <button
+        type="button"
+        class="occurrences-dialog__step"
+        aria-label="Uma sessão a menos"
+        [disabled]="count() <= minCount || saving()"
+        (click)="step(-1)"
+      >
+        −
+      </button>
+      <output class="occurrences-dialog__count" aria-live="polite">
+        {{ sessionsLabel(count()) }}
+      </output>
+      <button
+        type="button"
+        class="occurrences-dialog__step"
+        aria-label="Uma sessão a mais"
+        [disabled]="count() >= maxCount || saving()"
+        (click)="step(1)"
+      >
+        +
+      </button>
+    </section>
+
+    <section class="occurrences-dialog__total" aria-live="polite">
+      <span>{{ sessionsLabel(count()) }} × <app-money [value]="perSession" /></span>
+      <strong><app-money [value]="total()" /></strong>
+      @if (changed()) {
+        <span>antes: <app-money [value]="originalTotal" /></span>
+      }
+    </section>
+
+    @if (paidCount > 0) {
+      <p class="occurrences-dialog__hint">
+        {{ sessionsLabel(paidCount) }} já {{ paidCount === 1 ? 'paga' : 'pagas' }} — não dá pra
+        ficar abaixo disso.
+      </p>
+    }
+  </app-dialog-frame>
+</form>

@@ -655,6 +655,22 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       this.json(response, created, 201);
       return;
     }
+    if (method === 'POST' && path === '/v1/expenses/expense-weekly/update-occurrences') {
+      const body = await readJson(request);
+      if (!deepEqual(body, { occurrencesTotal: 3 })) {
+        this.json(response, { error: 'invalid_occurrences_fixture_body' }, 400);
+        return;
+      }
+      this.recordWrite(method, path, body);
+      this.expenses[0] = {
+        ...this.expenses[0],
+        occurrencesTotal: 3,
+        expectedAmount: 450,
+        updatedAt: '2026-10-08T12:00:00Z',
+      };
+      this.json(response, this.expenses[0]);
+      return;
+    }
     if (method === 'POST' && path === '/v1/expenses/expense-weekly/pay-occurrence') {
       const body = await readJson(request);
       if (!deepEqual(body, { amount: 150, paidDate: '2026-10-08', paidFromAccountId: null })) {
@@ -762,6 +778,9 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
     }
     if (method === 'POST' && path === '/v1/expenses/') return query === '';
     if (method === 'POST' && path === '/v1/expenses/expense-weekly/pay-occurrence') {
+      return query === '';
+    }
+    if (method === 'POST' && path === '/v1/expenses/expense-weekly/update-occurrences') {
       return query === '';
     }
     if (method === 'POST' && path === '/v1/expenses/expense-internet/pay') return query === '';

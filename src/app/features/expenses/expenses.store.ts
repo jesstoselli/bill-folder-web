@@ -65,6 +65,10 @@ export class ExpensesStore {
     );
   }
 
+  updateOccurrences(id: string, occurrencesTotal: number): Promise<ExpenseResponse> {
+    return firstValueFrom(this.api.updateOccurrences(id, { occurrencesTotal }));
+  }
+
   createRecurrence(request: CreateExpenseRecurrenceRequest): Promise<ExpenseRecurrenceResponse> {
     return firstValueFrom(this.api.createRecurrence(request));
   }

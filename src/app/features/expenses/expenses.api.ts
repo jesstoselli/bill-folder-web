@@ -15,6 +15,7 @@ import {
   PayExpenseRequest,
   PayOccurrenceRequest,
   RepriceProvisionedExpenseRequest,
+  UpdateOccurrencesRequest,
   UpdateExpenseRequest,
 } from './expenses.models';
 
@@ -68,6 +69,15 @@ export class ExpensesApi {
       this.changes,
       this.http
         .post<ExpenseResponse>(`${this.expensesUrl}/${id}/update-amount`, request)
+        .pipe(mapApiErrors()),
+    );
+  }
+
+  updateOccurrences(id: string, request: UpdateOccurrencesRequest): Observable<ExpenseResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http
+        .post<ExpenseResponse>(`${this.expensesUrl}/${id}/update-occurrences`, request)
         .pipe(mapApiErrors()),
     );
   }

@@ -11,6 +11,7 @@ import { ExpenseFormComponent } from './components/expense-form/expense-form.com
 import { PayExpenseDialogComponent } from './components/pay-expense-dialog/pay-expense-dialog.component';
 import { PayOccurrenceDialogComponent } from './components/pay-occurrence-dialog/pay-occurrence-dialog.component';
 import { RecurrenceFormComponent } from './components/recurrence-form/recurrence-form.component';
+import { AdjustOccurrencesDialogComponent } from './components/adjust-occurrences-dialog/adjust-occurrences-dialog.component';
 import { RepriceProvisionedDialogComponent } from './components/reprice-provisioned-dialog/reprice-provisioned-dialog.component';
 import { ExpenseProjection, groupExpenses, projectExpense } from './expense-projections';
 import { ExpensesStore } from './expenses.store';
@@ -27,7 +28,7 @@ import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.c
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: ExpenseProjection }
   | {
-      readonly kind: 'pay' | 'pay-occurrence' | 'reprice';
+      readonly kind: 'pay' | 'pay-occurrence' | 'reprice' | 'adjust-occurrences';
       readonly expense: ExpenseProjection;
       readonly focusContext: RowFocusTicket;
     }
@@ -205,6 +206,13 @@ export class ExpensesPage implements OnInit {
     }
   }
 
+  protected queueAdjustOccurrences(expense: ExpenseProjection): void {
+    const focusContext = this.rowFocus.capture(expense.id);
+    if (focusContext !== null && expense.isProvisioned) {
+      this.pendingAction = { kind: 'adjust-occurrences', expense, focusContext };
+    }
+  }
+
   protected queueDelete(expense: ExpenseProjection): void {
     const focusContext = this.rowFocus.capture(expense.id);
     if (focusContext !== null) {
@@ -231,6 +239,9 @@ export class ExpensesPage implements OnInit {
         return;
       case 'reprice':
         this.openScopeDialog('reprice', action.expense, action.focusContext);
+        return;
+      case 'adjust-occurrences':
+        this.openAdjustOccurrences(action.expense, action.focusContext);
         return;
       case 'delete':
         if (action.expense.templateId !== null) {
@@ -396,6 +407,22 @@ export class ExpensesPage implements OnInit {
           this.openReprice(expense, scope, focusContext);
         }
       });
+  }
+
+  private openAdjustOccurrences(expense: ExpenseProjection, focusContext: RowFocusTicket): void {
+    this.dialog
+      .open(AdjustOccurrencesDialogComponent, {
+        data: { expense },
+        width: '30rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        maxHeight: 'calc(100dvh - 2rem)',
+        autoFocus: 'first-tabbable',
+        restoreFocus: false,
+        ariaLabelledBy: 'adjust-occurrences-title',
+        ariaDescribedBy: 'adjust-occurrences-description',
+      })
+      .afterClosed()
+      .subscribe((result) => this.rowFocus.afterDialog(focusContext, result !== undefined));
   }
 
   private openReprice(
