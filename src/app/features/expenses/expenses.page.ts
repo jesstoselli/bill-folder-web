@@ -11,6 +11,7 @@ import { ExpenseFormComponent } from './components/expense-form/expense-form.com
 import { PayExpenseDialogComponent } from './components/pay-expense-dialog/pay-expense-dialog.component';
 import { PayOccurrenceDialogComponent } from './components/pay-occurrence-dialog/pay-occurrence-dialog.component';
 import { RecurrenceFormComponent } from './components/recurrence-form/recurrence-form.component';
+import { ConfirmActionDialogComponent } from '../../shared/dialogs/confirm-action-dialog/confirm-action-dialog.component';
 import { AdjustOccurrencesDialogComponent } from './components/adjust-occurrences-dialog/adjust-occurrences-dialog.component';
 import { RepriceProvisionedDialogComponent } from './components/reprice-provisioned-dialog/reprice-provisioned-dialog.component';
 import { ExpenseProjection, groupExpenses, projectExpense } from './expense-projections';
@@ -28,7 +29,7 @@ import { CycleBarComponent } from '../../shared/components/cycle-bar/cycle-bar.c
 type PendingAction =
   | { readonly kind: 'edit'; readonly expense: ExpenseProjection }
   | {
-      readonly kind: 'pay' | 'pay-occurrence' | 'reprice' | 'adjust-occurrences';
+      readonly kind: 'pay' | 'pay-occurrence' | 'reprice' | 'adjust-occurrences' | 'undo-payment';
       readonly expense: ExpenseProjection;
       readonly focusContext: RowFocusTicket;
     }
@@ -213,6 +214,13 @@ export class ExpensesPage implements OnInit {
     }
   }
 
+  protected queueUndoPayment(expense: ExpenseProjection): void {
+    const focusContext = this.rowFocus.capture(expense.id);
+    if (focusContext !== null && expense.status === 'paid' && !expense.isProvisioned) {
+      this.pendingAction = { kind: 'undo-payment', expense, focusContext };
+    }
+  }
+
   protected queueDelete(expense: ExpenseProjection): void {
     const focusContext = this.rowFocus.capture(expense.id);
     if (focusContext !== null) {
@@ -242,6 +250,9 @@ export class ExpensesPage implements OnInit {
         return;
       case 'adjust-occurrences':
         this.openAdjustOccurrences(action.expense, action.focusContext);
+        return;
+      case 'undo-payment':
+        this.confirmUndoPayment(action.expense, action.focusContext);
         return;
       case 'delete':
         if (action.expense.templateId !== null) {
@@ -443,6 +454,43 @@ export class ExpensesPage implements OnInit {
       })
       .afterClosed()
       .subscribe((result) => this.rowFocus.afterDialog(focusContext, result !== undefined));
+  }
+
+  private confirmUndoPayment(expense: ExpenseProjection, focusContext: RowFocusTicket): void {
+    this.actionError.set('');
+    this.dialog
+      .open(ConfirmActionDialogComponent, {
+        data: {
+          title: 'Desfazer pagamento?',
+          message: `“${expense.label}” volta a ficar pendente. A data, o valor e a conta do pagamento são apagados.`,
+          confirmLabel: 'Desfazer pagamento',
+        },
+        width: '32rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        autoFocus: 'first-tabbable',
+        restoreFocus: false,
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          this.rowFocus.afterDialog(focusContext, false);
+          return;
+        }
+        void this.undoPayment(expense, focusContext);
+      });
+  }
+
+  private async undoPayment(
+    expense: ExpenseProjection,
+    focusContext: RowFocusTicket,
+  ): Promise<void> {
+    try {
+      await this.store.undoPayment(expense.id);
+      this.rowFocus.afterDialog(focusContext, true);
+    } catch (error: unknown) {
+      this.actionError.set(mapApiError(error).message);
+      this.rowFocus.afterDialog(focusContext, false);
+    }
   }
 
   private async deleteExpense(

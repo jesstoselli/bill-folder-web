@@ -80,6 +80,10 @@ dl {
   }
 }
 
+.statement-summary__undo {
+  justify-self: start;
+}
+
 .statement-summary__paid {
   border-left: 3px solid var(--bf-primary);
   display: grid;

@@ -231,6 +231,10 @@ export class CardsStore {
     return firstValueFrom(this.api.payStatement(id, request));
   }
 
+  undoStatementPayment(id: string): Promise<CardStatementResponse> {
+    return firstValueFrom(this.api.undoStatementPayment(id));
+  }
+
   deleteEntry(id: string, scope: ScopeChoice): Promise<null> {
     return firstValueFrom(this.api.deleteEntry(id, scopeToDeleteQuery(scope)));
   }

@@ -73,6 +73,14 @@ export class ExpensesApi {
     );
   }
 
+  /** Undoes a payment confirmed by mistake: back to pending, without payment data. */
+  undoPayment(id: string): Observable<ExpenseResponse> {
+    return notifyingWrite(
+      this.changes,
+      this.http.post<ExpenseResponse>(`${this.expensesUrl}/${id}/unpay`, {}).pipe(mapApiErrors()),
+    );
+  }
+
   updateOccurrences(id: string, request: UpdateOccurrencesRequest): Observable<ExpenseResponse> {
     return notifyingWrite(
       this.changes,

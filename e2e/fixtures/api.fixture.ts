@@ -715,6 +715,19 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       this.json(response, { ...this.statement, installments: [] });
       return;
     }
+    if (method === 'POST' && path === '/v1/card-statements/statement-closed/unpay') {
+      this.recordWrite(method, path, await readJson(request));
+      this.statement = {
+        ...this.statement,
+        status: 'closed',
+        actualAmount: null,
+        paidDate: null,
+        paidFromAccountId: null,
+        paidFromAccountName: null,
+      };
+      this.json(response, { ...this.statement, installmentsCount: 0 });
+      return;
+    }
     if (method === 'POST' && path === '/v1/card-statements/statement-closed/pay') {
       const body = await readJson(request);
       const expected = { actualAmount: 420.5, paidDate: '2026-10-08', paidFromAccountId: null };
@@ -788,6 +801,9 @@ class DeterministicApiBoundary implements BillFolderApiFixture {
       return query === 'cardId=card-e2e';
     }
     if (method === 'GET' && path === '/v1/card-statements/statement-closed') return query === '';
+    if (method === 'POST' && path === '/v1/card-statements/statement-closed/unpay') {
+      return query === '';
+    }
     return method === 'POST' && path === '/v1/card-statements/statement-closed/pay' && query === '';
   }
 

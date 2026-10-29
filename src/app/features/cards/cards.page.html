@@ -82,7 +82,11 @@
       <app-refresh-status [state]="refreshState()" (retry)="refresh()" />
       @if (store.statement(); as statement) {
         <article class="statement-document" tabindex="-1" aria-label="Fatura selecionada">
-          <app-statement-summary [statement]="statement" (pay)="openPayment(statement)" />
+          <app-statement-summary
+            [statement]="statement"
+            (pay)="openPayment(statement)"
+            (undoPayment)="confirmUndoPayment(statement)"
+          />
           <app-installment-table
             [installments]="statement.installments"
             [entries]="store.entries()"

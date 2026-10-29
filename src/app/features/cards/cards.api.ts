@@ -125,6 +125,15 @@ export class CardsApi {
     );
   }
 
+  /** Undoes a statement payment confirmed by mistake; it becomes payable again. */
+  undoStatementPayment(id: string): Observable<CardStatementResponse> {
+    return this.write(
+      this.http
+        .post<CardStatementResponse>(`${this.statementsUrl}/${id}/unpay`, {})
+        .pipe(mapApiErrors()),
+    );
+  }
+
   private write<T>(operation: Observable<T>): Observable<T> {
     return notifyingWrite(this.changes, operation);
   }

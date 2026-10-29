@@ -197,6 +197,16 @@
             Ajustar sessões neste ciclo
           </button>
         } @else {
+          @if (expense.status === 'paid') {
+            <button
+              type="button"
+              mat-menu-item
+              data-action="undo-payment"
+              (click)="queueUndoPayment(expense)"
+            >
+              Desfazer pagamento
+            </button>
+          }
           <button type="button" mat-menu-item data-action="edit" (click)="queueEdit(expense)">
             Editar despesa
           </button>

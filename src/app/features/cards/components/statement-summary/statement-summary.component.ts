@@ -15,6 +15,7 @@ import { MoneyComponent } from '../../../../shared/components/money/money.compon
 export class StatementSummaryComponent {
   readonly statement = input.required<CardStatementDetailResponse>();
   readonly pay = output<void>();
+  readonly undoPayment = output<void>();
   protected readonly formatCivilDate = formatCivilDate;
   protected readonly canPayStatement = canPayStatement;
 

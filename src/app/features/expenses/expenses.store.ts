@@ -65,6 +65,10 @@ export class ExpensesStore {
     );
   }
 
+  undoPayment(id: string): Promise<ExpenseResponse> {
+    return firstValueFrom(this.api.undoPayment(id));
+  }
+
   updateOccurrences(id: string, occurrencesTotal: number): Promise<ExpenseResponse> {
     return firstValueFrom(this.api.updateOccurrences(id, { occurrencesTotal }));
   }

@@ -11,6 +11,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { mapApiError } from '../../core/http/api-error';
 import { PageStateComponent } from '../../shared/components/page-state/page-state.component';
+import { ConfirmActionDialogComponent } from '../../shared/dialogs/confirm-action-dialog/confirm-action-dialog.component';
 import { RecurrenceScopeDialogComponent } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope-dialog.component';
 import { ScopeChoice } from '../../shared/dialogs/recurrence-scope-dialog/recurrence-scope.models';
 import { CardEntryResponse, CardStatementDetailResponse } from './cards.models';
@@ -207,6 +208,42 @@ export class CardsPage implements OnInit {
       })
       .afterClosed()
       .subscribe((result) => this.restoreStatementDialogFocus(focus, result !== undefined));
+  }
+
+  protected confirmUndoPayment(statement: CardStatementDetailResponse): void {
+    const focus = this.captureStatementFocus();
+    if (!focus) return;
+    this.actionError.set('');
+    this.dialog
+      .open(ConfirmActionDialogComponent, {
+        data: {
+          title: 'Desfazer pagamento?',
+          message: `A fatura do ${statement.cardName} volta a ficar em aberto para pagamento. A data, o valor e a conta do pagamento são apagados.`,
+          confirmLabel: 'Desfazer pagamento',
+        },
+        width: '32rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        autoFocus: 'first-tabbable',
+        restoreFocus: false,
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          this.restoreStatementDialogFocus(focus, false);
+          return;
+        }
+        void this.undoPayment(statement.id, focus);
+      });
+  }
+
+  private async undoPayment(statementId: string, focus: StatementFocusContext): Promise<void> {
+    try {
+      await this.store.undoStatementPayment(statementId);
+      this.restoreStatementDialogFocus(focus, true);
+    } catch (error: unknown) {
+      this.actionError.set(mapApiError(error).message);
+      this.restoreStatementDialogFocus(focus, false);
+    }
   }
 
   private async initialize(): Promise<void> {

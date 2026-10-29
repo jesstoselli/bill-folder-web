@@ -50,5 +50,14 @@
       <span>{{ statement().paidFromAccountName || 'Conta não informada' }}</span>
       <span class="bf-tabular">{{ paidAmountLabel() }}</span>
     </div>
+    <button
+      type="button"
+      class="statement-summary__undo"
+      appButton
+      variant="text"
+      (click)="undoPayment.emit()"
+    >
+      Desfazer pagamento
+    </button>
   }
 </section>

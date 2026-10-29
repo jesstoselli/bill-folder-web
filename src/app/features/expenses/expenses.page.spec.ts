@@ -497,6 +497,62 @@ describe('ExpensesPage actions', () => {
     await vi.waitFor(() => expect(deleteOne).toHaveBeenCalledWith('recurring', 'thisAndFollowing'));
   });
 
+  it('undoes a payment confirmed by mistake after confirmation', async () => {
+    const undoPayment = vi.fn(() => Promise.resolve(expense({ id: 'paid', status: 'pending' })));
+    const { fixture } = await createActionFixture(
+      [expense({ id: 'paid', label: 'Luz', status: 'paid' })],
+      () => Promise.resolve(),
+      { undoPayment },
+    );
+    fixture.detectChanges();
+
+    await chooseMenuAction(fixture, 'paid', 'Desfazer pagamento');
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(overlay.textContent).toContain('“Luz” volta a ficar pendente');
+    });
+    const dialog = overlay.querySelector<HTMLElement>('app-confirm-action-dialog')!;
+    findButton(dialog, 'Desfazer pagamento').click();
+    fixture.detectChanges();
+
+    await vi.waitFor(() => expect(undoPayment).toHaveBeenCalledWith('paid'));
+  });
+
+  it('does not offer undoing a payment to unpaid or weekly expenses', async () => {
+    const { fixture } = await createActionFixture(
+      [
+        expense({ id: 'pending', label: 'Internet' }),
+        expense({
+          id: 'weekly',
+          label: 'Terapia',
+          status: 'paid',
+          occurrenceAmount: 150,
+          occurrencesTotal: 4,
+          occurrencesPaid: 4,
+          paidToDate: 600,
+          expectedAmount: 600,
+        }),
+      ],
+      () => Promise.resolve(),
+    );
+    fixture.detectChanges();
+
+    for (const id of ['pending', 'weekly']) {
+      const trigger = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+        `[data-expense-id="${id}"] [aria-label^="Ações para"]`,
+      );
+      trigger?.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      expect(overlay.querySelector('[data-action="undo-payment"]')).toBeNull();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
+  });
+
   it('restores payment cancellation focus to the row action trigger', async () => {
     const { fixture } = await createActionFixture(
       [expense({ id: 'ordinary', label: 'Internet' })],
@@ -701,7 +757,7 @@ async function createActionFixture(
 
 type ActionWriteOverrides = Partial<
   Record<
-    'pay' | 'payOccurrence' | 'repriceProvisioned' | 'createRecurrence',
+    'pay' | 'payOccurrence' | 'repriceProvisioned' | 'createRecurrence' | 'undoPayment',
     ReturnType<typeof vi.fn>
   >
 >;
