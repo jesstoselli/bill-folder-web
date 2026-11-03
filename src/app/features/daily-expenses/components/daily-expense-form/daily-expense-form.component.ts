@@ -84,6 +84,12 @@ export class DailyExpenseFormComponent implements OnInit {
       ]);
       this.categories.set(categories);
       this.accounts.set(accounts);
+      // A new expense starts on the primary account, like the Android app.
+      const accountId = this.form.controls.accountId;
+      const primary = accounts.find((account) => account.isPrimary);
+      if (!accountId.value && primary) {
+        accountId.setValue(primary.id);
+      }
     } catch (error: unknown) {
       this.serverError.set(mapApiError(error).message);
     } finally {

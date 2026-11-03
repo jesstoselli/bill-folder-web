@@ -66,6 +66,33 @@ describe('DailyExpenseFormComponent', () => {
     expect(component.accounts().map((item) => item.id)).toEqual(['primary', 'secondary']);
   });
 
+  it('starts a new expense on the primary account', async () => {
+    const component = await createComponent({
+      accounts: [
+        account({ id: 'secondary', bankName: 'Banco A', isPrimary: false }),
+        account({ id: 'primary', bankName: 'Banco Z', isPrimary: true }),
+      ],
+    });
+
+    await vi.waitFor(() => expect(component.loadingReferences()).toBe(false));
+
+    expect(component.form.controls.accountId.value).toBe('primary');
+  });
+
+  it('keeps the account of an expense being edited', async () => {
+    const component = await createComponent({
+      accounts: [
+        account({ id: 'secondary', bankName: 'Banco A', isPrimary: false }),
+        account({ id: 'primary', bankName: 'Banco Z', isPrimary: true }),
+      ],
+      data: { mode: 'edit', expense: dailyExpense({ accountId: 'secondary' }) },
+    });
+
+    await vi.waitFor(() => expect(component.loadingReferences()).toBe(false));
+
+    expect(component.form.controls.accountId.value).toBe('secondary');
+  });
+
   it('keeps entered values, the dialog and the server error after a failed save', async () => {
     const pending = deferred<DailyExpenseResponse>();
     const create = vi.fn(() => pending.promise);
