@@ -146,8 +146,8 @@
     <td data-label="Despesa">
       <strong>{{ expense.label }}</strong>
       <span
-        class="expense-ledger__status"
-        [class.expense-ledger__status--overdue]="expense.status === 'overdue'"
+        class="expense-ledger__status bf-status"
+        [class]="'bf-status--' + statusTone(expense.status)"
       >
         {{ statusLabel(expense.status) }}
       </span>

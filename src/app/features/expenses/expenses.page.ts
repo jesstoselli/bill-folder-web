@@ -11,6 +11,7 @@ import { ExpenseFormComponent } from './components/expense-form/expense-form.com
 import { PayExpenseDialogComponent } from './components/pay-expense-dialog/pay-expense-dialog.component';
 import { PayOccurrenceDialogComponent } from './components/pay-occurrence-dialog/pay-occurrence-dialog.component';
 import { RecurrenceFormComponent } from './components/recurrence-form/recurrence-form.component';
+import { statusTone } from '../../shared/formatters/status-tone';
 import { ConfirmActionDialogComponent } from '../../shared/dialogs/confirm-action-dialog/confirm-action-dialog.component';
 import { AdjustOccurrencesDialogComponent } from './components/adjust-occurrences-dialog/adjust-occurrences-dialog.component';
 import { RepriceProvisionedDialogComponent } from './components/reprice-provisioned-dialog/reprice-provisioned-dialog.component';
@@ -281,6 +282,8 @@ export class ExpensesPage implements OnInit {
     }
     void this.store.refresh();
   }
+
+  protected readonly statusTone = statusTone;
 
   protected statusLabel(status: string): string {
     switch (status) {

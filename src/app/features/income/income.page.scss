@@ -40,15 +40,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.income-ledger__status {
-  white-space: nowrap;
-}
-.income-ledger__status--attention {
-  font-weight: 500;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
-}
 @media (max-width: bp.$md) {
   .income-totals {
     overflow-x: auto;

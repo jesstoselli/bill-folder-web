@@ -26,6 +26,7 @@ type IncomeViewState =
 import { MoneyComponent } from '../../shared/components/money/money.component';
 import { sumMoney } from '../../shared/formatters/money';
 import { sideSheetConfig } from '../../shared/dialogs/side-sheet';
+import { statusTone } from '../../shared/formatters/status-tone';
 
 @Component({
   selector: 'app-income-page',
@@ -155,6 +156,7 @@ export class IncomePage implements OnInit {
       void this.cycles.load();
     else void this.store.refresh();
   }
+  protected readonly statusTone = statusTone;
   protected statusLabel(status: string): string {
     switch (status) {
       case 'expected':

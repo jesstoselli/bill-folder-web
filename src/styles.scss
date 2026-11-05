@@ -2,6 +2,7 @@
 @use './styles/tokens';
 @use './styles/typography' as typography;
 @use './styles/ledger';
+@use './styles/status';
 
 html {
   height: 100%;

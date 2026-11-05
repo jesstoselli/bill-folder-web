@@ -21,15 +21,14 @@
   }
 }
 
-.expense-ledger__status,
+.expense-ledger__status {
+  margin-top: 0.3rem;
+}
+
 .expense-ledger__provision,
 .expense-ledger__amount span {
   color: var(--bf-muted);
   font-size: var(--bf-text-sm);
-}
-
-.expense-ledger__status--overdue {
-  color: var(--bf-danger);
 }
 
 .expense-ledger__amount span {

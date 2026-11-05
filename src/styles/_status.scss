@@ -1,0 +1,35 @@
+// Status chip shared by the ledgers and the Home lists: `bf-status` plus a
+// tone from statusTone(). Same roles as the Android StatusChip.
+.bf-status {
+  align-items: center;
+  border-radius: var(--bf-radius-pill);
+  display: inline-flex;
+  font-size: var(--bf-text-xs);
+  font-weight: 500;
+  line-height: 1.2;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+  width: fit-content;
+}
+
+.bf-status--positive {
+  background: color-mix(in srgb, var(--bf-primary) 18%, transparent);
+  color: var(--bf-primary);
+}
+
+.bf-status--danger {
+  background: color-mix(in srgb, var(--bf-danger) 18%, transparent);
+  color: var(--bf-danger);
+}
+
+.bf-status--neutral {
+  background: var(--bf-surface-high);
+  color: var(--bf-muted);
+}
+
+.bf-status--info {
+  background: color-mix(in srgb, var(--bf-brand) 12%, transparent);
+  color: var(--bf-text);
+  outline: 1px solid color-mix(in srgb, var(--bf-brand) 35%, transparent);
+  outline-offset: -1px;
+}

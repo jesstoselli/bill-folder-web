@@ -26,8 +26,8 @@
 
         @if (row.status) {
           <span
-            class="projection-list__status"
-            [class.projection-list__status--danger]="row.status === 'overdue'"
+            class="projection-list__status bf-status"
+            [class]="'bf-status--' + statusTone(row.status)"
           >
             {{ statusLabel(row.status) }}
           </span>

@@ -68,20 +68,6 @@
   }
 }
 
-.projection-list__status {
-  border: 1px solid var(--bf-outline);
-  border-radius: var(--bf-radius-pill);
-  color: var(--bf-muted);
-  font-size: var(--bf-text-xs);
-  padding: 0.3rem 0.55rem;
-  white-space: nowrap;
-}
-
-.projection-list__status--danger {
-  border-color: color-mix(in srgb, var(--bf-danger) 60%, var(--bf-outline));
-  color: var(--bf-danger);
-}
-
 .projection-list__action {
   color: var(--bf-primary);
   font-size: var(--bf-text-sm);

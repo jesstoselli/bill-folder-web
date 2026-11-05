@@ -191,13 +191,9 @@
       }
     </td>
     <td data-label="Situação">
-      <span
-        class="income-ledger__status"
-        [class.income-ledger__status--attention]="
-          entry.status === 'late' || entry.status === 'notOccurred'
-        "
-        >{{ statusLabel(entry.status) }}</span
-      >
+      <span class="bf-status" [class]="'bf-status--' + statusTone(entry.status)">{{
+        statusLabel(entry.status)
+      }}</span>
     </td>
     <td class="income-ledger__row-actions bf-ledger__actions">
       @if (canConfirm(entry.status)) {

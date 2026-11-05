@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MoneyComponent } from '../../../../shared/components/money/money.component';
 import { formatCivilDate } from '../../../../shared/formatters/civil-date';
 import { HomeDisplayRow } from '../../home-projections';
+import { statusTone } from '../../../../shared/formatters/status-tone';
 
 @Component({
   selector: 'app-projection-list',
@@ -15,6 +16,8 @@ export class ProjectionListComponent {
   readonly emptyMessage = input.required<string>();
   readonly cycleId = input('');
   protected readonly formatCivilDate = formatCivilDate;
+
+  protected readonly statusTone = statusTone;
 
   protected statusLabel(status: HomeDisplayRow['status']): string {
     switch (status) {
